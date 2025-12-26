@@ -78,14 +78,14 @@ release-desktop:
 	@python desktop/release.py
 
 lint:
-	@echo "Running Python linter..."
-	ruff check . --fix --unsafe-fixes
+	@echo "Running ruff linter..."
+	ruff check src/ desktop/ scripts/ --fix --unsafe-fixes
 	@echo "Running JavaScript linter..."
 	cd web && npm run lint || true
 
 format:
 	@echo "Formatting code with ruff..."
-	ruff format src/
+	ruff format src/ desktop/ scripts/
 
 typecheck:
 	@echo "Running ty type checker..."
@@ -93,4 +93,3 @@ typecheck:
 
 check: lint typecheck
 	@echo "✓ All checks passed!"
-

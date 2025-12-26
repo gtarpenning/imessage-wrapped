@@ -44,7 +44,7 @@ EXIT_CODE=0
 # Run Python checks
 if [ -n "$PYTHON_FILES" ]; then
   echo "${BLUE}🐍 Detected Python files in commit...${NC}"
-  
+
   # Check if ruff is available
   if ! command -v ruff > /dev/null 2>&1; then
     echo "${YELLOW}⚠ ruff not found. Install with: pip install -e '.[dev]'${NC}"
@@ -57,18 +57,18 @@ if [ -n "$PYTHON_FILES" ]; then
     else
       echo "${GREEN}✓ Ruff linting passed${NC}"
     fi
-    
+
     echo "${YELLOW}⚙️  Checking code formatting...${NC}"
     ruff format --check $PYTHON_FILES
     if [ $? -ne 0 ]; then
       echo "${RED}✗ Code formatting check failed!${NC}"
-      echo "${YELLOW}Run 'make format' or 'ruff format src/' to fix${NC}"
+      echo "${YELLOW}Run 'make format' to fix formatting${NC}"
       EXIT_CODE=1
     else
       echo "${GREEN}✓ Code formatting passed${NC}"
     fi
   fi
-  
+
   # Check if ty is available
   if ! command -v ty > /dev/null 2>&1; then
     echo "${YELLOW}⚠ ty not found. Install with: pip install -e '.[dev]'${NC}"
@@ -76,7 +76,7 @@ if [ -n "$PYTHON_FILES" ]; then
     echo "${YELLOW}⚙️  Running ty type checker...${NC}"
     # Get directories containing Python files
     PYTHON_DIRS=$(echo "$PYTHON_FILES" | xargs dirname | sort -u)
-    
+
     # Run ty on the src directory if any Python files are in it
     if echo "$PYTHON_DIRS" | grep -q "^src"; then
       ty check src/ 2>&1 | head -20
@@ -93,11 +93,11 @@ fi
 # Run Next.js lint for web files
 if [ -n "$WEB_FILES" ]; then
   echo "${BLUE}🌐 Detected web files in commit...${NC}"
-  
+
   if [ -d "web/node_modules" ]; then
     echo "${YELLOW}⚙️  Running Next.js linter...${NC}"
     cd web
-    
+
     # Run lint only on staged files
     npm run lint > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -154,25 +154,25 @@ do
   if echo "$remote_ref" | grep -q 'refs/heads/main'; then
     echo "${YELLOW}🔍 Detected push to main branch...${NC}"
     echo "${YELLOW}⚙️  Running web build validation...${NC}"
-    
+
     # Check if web directory exists
     if [ ! -d "web" ]; then
       echo "${RED}✗ web directory not found${NC}"
       exit 0
     fi
-    
+
     # Check if package.json exists
     if [ ! -f "web/package.json" ]; then
       echo "${YELLOW}⚠ web/package.json not found, skipping build check${NC}"
       exit 0
     fi
-    
+
     # Store current directory
     CURRENT_DIR=$(pwd)
-    
+
     # Navigate to web directory
     cd web || exit 1
-    
+
     # Check if node_modules exists, if not install
     if [ ! -d "node_modules" ]; then
       echo "${YELLOW}📦 Installing dependencies...${NC}"
@@ -182,20 +182,20 @@ do
         exit 1
       }
     fi
-    
+
     # Run the build
     echo "${YELLOW}🔨 Building application...${NC}"
     npm run build > /dev/null 2>&1
-    
+
     if [ $? -ne 0 ]; then
       echo "${RED}✗ Build failed! Cannot push to main.${NC}"
       echo "${RED}Fix the build errors and try again.${NC}"
       cd "$CURRENT_DIR"
       exit 1
     fi
-    
+
     echo "${GREEN}✓ Build successful!${NC}"
-    
+
     # Return to original directory
     cd "$CURRENT_DIR"
   fi
@@ -216,4 +216,3 @@ echo ""
 echo "To bypass hooks (not recommended):"
 echo "  - git commit --no-verify"
 echo "  - git push --no-verify"
-

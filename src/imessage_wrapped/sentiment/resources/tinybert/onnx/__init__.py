@@ -1,1 +1,1 @@
-# TinyBERT ONNX asset package.
+# TinyBERT ONNX asset package marker.

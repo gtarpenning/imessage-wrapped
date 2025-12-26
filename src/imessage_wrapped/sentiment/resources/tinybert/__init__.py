@@ -1,1 +1,1 @@
-# Resource package for TinyBERT sentiment assets.
+# Package marker for TinyBERT sentiment resources.
