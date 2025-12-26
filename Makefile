@@ -85,7 +85,7 @@ lint:
 
 format:
 	@echo "Formatting code with ruff..."
-	ruff format src/
+	ruff format src/ desktop/
 
 typecheck:
 	@echo "Running ty type checker..."

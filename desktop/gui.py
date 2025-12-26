@@ -263,11 +263,12 @@ class IMessageWrappedApp(rumps.App):
     def show_about(self, _):
         rumps.alert(
             title="iMessage Wrapped",
-            message="Version 1.0.0\n\n"
-            "Your year in messages, beautifully visualized.\n\n"
-            "All data stays on your Mac.\n"
+            message="Version 1.1.5\n\n"
+            "Your year in messages, visualized.\n\n"
             "Only anonymized statistics are uploaded.\n\n"
-            "https://imessage-wrapped.fly.dev",
+            "Created by Griffin and Zubin.\n\n"
+            "https://imessage-wrapped.fly.dev\n"
+            "https://github.com/gtarpenning/imessage-wrapped",
         )
 
 
