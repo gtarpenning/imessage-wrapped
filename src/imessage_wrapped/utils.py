@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 
-
 APPLE_EPOCH = datetime(2001, 1, 1, tzinfo=timezone.utc)
 TIMESTAMP_FACTOR = 1_000_000_000
 
@@ -37,18 +36,18 @@ def readable_duration(seconds: float) -> str:
     if seconds < 60:
         s = int(seconds)
         return f"{s} second{'s' if s != 1 else ''}"
-    
+
     parts = []
     hours, remainder = divmod(int(seconds), 3600)
     minutes, secs = divmod(remainder, 60)
-    
+
     if hours > 0:
         parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
     if minutes > 0:
         parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
     if secs > 0 and hours == 0:
         parts.append(f"{secs} second{'s' if secs != 1 else ''}")
-    
+
     return ", ".join(parts)
 
 
@@ -65,10 +64,10 @@ def get_tapback_type(associated_message_type: int) -> str | None:
 def strip_guid_prefix(guid: str | None) -> str | None:
     if not guid:
         return None
-    if '/' in guid:
-        return guid.split('/', 1)[1]
-    elif ':' in guid:
-        return guid.split(':', 1)[1]
+    if "/" in guid:
+        return guid.split("/", 1)[1]
+    elif ":" in guid:
+        return guid.split(":", 1)[1]
     return guid
 
 
@@ -77,22 +76,22 @@ def extract_text_from_attributed_body(blob: bytes) -> str | None:
         return None
     try:
         import re
-        
-        ns_string_pattern = rb'NSString\x01\x94\x84\x01.(.+?)\x86\x84\x02'
+
+        ns_string_pattern = rb"NSString\x01\x94\x84\x01.(.+?)\x86\x84\x02"
         match = re.search(ns_string_pattern, blob, re.DOTALL)
-        
+
         if match:
             text_bytes = match.group(1)
-            text = text_bytes.decode('utf-8', errors='replace')
-            
-            cleaned = ''.join(
-                c for c in text 
-                if (c.isprintable() or c in '\n\r\t ' or ord(c) >= 0x1F300) and c != '�'
+            text = text_bytes.decode("utf-8", errors="replace")
+
+            cleaned = "".join(
+                c
+                for c in text
+                if (c.isprintable() or c in "\n\r\t " or ord(c) >= 0x1F300) and c != "�"
             )
             if len(cleaned) > 0:
                 return cleaned.strip()
-        
+
         return None
     except Exception:
         return None
-

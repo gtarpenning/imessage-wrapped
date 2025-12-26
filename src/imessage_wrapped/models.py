@@ -20,11 +20,11 @@ class Message:
     has_attachment: bool
     date_read_after_seconds: float | None = None
     tapbacks: list[Tapback] = field(default_factory=list)
-    
+
     @property
     def timestamp_iso(self) -> str:
         return self.timestamp.isoformat()
-    
+
     @property
     def timestamp_unix(self) -> int:
         return int(self.timestamp.timestamp())
@@ -38,7 +38,7 @@ class Conversation:
     is_group_chat: bool
     participants: list[str]
     messages: list[Message] = field(default_factory=list)
-    
+
     @property
     def message_count(self) -> int:
         return len(self.messages)
@@ -49,8 +49,7 @@ class ExportData:
     export_date: datetime
     year: int
     conversations: dict[str, Conversation]
-    
+
     @property
     def total_messages(self) -> int:
         return sum(conv.message_count for conv in self.conversations.values())
-

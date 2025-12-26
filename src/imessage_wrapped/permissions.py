@@ -4,7 +4,6 @@ import sqlite3
 from rich.console import Console
 from rich.panel import Panel
 
-
 DEFAULT_DB_PATH = "~/Library/Messages/chat.db"
 
 
@@ -14,7 +13,7 @@ class PermissionError(Exception):
 
 def check_database_access(db_path: str | None = None) -> bool:
     path = db_path or os.path.expanduser(DEFAULT_DB_PATH)
-    
+
     try:
         conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
         conn.execute("SELECT 1 FROM message LIMIT 1")
@@ -44,4 +43,3 @@ def display_permission_error() -> None:
             title="⚠️  Permission Error",
         )
     )
-

@@ -50,7 +50,7 @@ export default function Home() {
             Or use the command line:
           </p>
           <pre style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '0.5rem', textAlign: 'left', maxWidth: '500px', margin: '0 auto', overflow: 'auto' }}>
-            <code>pip install imessage-wrapped{'\n'}imexport analyze</code>
+            <code>pip install imessage-wrapped{'\n'}imexport analyze</code>make
           </pre>
           <p style={{ marginTop: '1.5rem', opacity: 0.7, textAlign: 'center' }}>
             <a 

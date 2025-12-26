@@ -1,15 +1,17 @@
-import requests
 from typing import Optional
+
+import requests
 from rich.console import Console
 from rich.panel import Panel
 
 API_BASE_URL = "https://imessage-wrapped.fly.dev"
 
+
 class StatsUploader:
     def __init__(self, base_url: str = API_BASE_URL):
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.console = Console()
-    
+
     def upload(self, year: int, statistics: dict) -> Optional[str]:
         """
         Upload statistics to web server.
@@ -17,39 +19,38 @@ class StatsUploader:
         """
         try:
             self.console.print("[cyan]📤 Uploading to server...[/]")
-            
+
             response = requests.post(
                 f"{self.base_url}/api/upload",
-                json={
-                    "year": year,
-                    "statistics": statistics
-                },
+                json={"year": year, "statistics": statistics},
                 timeout=30,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
             )
-            
+
             if response.status_code == 429:
                 self.console.print("[red]❌ Rate limit exceeded. Try again in an hour.[/]")
                 return None
-            
+
             response.raise_for_status()
             data = response.json()
-            
+
             share_url = data.get("url")
-            
+
             if share_url:
                 self.console.print()
-                self.console.print(Panel.fit(
-                    f"[bold green]View the full analysis at this link[/]\n\n"
-                    f"[cyan]🔗 {share_url}[/]\n\n"
-                    f"Copy and share your imessage wrapped with friends!",
-                    title="Share Your Wrapped",
-                    border_style="green"
-                ))
+                self.console.print(
+                    Panel.fit(
+                        f"[bold green]View the full analysis at this link[/]\n\n"
+                        f"[cyan]🔗 {share_url}[/]\n\n"
+                        f"Copy and share your imessage wrapped with friends!",
+                        title="Share Your Wrapped",
+                        border_style="green",
+                    )
+                )
                 self.console.print()
-            
+
             return share_url
-            
+
         except requests.Timeout:
             self.console.print("[red]❌ Upload timed out. Is the server running?[/]")
             return None
@@ -63,4 +64,3 @@ class StatsUploader:
         except Exception as e:
             self.console.print(f"[red]❌ Unexpected error: {e}[/]")
             return None
-
