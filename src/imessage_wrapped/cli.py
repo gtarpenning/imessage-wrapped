@@ -6,7 +6,15 @@ from pathlib import Path
 
 import questionary
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+)
 
 from . import (
     Exporter,
@@ -19,6 +27,7 @@ from . import (
     TerminalDisplay,
     require_database_access,
 )
+from .utils import sanitize_statistics_for_export
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +169,13 @@ def parse_args():
         ),
     )
 
+    analyze_parser.add_argument(
+        "--ghost-timeline",
+        type=int,
+        default=30,
+        help="Days without a reply before someone counts as a ghost (default: 30)",
+    )
+
     args = parser.parse_args()
 
     if args.command is None:
@@ -228,6 +244,10 @@ def export_command(args):
 def analyze_command(args):
     console = Console()
 
+    if args.ghost_timeline <= 0:
+        console.print("[red]✗[/] --ghost-timeline must be greater than zero")
+        sys.exit(1)
+
     if not args.input:
         exports_dir = Path("exports")
         export_files = []
@@ -295,9 +315,14 @@ def analyze_command(args):
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
+        BarColumn(bar_width=None, complete_style="green"),
+        MofNCompleteColumn(),
+        TimeElapsedColumn(),
+        TimeRemainingColumn(elapsed_when_finished=True),
         console=console,
+        transient=True,
     ) as progress:
-        task = progress.add_task("Loading export data...", total=None)
+        load_task = progress.add_task("Loading export data...", total=1)
 
         try:
             data = ExportLoader.load(input_path)
@@ -305,20 +330,64 @@ def analyze_command(args):
             console.print(f"[red]✗[/] Failed to load export data: {e}")
             sys.exit(1)
 
-        progress.update(task, description=f"Analyzing {data.total_messages:,} messages...")
+        progress.update(load_task, advance=1, description="Export loaded")
+
+        sentiment_tasks: dict[str, int] = {}
+
+        def sentiment_progress(stage: str, completed: int, total: int) -> None:
+            if total == 0:
+                return
+            label = "Sentiment (You)" if stage == "sent" else "Sentiment (Them)"
+            task_id = sentiment_tasks.get(stage)
+            if task_id is None:
+                task_id = progress.add_task(label, total=total)
+                sentiment_tasks[stage] = task_id
+            progress.update(task_id, completed=completed, total=total)
 
         analyzers = []
+        def _print_sentiment_info(info: dict[str, str | int | None] | None) -> None:
+            if not info:
+                return
+            params = info.get("parameters_display")
+            name = info.get("name") or "Sentiment"
+            details: list[str] = []
+            if params:
+                details.append(f"{params} parameters")
+            sample_rate = info.get("sample_rate") or info.get("embedding_sample_rate")
+            try:
+                sample_rate_val = float(sample_rate) if sample_rate is not None else None
+            except (TypeError, ValueError):
+                sample_rate_val = None
+            if sample_rate_val and 0 < sample_rate_val < 1:
+                details.append(f"{sample_rate_val * 100:.0f}% sample")
+            detail_text = f" ({', '.join(details)})" if details else ""
+            progress.console.print(f"[dim]Using sentiment backend: {name}{detail_text}[/]")
+
         if "raw" in analyzer_names:
-            analyzers.append(RawStatisticsAnalyzer(sentiment_backend=args.sentiment_backend))
+            analyzers.append(
+                RawStatisticsAnalyzer(
+                    sentiment_backend=args.sentiment_backend,
+                    sentiment_progress=sentiment_progress,
+                    ghost_timeline_days=args.ghost_timeline,
+                )
+            )
+            _print_sentiment_info(analyzers[-1].sentiment_model_info)
         if "nlp" in analyzer_names:
             analyzers.append(NLPStatisticsAnalyzer())
         if "llm" in analyzer_names:
             analyzers.append(LLMStatisticsAnalyzer())
 
+        analyzer_task = progress.add_task(
+            f"Running {len(analyzers)} analyzer(s)...", total=max(len(analyzers), 1)
+        )
+
         statistics = {}
         for analyzer in analyzers:
-            progress.update(task, description=f"Running {analyzer.name} analyzer...")
+            progress.update(analyzer_task, description=f"Running {analyzer.name} analyzer...")
             statistics[analyzer.name] = analyzer.analyze(data)
+            progress.advance(analyzer_task)
+
+    sanitized_statistics = sanitize_statistics_for_export(statistics)
 
     if args.output:
         import json
@@ -326,7 +395,7 @@ def analyze_command(args):
         output_path = Path(args.output)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(statistics, f, indent=2, ensure_ascii=False)
+            json.dump(sanitized_statistics, f, indent=2, ensure_ascii=False)
         console.print(f"\n[green]✓[/] Statistics saved to [cyan]{args.output}[/]")
 
     display = TerminalDisplay()
@@ -339,7 +408,7 @@ def analyze_command(args):
         uploader = StatsUploader(base_url=server_url)
 
         year = data.year if hasattr(data, "year") else datetime.now().year
-        share_url = uploader.upload(year, statistics)
+        share_url = uploader.upload(year, sanitized_statistics)
 
         if not share_url:
             console.print("\n[yellow]Tip: Make sure the web server is running:[/]")

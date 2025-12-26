@@ -39,7 +39,8 @@ Want to see full details in the terminal instead? Use `imexport --no-share`
 
 ✅ **Dashboard** - Interactive visualizations of your messaging patterns  
 ✅ **Easy Sharing** - One command to upload and get a shareable link  
-✅ **Secure** - HTTPS, encrypted database  git status
+✅ **Secure** - HTTPS, encrypted database  
+✅ **Favorite Phrases** - Automatically surfaces the sayings you repeat most  
 ✅ **Deploy Anywhere** - Fly.io ready (free tier available)  
 
 ## 🔒 Data Privacy
@@ -157,19 +158,25 @@ Requires **Full Disk Access** to read the iMessage database:
 3. Add Terminal (for CLI) or the Desktop App
 4. Restart the application
 
-## Advanced: TinyBERT Sentiment Backend
+## Advanced: DistilBERT Sentiment Backend
 
-The package now bundles a TinyBERT ONNX model (via `onnxruntime` + `numpy<2`) so you don’t need extra installs. Toggle the backend per-run:
+The package now bundles the `optimum/distilbert-base-uncased-finetuned-sst-2-english` ONNX model
+(via `onnxruntime` + `numpy<2`) so you don’t need extra installs. Toggle the backend per-run:
 
 ```bash
-# Use ONNX TinyBERT instead of the default lexicon model
-imexport analyze --sentiment-backend tinybert --no-share
+# Use ONNX DistilBERT instead of the default lexicon model
+imexport analyze --sentiment-backend distilbert --no-share
 
 # or via environment variable (still defaults to lexical if unset)
-IMESSAGE_WRAPPED_SENTIMENT_BACKEND=tinybert imexport analyze --no-share
+IMESSAGE_WRAPPED_SENTIMENT_BACKEND=distilbert imexport analyze --no-share
 ```
 
-If ONNX runtime fails to load for any reason, the CLI/Desktop automatically falls back to the lexicon-based analyzer.
+By default the DistilBERT backend processes a 25% deterministic sample of your messages to
+keep analysis fast. Adjust this via `IMESSAGE_WRAPPED_SENTIMENT_SUBSAMPLE` (between `0` and `1`) if
+you need higher fidelity or want to speed it up further.
+
+`tinybert` remains a supported alias for backwards compatibility. If ONNX runtime fails to load for
+any reason, the CLI/Desktop automatically falls back to the lexicon-based analyzer.
 
 ## Deployment
 
