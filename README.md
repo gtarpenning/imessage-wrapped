@@ -3,7 +3,7 @@
 Export and analyze your iMessage conversations from the macOS SQLite database.
 
 <img width="1507" height="810" alt="image" src="https://github.com/user-attachments/assets/704e42ea-4df7-48f8-b21d-8f16d935c815" />
-<img width="1507" alt="image" src="https://github.com/user-attachments/assets/bcc55823-34b8-4f26-94ba-418f9bce455b" />
+<img width="1507" height="494" alt="image" src="https://github.com/user-attachments/assets/33cc9f63-5257-4442-9775-477ca7608d43" />
 
 
 ## Quick Start
