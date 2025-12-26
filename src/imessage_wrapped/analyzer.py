@@ -5,14 +5,15 @@ from typing import Any
 import re
 
 from .models import ExportData, Message, Conversation
+from .sentiment import LexicalSentimentAnalyzer
 
 
 class StatisticsAnalyzer(ABC):
-    
+
     @abstractmethod
     def analyze(self, data: ExportData) -> dict[str, Any]:
         pass
-    
+
     @property
     @abstractmethod
     def name(self) -> str:
@@ -20,16 +21,21 @@ class StatisticsAnalyzer(ABC):
 
 
 class RawStatisticsAnalyzer(StatisticsAnalyzer):
-    
+
+    def __init__(self) -> None:
+        self._sentiment_analyzer = LexicalSentimentAnalyzer()
+        self._sentiment_interval = "month"
+
     @property
     def name(self) -> str:
         return "raw"
-    
+
     def analyze(self, data: ExportData) -> dict[str, Any]:
         all_messages = self._flatten_messages(data)
+        all_messages_with_context = self._flatten_messages(data, include_context=True)
         sent_messages = [m for m in all_messages if m.is_from_me]
         received_messages = [m for m in all_messages if not m.is_from_me]
-        
+
         return {
             "volume": self._analyze_volume(all_messages, sent_messages, received_messages),
             "temporal": self._analyze_temporal_patterns(all_messages, sent_messages),
@@ -37,38 +43,41 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "content": self._analyze_content(sent_messages, received_messages),
             "conversations": self._analyze_conversations(data),
             "response_times": self._analyze_response_times(data),
-            "tapbacks": self._analyze_tapbacks(all_messages, sent_messages, received_messages),
+            "tapbacks": self._analyze_tapbacks(all_messages_with_context, sent_messages, received_messages),
             "streaks": self._analyze_streaks(data),
         }
-    
-    def _flatten_messages(self, data: ExportData) -> list[Message]:
+
+    def _flatten_messages(self, data: ExportData, include_context: bool = False) -> list[Message]:
         messages = []
         for conv in data.conversations.values():
-            messages.extend(conv.messages)
+            for msg in conv.messages:
+                if not self._should_include_message(msg, data.year, include_context):
+                    continue
+                messages.append(msg)
         return sorted(messages, key=lambda m: m.timestamp)
-    
+
     def _analyze_volume(
-        self, 
+        self,
         all_messages: list[Message],
         sent_messages: list[Message],
         received_messages: list[Message]
     ) -> dict[str, Any]:
         sent_by_date = defaultdict(int)
         received_by_date = defaultdict(int)
-        
+
         for msg in sent_messages:
             sent_by_date[msg.timestamp.date()] += 1
-        
+
         for msg in received_messages:
             received_by_date[msg.timestamp.date()] += 1
-        
+
         busiest_day_total = max(
-            ((date, sent_by_date[date] + received_by_date[date]) 
+            ((date, sent_by_date[date] + received_by_date[date])
              for date in set(sent_by_date.keys()) | set(received_by_date.keys())),
             key=lambda x: x[1],
             default=(None, 0)
         )
-        
+
         daily_activity = {}
         all_dates = set(sent_by_date.keys()) | set(received_by_date.keys())
         for date in all_dates:
@@ -77,7 +86,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 "received": received_by_date.get(date, 0),
                 "total": sent_by_date.get(date, 0) + received_by_date.get(date, 0),
             }
-        
+
         return {
             "total_messages": len(all_messages),
             "total_sent": len(sent_messages),
@@ -95,7 +104,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "days_received": len(received_by_date),
             "daily_activity": daily_activity,
         }
-    
+
     def _analyze_temporal_patterns(
         self,
         all_messages: list[Message],
@@ -104,7 +113,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         hour_distribution = Counter(msg.timestamp.hour for msg in sent_messages)
         day_of_week_distribution = Counter(msg.timestamp.weekday() for msg in sent_messages)
         month_distribution = Counter(msg.timestamp.month for msg in sent_messages)
-        
+
         return {
             "hour_distribution": dict(sorted(hour_distribution.items())),
             "day_of_week_distribution": dict(sorted(day_of_week_distribution.items())),
@@ -112,19 +121,20 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "busiest_hour": hour_distribution.most_common(1)[0] if hour_distribution else (None, 0),
             "busiest_day_of_week": day_of_week_distribution.most_common(1)[0] if day_of_week_distribution else (None, 0),
         }
-    
+
     def _analyze_streaks(self, data: ExportData) -> dict[str, Any]:
         max_streak = 0
         max_streak_contact = None
         max_streak_contact_id = None
-        
+
         for conv in data.conversations.values():
-            messages = sorted(conv.messages, key=lambda m: m.timestamp)
+            messages = self._filter_conversation_messages(conv, data.year)
             if not messages:
                 continue
-            
+            messages = sorted(messages, key=lambda m: m.timestamp)
+
             dates = sorted(set(msg.timestamp.date() for msg in messages))
-            
+
             current_streak = 1
             for i in range(1, len(dates)):
                 if dates[i] - dates[i-1] == timedelta(days=1):
@@ -135,13 +145,13 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                         max_streak_contact_id = conv.chat_identifier
                 else:
                     current_streak = 1
-        
+
         return {
             "longest_streak_days": max_streak,
             "longest_streak_contact": max_streak_contact,
             "longest_streak_contact_id": max_streak_contact_id,
         }
-    
+
     def _analyze_contacts(
         self,
         data: ExportData,
@@ -151,56 +161,59 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         sent_by_contact = defaultdict(int)
         received_by_contact = defaultdict(int)
         contact_names = {}
-        
+
         for conv in data.conversations.values():
             contact_id = conv.chat_identifier
             contact_name = conv.display_name or contact_id
             contact_names[contact_id] = contact_name
-            
-            for msg in conv.messages:
+            messages = self._filter_conversation_messages(conv, data.year)
+            if not messages:
+                continue
+            for msg in messages:
                 if msg.is_from_me:
                     sent_by_contact[contact_id] += 1
                 else:
                     received_by_contact[contact_id] += 1
-        
+
         top_sent = sorted(
             ((contact_names[cid], count) for cid, count in sent_by_contact.items()),
             key=lambda x: x[1],
             reverse=True
         )[:10]
-        
+
         top_received = sorted(
             ((contact_names[cid], count) for cid, count in received_by_contact.items()),
             key=lambda x: x[1],
             reverse=True
         )[:10]
-        
+
         unique_contacts_sent = len([c for c, count in sent_by_contact.items() if count > 0])
         unique_contacts_received = len([c for c, count in received_by_contact.items() if count > 0])
-        
+
         contacts_by_date_sent = defaultdict(set)
         contacts_by_date_received = defaultdict(set)
-        
+
         for conv in data.conversations.values():
             contact_id = conv.chat_identifier
-            for msg in conv.messages:
+            messages = self._filter_conversation_messages(conv, data.year)
+            for msg in messages:
                 if msg.is_from_me:
                     contacts_by_date_sent[msg.timestamp.date()].add(contact_id)
                 else:
                     contacts_by_date_received[msg.timestamp.date()].add(contact_id)
-        
+
         social_butterfly_day = max(
             contacts_by_date_sent.items(),
             key=lambda x: len(x[1]),
             default=(None, set())
         )
-        
+
         fan_club_day = max(
             contacts_by_date_received.items(),
             key=lambda x: len(x[1]),
             default=(None, set())
         )
-        
+
         return {
             "top_sent_to": [{"name": name, "count": count} for name, count in top_sent],
             "top_received_from": [{"name": name, "count": count} for name, count in top_received],
@@ -215,7 +228,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 "unique_contacts": len(fan_club_day[1]),
             },
         }
-    
+
     def _analyze_content(
         self,
         sent_messages: list[Message],
@@ -223,7 +236,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
     ) -> dict[str, Any]:
         sent_with_text = [m for m in sent_messages if m.text]
         received_with_text = [m for m in received_messages if m.text]
-        
+
         emoji_pattern = re.compile(
             "["
             "\U0001F600-\U0001F64F"  # emoticons
@@ -235,9 +248,9 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "]+",
             flags=re.UNICODE
         )
-        
+
         punctuation_pattern = re.compile(r'[.!?,;:\-\'"()]')
-        
+
         sent_emojis = []
         sent_lengths = []
         sent_punctuation_counts = []
@@ -245,13 +258,13 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         question_count = 0
         exclamation_count = 0
         link_count = 0
-        
+
         for msg in sent_with_text:
             text = msg.text or ""
             sent_lengths.append(len(text))
             found_emojis = emoji_pattern.findall(text)
             filtered_emojis = [
-                e for e in found_emojis 
+                e for e in found_emojis
                 if '\ufffc' not in e and e not in ['\u2642\ufe0f', '\u2640\ufe0f', '\u2642', '\u2640', '\ufe0f']
             ]
             sent_emojis.extend(filtered_emojis)
@@ -262,19 +275,19 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 exclamation_count += 1
             if re.search(r'https?://', text):
                 link_count += 1
-        
+
         for msg in received_with_text:
             text = msg.text or ""
             received_punctuation_counts.append(len(punctuation_pattern.findall(text)))
-        
+
         emoji_counter = Counter(sent_emojis)
-        
+
         avg_length_sent = sum(sent_lengths) / len(sent_lengths) if sent_lengths else 0
         avg_length_received = (
             sum(len(m.text or "") for m in received_with_text) / len(received_with_text)
             if received_with_text else 0
         )
-        
+
         avg_punctuation_sent = (
             sum(sent_punctuation_counts) / len(sent_punctuation_counts)
             if sent_punctuation_counts else 0
@@ -283,10 +296,15 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             sum(received_punctuation_counts) / len(received_punctuation_counts)
             if received_punctuation_counts else 0
         )
-        
+
         double_texts = self._count_double_texts(sent_messages)
-        
-        return {
+        sentiment_stats = self._analyze_sentiment(
+            sent_messages,
+            received_messages,
+            interval=self._sentiment_interval,
+        )
+
+        result = {
             "avg_message_length_sent": round(avg_length_sent, 2),
             "avg_message_length_received": round(avg_length_received, 2),
             "avg_punctuation_sent": round(avg_punctuation_sent, 2),
@@ -311,54 +329,224 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "double_text_count": double_texts["count"],
             "double_text_percentage": double_texts["percentage"],
         }
-    
+
+        if sentiment_stats:
+            result["sentiment"] = sentiment_stats
+
+        return result
+
     def _count_double_texts(self, sent_messages: list[Message]) -> dict[str, Any]:
         if not sent_messages:
             return {"count": 0, "percentage": 0.0}
-        
+
         sorted_msgs = sorted(sent_messages, key=lambda m: m.timestamp)
-        
+
         double_text_count = 0
         i = 0
         while i < len(sorted_msgs) - 1:
             current = sorted_msgs[i]
             next_msg = sorted_msgs[i + 1]
-            
+
             time_diff = (next_msg.timestamp - current.timestamp).total_seconds()
-            
+
             if time_diff < 300:
                 double_text_count += 1
                 while i < len(sorted_msgs) - 1 and (sorted_msgs[i + 1].timestamp - current.timestamp).total_seconds() < 300:
                     i += 1
             i += 1
-        
+
         percentage = round(double_text_count / len(sorted_msgs) * 100, 2) if sorted_msgs else 0
-        
+
         return {
             "count": double_text_count,
             "percentage": percentage,
         }
-    
+
+    def _analyze_sentiment(
+        self,
+        sent_messages: list[Message],
+        received_messages: list[Message],
+        interval: str = "month",
+    ) -> dict[str, Any]:
+        sent_bucket = self._score_sentiment_messages(sent_messages, interval)
+        received_bucket = self._score_sentiment_messages(received_messages, interval)
+        overall_bucket = self._combine_sentiment_buckets(sent_bucket, received_bucket)
+
+        if overall_bucket["message_count"] == 0:
+            return {}
+
+        return {
+            "overall": self._public_sentiment_view(overall_bucket),
+            "sent": self._public_sentiment_view(sent_bucket),
+            "received": self._public_sentiment_view(received_bucket),
+            "periods": {
+                "interval": interval,
+                "overall": self._format_period_trend(overall_bucket["period_totals"]),
+                "sent": self._format_period_trend(sent_bucket["period_totals"]),
+                "received": self._format_period_trend(received_bucket["period_totals"]),
+            },
+        }
+
+    def _score_sentiment_messages(
+        self,
+        messages: list[Message],
+        interval: str,
+    ) -> dict[str, Any]:
+        distribution = {"positive": 0, "neutral": 0, "negative": 0}
+        total_score = 0.0
+        total_messages = 0
+        period_totals: dict[str, dict[str, Any]] = {}
+
+        for msg in messages:
+            text = (msg.text or "").strip()
+            if not text:
+                continue
+
+            result = self._sentiment_analyzer.analyze(text)
+            distribution[result.label] += 1
+            total_score += result.score
+            total_messages += 1
+
+            period_key = self._period_key(msg.timestamp, interval)
+            period_bucket = period_totals.setdefault(
+                period_key,
+                {
+                    "sum": 0.0,
+                    "count": 0,
+                    "distribution": {"positive": 0, "neutral": 0, "negative": 0},
+                },
+            )
+            period_bucket["sum"] += result.score
+            period_bucket["count"] += 1
+            period_bucket["distribution"][result.label] += 1
+
+        return {
+            "distribution": distribution,
+            "score_sum": total_score,
+            "message_count": total_messages,
+            "period_totals": period_totals,
+        }
+
+    def _combine_sentiment_buckets(self, *buckets: dict[str, Any]) -> dict[str, Any]:
+        distribution = {"positive": 0, "neutral": 0, "negative": 0}
+        total_score = 0.0
+        total_messages = 0
+        period_totals: dict[str, dict[str, Any]] = {}
+
+        for bucket in buckets:
+            for label, count in bucket["distribution"].items():
+                distribution[label] += count
+            total_score += bucket["score_sum"]
+            total_messages += bucket["message_count"]
+
+            for period, values in bucket["period_totals"].items():
+                period_bucket = period_totals.setdefault(
+                    period,
+                    {
+                        "sum": 0.0,
+                        "count": 0,
+                        "distribution": {"positive": 0, "neutral": 0, "negative": 0},
+                    },
+                )
+                period_bucket["sum"] += values["sum"]
+                period_bucket["count"] += values["count"]
+                for label, count in values["distribution"].items():
+                    period_bucket["distribution"][label] += count
+
+        return {
+            "distribution": distribution,
+            "score_sum": total_score,
+            "message_count": total_messages,
+            "period_totals": period_totals,
+        }
+
+    def _public_sentiment_view(self, bucket: dict[str, Any]) -> dict[str, Any]:
+        avg_score = (
+            round(bucket["score_sum"] / bucket["message_count"], 3)
+            if bucket["message_count"] else 0.0
+        )
+
+        distribution = {
+            "positive": bucket["distribution"]["positive"],
+            "neutral": bucket["distribution"]["neutral"],
+            "negative": bucket["distribution"]["negative"],
+        }
+
+        return {
+            "distribution": distribution,
+            "avg_score": avg_score,
+            "message_count": bucket["message_count"],
+        }
+
+    def _format_period_trend(self, period_totals: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        trend = []
+        for period in sorted(period_totals.keys()):
+            values = period_totals[period]
+            count = values["count"]
+            if not count:
+                continue
+            avg = round(values["sum"] / count, 3)
+            trend.append({
+                "period": period,
+                "avg_score": avg,
+                "message_count": count,
+                "distribution": dict(values["distribution"]),
+            })
+        return trend
+
+    def _period_key(self, timestamp: datetime, interval: str) -> str:
+        interval = interval.lower()
+        if interval == "month":
+            return timestamp.strftime("%Y-%m")
+        if interval == "week":
+            iso = timestamp.isocalendar()
+            return f"{iso.year}-W{iso.week:02d}"
+        if interval == "day":
+            return timestamp.strftime("%Y-%m-%d")
+        raise ValueError(f"Unsupported sentiment interval: {interval}")
+
+    def _should_include_message(
+        self,
+        message: Message,
+        year: int,
+        include_context: bool = False,
+    ) -> bool:
+        if include_context:
+            return True
+        if getattr(message, "is_context_only", False):
+            return False
+        return message.timestamp.year == year
+
+    def _filter_conversation_messages(
+        self,
+        conversation: Conversation,
+        year: int,
+    ) -> list[Message]:
+        return [
+            msg for msg in conversation.messages
+            if self._should_include_message(msg, year, include_context=False)
+        ]
+
     def _analyze_conversations(self, data: ExportData) -> dict[str, Any]:
         group_chats = [c for c in data.conversations.values() if c.is_group_chat]
         one_on_one = [c for c in data.conversations.values() if not c.is_group_chat]
-        
+
         group_message_count = sum(c.message_count for c in group_chats)
         one_on_one_message_count = sum(c.message_count for c in one_on_one)
         total = group_message_count + one_on_one_message_count
-        
+
         most_active = max(
             data.conversations.values(),
             key=lambda c: c.message_count,
             default=None
         )
-        
+
         most_active_group = max(
             group_chats,
             key=lambda c: c.message_count,
             default=None
         ) if group_chats else None
-        
+
         return {
             "total_conversations": len(data.conversations),
             "group_chats": len(group_chats),
@@ -377,25 +565,28 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 "message_count": most_active_group.message_count if most_active_group else 0,
             } if most_active_group else None,
         }
-    
+
     def _analyze_response_times(self, data: ExportData) -> dict[str, Any]:
         response_times_you = []
         response_times_them = []
-        
+
         for conv in data.conversations.values():
-            messages = sorted(conv.messages, key=lambda m: m.timestamp)
-            
+            messages = self._filter_conversation_messages(conv, data.year)
+            if len(messages) < 2:
+                continue
+            messages = sorted(messages, key=lambda m: m.timestamp)
+
             for i in range(len(messages) - 1):
                 current = messages[i]
                 next_msg = messages[i + 1]
-                
+
                 time_diff_seconds = (next_msg.timestamp - current.timestamp).total_seconds()
-                
+
                 if current.is_from_me and not next_msg.is_from_me:
                     response_times_them.append(time_diff_seconds)
                 elif not current.is_from_me and next_msg.is_from_me:
                     response_times_you.append(time_diff_seconds)
-        
+
         def format_duration(seconds: float) -> str:
             if seconds < 60:
                 return f"{int(seconds)}s"
@@ -409,7 +600,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 days = int(seconds // 86400)
                 hours = int((seconds % 86400) // 3600)
                 return f"{days}d {hours}h"
-        
+
         def calculate_median(times: list[float]) -> float:
             if not times:
                 return 0
@@ -418,10 +609,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             if n % 2 == 0:
                 return (sorted_times[n//2 - 1] + sorted_times[n//2]) / 2
             return sorted_times[n//2]
-        
+
         median_response_you = calculate_median(response_times_you)
         median_response_them = calculate_median(response_times_them)
-        
+
         return {
             "median_response_time_you_seconds": round(median_response_you, 2),
             "median_response_time_you_formatted": format_duration(median_response_you),
@@ -430,7 +621,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "total_responses_you": len(response_times_you),
             "total_responses_them": len(response_times_them),
         }
-    
+
     def _analyze_tapbacks(
         self,
         all_messages: list[Message],
@@ -439,17 +630,17 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
     ) -> dict[str, Any]:
         tapbacks_given = []
         tapbacks_received = []
-        
+
         for msg in all_messages:
             for tapback in msg.tapbacks:
                 if tapback.by == "Me":
                     tapbacks_given.append(tapback.type)
                 else:
                     tapbacks_received.append(tapback.type)
-        
+
         tapback_counter_given = Counter(tapbacks_given)
         tapback_counter_received = Counter(tapbacks_received)
-        
+
         return {
             "total_tapbacks_given": len(tapbacks_given),
             "total_tapbacks_received": len(tapbacks_received),
@@ -461,11 +652,11 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
 
 class NLPStatisticsAnalyzer(StatisticsAnalyzer):
-    
+
     @property
     def name(self) -> str:
         return "nlp"
-    
+
     def analyze(self, data: ExportData) -> dict[str, Any]:
         return {
             "status": "not_implemented",
@@ -481,11 +672,11 @@ class NLPStatisticsAnalyzer(StatisticsAnalyzer):
 
 
 class LLMStatisticsAnalyzer(StatisticsAnalyzer):
-    
+
     @property
     def name(self) -> str:
         return "llm"
-    
+
     def analyze(self, data: ExportData) -> dict[str, Any]:
         return {
             "status": "not_implemented",
@@ -498,4 +689,3 @@ class LLMStatisticsAnalyzer(StatisticsAnalyzer):
                 "comparative_analysis",
             ],
         }
-
