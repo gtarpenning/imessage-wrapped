@@ -49,10 +49,9 @@ export default function Home() {
           <p style={{ marginBottom: '1rem', opacity: 0.8, textAlign: 'center' }}>
             Or use the command line:
           </p>
-          <ol style={{ textAlign: 'center', lineHeight: '2.5', listStyle: 'none', padding: 0 }}>
-            <li><span style={{ display: 'inline-block', width: '70px', textAlign: 'right', marginRight: '0.5rem' }}>Install:</span> <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>pip install imessage-wrapped</code></li>
-            <li><span style={{ display: 'inline-block', width: '70px', textAlign: 'right', marginRight: '0.5rem' }}>Run:</span> <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>imexport analyze</code></li>
-          </ol>
+          <pre style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '0.5rem', textAlign: 'left', maxWidth: '500px', margin: '0 auto', overflow: 'auto' }}>
+            <code>pip install imessage-wrapped{'\n'}imexport analyze</code>
+          </pre>
           <p style={{ marginTop: '1.5rem', opacity: 0.7, textAlign: 'center' }}>
             <a 
               href="https://github.com/gtarpenning/imessage-wrapped" 
