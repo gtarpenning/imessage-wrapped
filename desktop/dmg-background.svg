@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600" height="450" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="600" height="450" fill="#f5f5f7"/>
+  
+  <!-- Gradient for a modern look -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fafafa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e8e8e8;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Arrow marker -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" 
+            refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#007AFF" />
+    </marker>
+  </defs>
+  
+  <rect width="600" height="450" fill="url(#bgGradient)"/>
+  
+  <!-- Instruction text at top -->
+  <text x="300" y="40" 
+        font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" 
+        font-size="24" 
+        font-weight="600" 
+        fill="#1d1d1f" 
+        text-anchor="middle">
+    Install iMessage Wrapped
+  </text>
+  
+  <text x="300" y="70" 
+        font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif" 
+        font-size="14" 
+        fill="#86868b" 
+        text-anchor="middle">
+    Drag the app icon to the Applications folder
+  </text>
+  
+  <!-- Arrow showing drag direction -->
+  <line x1="220" y1="200" x2="380" y2="200" 
+        stroke="#007AFF" 
+        stroke-width="3" 
+        marker-end="url(#arrowhead)"
+        stroke-dasharray="5,5">
+    <animate attributeName="stroke-dashoffset" 
+             from="0" to="-10" 
+             dur="0.5s" 
+             repeatCount="indefinite"/>
+  </line>
+  
+  <!-- Circular backgrounds for icons (icons are 100x100, so radius 50) -->
+  <circle cx="150" cy="200" r="52" fill="#ffffff" opacity="0.6" 
+          stroke="#d2d2d7" stroke-width="1"/>
+  <circle cx="450" cy="200" r="52" fill="#ffffff" opacity="0.6" 
+          stroke="#d2d2d7" stroke-width="1"/>
+  
+  <!-- App placeholder text (the actual icon will be shown) -->
+  <text x="150" y="290" 
+        font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif" 
+        font-size="12" 
+        fill="#1d1d1f" 
+        text-anchor="middle"
+        font-weight="500">
+    iMessage Wrapped
+  </text>
+  
+  <!-- Applications folder label -->
+  <text x="450" y="290" 
+        font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif" 
+        font-size="12" 
+        fill="#1d1d1f" 
+        text-anchor="middle"
+        font-weight="500">
+    Applications
+  </text>
+  
+  <!-- Bottom instruction -->
+  <text x="300" y="410" 
+        font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif" 
+        font-size="11" 
+        fill="#86868b" 
+        text-anchor="middle">
+    After installation, find it in your Applications folder
+  </text>
+</svg>
+

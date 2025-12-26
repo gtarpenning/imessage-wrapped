@@ -23,9 +23,19 @@ echo "🔐 Signing: $ORIGINAL_DMG"
 echo ""
 
 # Mount and extract
-echo "📂 Extracting app from DMG..."
+echo "📂 Extracting contents from DMG..."
 hdiutil attach "$ORIGINAL_DMG" -mountpoint /Volumes/iMessageWrapped -nobrowse -quiet
 cp -R "/Volumes/iMessageWrapped/iMessage Wrapped.app" ./
+
+# Preserve the background and DS_Store from original DMG
+echo "  Preserving DMG appearance settings..."
+if [ -d "/Volumes/iMessageWrapped/.background" ]; then
+    cp -R "/Volumes/iMessageWrapped/.background" ./dmg-background-temp/ 2>/dev/null || true
+fi
+if [ -f "/Volumes/iMessageWrapped/.DS_Store" ]; then
+    cp "/Volumes/iMessageWrapped/.DS_Store" ./DS_Store.temp 2>/dev/null || true
+fi
+
 hdiutil detach /Volumes/iMessageWrapped -quiet
 echo "✅ Extracted"
 
@@ -78,7 +88,7 @@ fi
 # Create new DMG
 echo ""
 echo "📀 Creating signed DMG..."
-SIGNED_DMG="signed-$(basename "$ORIGINAL_DMG")"
+SIGNED_DMG="$(basename "$ORIGINAL_DMG")"
 TEMP_DMG="temp.dmg"
 VOLUME_NAME="iMessage Wrapped"
 MOUNT_DIR="/Volumes/${VOLUME_NAME}"
@@ -94,7 +104,7 @@ hdiutil create -size 300m -fs HFS+ -volname "${VOLUME_NAME}" "${TEMP_DMG}"
 echo "Attaching temporary DMG..."
 # Unmount if already mounted
 hdiutil detach "${MOUNT_DIR}" 2>/dev/null || true
-hdiutil attach "${TEMP_DMG}" -mountpoint "${MOUNT_DIR}" -nobrowse
+hdiutil attach "${TEMP_DMG}" -mountpoint "${MOUNT_DIR}"
 
 echo "Copying app bundle to temporary DMG..."
 cp -R "$APP_PATH" "${MOUNT_DIR}/" || { echo "❌ Copy failed"; exit 1; }
@@ -102,33 +112,94 @@ cp -R "$APP_PATH" "${MOUNT_DIR}/" || { echo "❌ Copy failed"; exit 1; }
 echo "Creating Applications symlink..."
 ln -s /Applications "${MOUNT_DIR}/Applications" || { echo "❌ Symlink failed"; exit 1; }
 
+# Restore background folder from original DMG, or create new one
+if [ -d "dmg-background-temp" ]; then
+    echo "Restoring background from original DMG..."
+    cp -R dmg-background-temp "${MOUNT_DIR}/.background"
+else
+    # Create background image if it doesn't exist
+    if [ ! -f "dmg-background.png" ]; then
+        echo "Creating DMG background image..."
+        bash create-dmg-background.sh
+    fi
+    
+    # Copy background image to DMG (hidden)
+    echo "Adding background image..."
+    mkdir -p "${MOUNT_DIR}/.background"
+    cp dmg-background.png "${MOUNT_DIR}/.background/"
+fi
+
+# Restore .DS_Store from original DMG if it exists
+if [ -f "DS_Store.temp" ]; then
+    echo "Restoring window settings from original DMG..."
+    cp DS_Store.temp "${MOUNT_DIR}/.DS_Store"
+    # Clean up temp files
+    rm -rf dmg-background-temp DS_Store.temp
+fi
+
 echo "Syncing..."
 sync
 
-# Icon layout (with timeout to prevent hanging)
-# timeout 10 osascript <<EOF 2>/dev/null || true
-# tell application "Finder"
-#   tell disk "${VOLUME_NAME}"
-#     open
-#     set current view of container window to icon view
-#     set toolbar visible of container window to false
-#     set statusbar visible of container window to false
-#     set the bounds of container window to {400, 100, 900, 500}
-#     set viewOptions to the icon view options of container window
-#     set arrangement of viewOptions to not arranged
-#     set icon size of viewOptions to 100
-#     set position of item "iMessage Wrapped.app" of container window to {120, 160}
-#     set position of item "Applications" of container window to {380, 160}
-#     close
-#     update without registering applications
-#   end tell
-# end tell
-# EOF
+# Only configure appearance if we don't have a .DS_Store from original
+if [ ! -f "${MOUNT_DIR}/.DS_Store" ]; then
+    # Configure DMG appearance with AppleScript
+    echo "Configuring DMG window appearance..."
+    echo "  (This may take a few seconds...)"
+    
+    # Run AppleScript with better error handling
+    if osascript <<EOF
+tell application "Finder"
+    tell disk "${VOLUME_NAME}"
+        open
+        set current view of container window to icon view
+        set toolbar visible of container window to false
+        set statusbar visible of container window to false
+        set the bounds of container window to {100, 100, 700, 550}
+        set viewOptions to the icon view options of container window
+        set arrangement of viewOptions to not arranged
+        set icon size of viewOptions to 100
+        set background picture of viewOptions to file ".background:dmg-background.png"
+        set position of item "iMessage Wrapped.app" of container window to {150, 200}
+        set position of item "Applications" of container window to {450, 200}
+        update without registering applications
+        delay 1
+    end tell
+end tell
+EOF
+    then
+        echo "✅ DMG appearance configured"
+    else
+        echo "⚠️  AppleScript configuration had issues, but continuing..."
+    fi
+    
+    # Keep window open briefly to ensure settings are saved
+    sleep 2
+else
+    echo "✅ Using appearance settings from original DMG"
+fi
+
+sync
+
+echo "Finalizing DMG settings..."
+# Close any Finder windows to ensure settings are saved
+osascript -e "tell application \"Finder\" to close every window" 2>/dev/null || true
+sleep 2
 
 echo "Detaching volume..."
-hdiutil detach "${MOUNT_DIR}" -quiet
+for i in {1..5}; do
+    if hdiutil detach "${MOUNT_DIR}" -quiet 2>/dev/null; then
+        echo "✅ Volume unmounted cleanly"
+        break
+    fi
+    echo "  Waiting for Finder to release volume (attempt $i/5)..."
+    sleep 2
+    if [ $i -eq 5 ]; then
+        echo "  Using force unmount..."
+        hdiutil detach "${MOUNT_DIR}" -force || true
+    fi
+done
 echo "Converting to compressed DMG..."
-hdiutil convert "${TEMP_DMG}" -format UDZO -o "${SIGNED_DMG}" -quiet
+hdiutil convert "${TEMP_DMG}" -format UDZO -o "${SIGNED_DMG}"
 echo "Removing temporary DMG..."
 rm "${TEMP_DMG}"
 
@@ -176,6 +247,7 @@ if [ $NOTARIZE_STATUS -eq 0 ]; then
     
     # Cleanup
     rm -rf "$APP_PATH"
+    rm -rf dmg-background-temp DS_Store.temp 2>/dev/null || true
     
     echo ""
     echo "🎉 SUCCESS!"
@@ -186,6 +258,7 @@ else
     echo "❌ Notarization failed"
     echo "Check logs with:"
     echo "  xcrun notarytool history --apple-id $APPLE_ID"
+    rm -rf "$APP_PATH" dmg-background-temp DS_Store.temp 2>/dev/null || true
     exit 1
 fi
 
