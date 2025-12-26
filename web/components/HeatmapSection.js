@@ -2,12 +2,21 @@
 
 import { useMemo } from 'react'
 
-export default function HeatmapSection({ volume }) {
+export default function HeatmapSection({ volume, year }) {
   if (!volume?.daily_activity) return null
 
   const heatmapData = useMemo(() => {
     const dailyActivity = volume.daily_activity
-    const dates = Object.keys(dailyActivity).sort()
+    
+    const filteredActivity = {}
+    Object.keys(dailyActivity).forEach(dateStr => {
+      const dateYear = new Date(dateStr).getFullYear()
+      if (dateYear === parseInt(year)) {
+        filteredActivity[dateStr] = dailyActivity[dateStr]
+      }
+    })
+    
+    const dates = Object.keys(filteredActivity).sort()
     
     if (dates.length === 0) return null
 
@@ -33,7 +42,7 @@ export default function HeatmapSection({ volume }) {
       let dayDate = new Date(monthStart)
       while (dayDate <= actualEnd) {
         const dateStr = dayDate.toISOString().split('T')[0]
-        const activity = dailyActivity[dateStr]
+        const activity = filteredActivity[dateStr]
         daysInMonth.push({
           date: dateStr,
           count: activity ? activity.total : 0,
@@ -51,7 +60,7 @@ export default function HeatmapSection({ volume }) {
       currentDate.setMonth(currentDate.getMonth() + 1)
     }
     
-    const allCounts = Object.values(dailyActivity).map(d => d.total)
+    const allCounts = Object.values(filteredActivity).map(d => d.total)
     const maxCount = Math.max(...allCounts)
     
     const percentiles = [
@@ -62,8 +71,8 @@ export default function HeatmapSection({ volume }) {
       maxCount
     ]
     
-    return { monthsData, maxCount, percentiles }
-  }, [volume.daily_activity])
+    return { monthsData, maxCount, percentiles, totalDays: dates.length }
+  }, [volume.daily_activity, year])
 
   if (!heatmapData) return null
 
@@ -189,7 +198,7 @@ export default function HeatmapSection({ volume }) {
         gap: '2rem',
         flexWrap: 'wrap',
       }}>
-        <span>Total days: {Object.keys(volume.daily_activity).length}</span>
+        <span>Active days in {year}: {heatmapData.totalDays}</span>
         <span>•</span>
         <span>Peak: {heatmapData.maxCount} messages</span>
       </div>

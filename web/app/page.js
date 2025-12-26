@@ -46,14 +46,14 @@ export default function Home() {
           borderRadius: '1rem',
           maxWidth: '600px'
         }}>
-          <p style={{ marginBottom: '1rem', opacity: 0.8 }}>
+          <p style={{ marginBottom: '1rem', opacity: 0.8, textAlign: 'center' }}>
             Or use the command line:
           </p>
-          <ol style={{ textAlign: 'left', lineHeight: '2' }}>
-            <li>Install: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>pip install imessage-wrapped</code></li>
-            <li>Run: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>imexport analyze</code></li>
+          <ol style={{ textAlign: 'center', lineHeight: '2.5', listStyle: 'none', padding: 0 }}>
+            <li><span style={{ display: 'inline-block', width: '70px', textAlign: 'right', marginRight: '0.5rem' }}>Install:</span> <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>pip install imessage-wrapped</code></li>
+            <li><span style={{ display: 'inline-block', width: '70px', textAlign: 'right', marginRight: '0.5rem' }}>Run:</span> <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>imexport analyze</code></li>
           </ol>
-          <p style={{ marginTop: '1.5rem', opacity: 0.7 }}>
+          <p style={{ marginTop: '1.5rem', opacity: 0.7, textAlign: 'center' }}>
             <a 
               href="https://github.com/gtarpenning/imessage-wrapped" 
               target="_blank" 

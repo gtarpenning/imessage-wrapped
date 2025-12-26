@@ -32,11 +32,12 @@ python gui.py
 ## How It Works
 
 1. 💌 icon appears in menu bar
-2. Click → "Analyze My Messages"
+2. Click → "Analyze my messages"
 3. Grant Full Disk Access if prompted
 4. Watch notifications (icon changes to ⏳)
 5. Browser opens automatically with your wrapped
 6. Done! (icon shows ✅ then returns to 💌)
+7. Use "📋 Copy link" to share your wrapped
 
 ## Building
 

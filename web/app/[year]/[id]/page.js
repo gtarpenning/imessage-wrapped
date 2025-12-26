@@ -63,7 +63,7 @@ export default function WrappedPage() {
     <main className="container">
       <HeroSection year={data.year} volume={stats.volume} />
       <VolumeSection volume={stats.volume} />
-      <HeatmapSection volume={stats.volume} />
+      <HeatmapSection volume={stats.volume} year={data.year} />
       <ContactsSection contacts={stats.contacts} />
       <TemporalSection temporal={stats.temporal} />
       <ContentSection content={stats.content} />
