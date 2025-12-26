@@ -1,4 +1,5 @@
 import StatCard from './StatCard'
+import { useEnhancement, PLAYFUL_INSTRUCTION } from '@/hooks/useEnhancement'
 
 const TAPBACK_EMOJIS = {
   'love': '❤️',
@@ -50,70 +51,92 @@ export default function TapbacksSection({ tapbacks }) {
       </div>
 
       {orderedTapbacks.length > 0 && (
-        <div style={{ marginTop: '2rem' }}>
-          <h3 style={{ textAlign: 'center', fontSize: '1.5rem', marginBottom: '1.5rem', opacity: 0.9 }}>
-            Your Reactions
-          </h3>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-            gap: '1rem',
-            maxWidth: '1100px',
-            margin: '0 auto'
-          }}>
-            {orderedTapbacks.map(type => (
-              <div 
-                key={type}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  borderRadius: '12px',
-                  padding: '1.5rem',
-                  textAlign: 'center',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>
-                  {TAPBACK_EMOJIS[type]}
-                </div>
-                <div style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '0.25rem' }}>
-                  {TAPBACK_LABELS[type]}
-                </div>
-                <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#a78bfa' }}>
-                  {tapbackDistribution[type].toLocaleString()}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {tapbackDistribution.like > 0 && tapbackDistribution.dislike > 0 && (
-            <div style={{ 
-              marginTop: '2rem',
-              textAlign: 'center',
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '16px',
-              padding: '2rem',
-              maxWidth: '400px',
-              margin: '2rem auto 0',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
-            }}>
-              <div style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '0.75rem' }}>
-                Like to Dislike Ratio
-              </div>
-              <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>
-                👍 / 👎
-              </div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#10b981' }}>
-                {Math.round(tapbackDistribution.like / tapbackDistribution.dislike)}:1
-              </div>
-              <div style={{ fontSize: '0.85rem', opacity: 0.6, marginTop: '0.5rem' }}>
-                {tapbackDistribution.like.toLocaleString()} likes vs {tapbackDistribution.dislike.toLocaleString()} dislikes
-              </div>
-            </div>
-          )}
-        </div>
+        <TapbackReactionsSection 
+          orderedTapbacks={orderedTapbacks}
+          tapbackDistribution={tapbackDistribution}
+        />
       )}
     </div>
+  )
+}
+
+function TapbackReactionsSection({ orderedTapbacks, tapbackDistribution }) {
+  const prompt = orderedTapbacks[0] 
+    ? `Your favorite tapback reaction is ${TAPBACK_LABELS[orderedTapbacks[0]]} ${TAPBACK_EMOJIS[orderedTapbacks[0]]} which you used ${tapbackDistribution[orderedTapbacks[0]]} times. ${PLAYFUL_INSTRUCTION}`
+    : null
+  
+  const { enhancement } = useEnhancement(prompt, !!prompt)
+  const title = enhancement || 'Your Reactions'
+
+  return (
+    <div style={{ marginTop: '2rem' }}>
+      <h3 style={{ 
+        textAlign: 'center', 
+        fontSize: '1.5rem', 
+        marginBottom: '1.5rem', 
+        opacity: 0.85,
+        fontStyle: enhancement ? 'italic' : 'normal'
+      }}>
+        {title}
+      </h3>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: '1rem',
+              maxWidth: '1100px',
+              margin: '0 auto'
+            }}>
+              {orderedTapbacks.map(type => (
+                <div 
+                  key={type}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '12px',
+                    padding: '1.5rem',
+                    textAlign: 'center',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>
+                    {TAPBACK_EMOJIS[type]}
+                  </div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '0.25rem' }}>
+                    {TAPBACK_LABELS[type]}
+                  </div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#a78bfa' }}>
+                    {tapbackDistribution[type].toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {tapbackDistribution.like > 0 && tapbackDistribution.dislike > 0 && (
+              <div style={{ 
+                marginTop: '2rem',
+                textAlign: 'center',
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '16px',
+                padding: '2rem',
+                maxWidth: '400px',
+                margin: '2rem auto 0',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}>
+                <div style={{ fontSize: '0.9rem', opacity: 0.7, marginBottom: '0.75rem' }}>
+                  Like to Dislike Ratio
+                </div>
+                <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>
+                  👍 / 👎
+                </div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#10b981' }}>
+                  {Math.round(tapbackDistribution.like / tapbackDistribution.dislike)}:1
+                </div>
+                <div style={{ fontSize: '0.85rem', opacity: 0.6, marginTop: '0.5rem' }}>
+                  {tapbackDistribution.like.toLocaleString()} likes vs {tapbackDistribution.dislike.toLocaleString()} dislikes
+                </div>
+              </div>
+            )}
+          </div>
   )
 }
 

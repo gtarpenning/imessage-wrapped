@@ -31,6 +31,19 @@ async function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_created_at ON wrapped_stats(created_at);
     `)
     
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS llm_cache (
+        prompt_hash TEXT PRIMARY KEY,
+        prompt TEXT NOT NULL,
+        completion TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `)
+    
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_llm_created_at ON llm_cache(created_at);
+    `)
+    
     console.log('✓ Database initialized successfully')
     
     // Test insert/select

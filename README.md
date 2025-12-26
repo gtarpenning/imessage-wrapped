@@ -24,7 +24,7 @@ See [`desktop/`](desktop/) for building from source.
 
 ```bash
 pip install imessage-wrapped
-imexport analyze
+imexport
 ```
 
 That's it! By default, the command will:
@@ -33,7 +33,7 @@ That's it! By default, the command will:
 3. ☁️ Upload anonymized statistics
 4. 🔗 Give you a shareable URL like: `https://imessage-wrapped.fly.dev/2025/abc123xyz`
 
-Want to see full details in the terminal instead? Use `imexport analyze --no-share`
+Want to see full details in the terminal instead? Use `imexport --no-share`
 
 ### Features
 
@@ -87,26 +87,26 @@ See `example_usage.py` for a complete working example.
 After installation, use the `imexport` command:
 
 ```bash
-# Export current year (default)
-imexport export
-
-# Export specific year
-imexport export --year 2024
-
-# Custom output path
-imexport export --output my_messages.json
-
-# Custom database path (for testing)
-imexport export --database /path/to/test/chat.db
-
-# Compact JSON (no indentation)
-imexport export --indent 0
-
 # Analyze and share (default behavior)
-imexport analyze
+imexport
 
 # Analyze with full terminal output (no sharing)
-imexport analyze --no-share
+imexport --no-share
+
+# Export specific year
+imexport --year 2024
+
+# Replace cached export
+imexport --replace-cache
+
+# Use local dev server
+imexport --dev
+
+# Custom database path
+imexport --database /path/to/test/chat.db
+
+# Save statistics to file
+imexport --output stats.json
 
 # Show help
 imexport --help
@@ -115,12 +115,8 @@ imexport --help
 **Alternatively**, run without installation:
 
 ```bash
-python -m imessage_wrapped export --year 2024
+python -m imessage_wrapped --year 2024
 ```
-
-**CLI Commands:**
-- `imexport export`: Export iMessage conversations to JSON
-- `imexport analyze`: Analyze and share your wrapped (auto-exports if needed, use `--no-share` for full terminal output)
 
 ## Requirements
 
