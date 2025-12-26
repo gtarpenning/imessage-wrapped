@@ -1,23 +1,23 @@
-import sys
 import argparse
 import logging
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
+import questionary
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
-import questionary
 
 from . import (
-    MessageService,
     Exporter,
-    require_database_access,
-    PermissionError,
     ExportLoader,
-    RawStatisticsAnalyzer,
-    NLPStatisticsAnalyzer,
     LLMStatisticsAnalyzer,
+    MessageService,
+    NLPStatisticsAnalyzer,
+    PermissionError,
+    RawStatisticsAnalyzer,
     TerminalDisplay,
+    require_database_access,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,20 +38,23 @@ def parse_args():
     )
 
     export_parser.add_argument(
-        "-y", "--year",
+        "-y",
+        "--year",
         type=int,
         default=datetime.now().year,
         help="Year to export (default: current year)",
     )
 
     export_parser.add_argument(
-        "-o", "--output",
+        "-o",
+        "--output",
         type=str,
         help="Output file path (default: exports/imessage_export_YEAR.jsonl)",
     )
 
     export_parser.add_argument(
-        "-d", "--database",
+        "-d",
+        "--database",
         type=str,
         help="Path to chat.db (default: ~/Library/Messages/chat.db)",
     )
@@ -192,7 +195,7 @@ def export_command(args):
 
     if output_file.exists() and not args.replace_cache:
         console.print(f"\n[yellow]ℹ[/] Export file already exists: [cyan]{output_path}[/]")
-        console.print(f"[dim]Use --replace-cache to regenerate[/]")
+        console.print("[dim]Use --replace-cache to regenerate[/]")
         return
 
     with Progress(
@@ -207,7 +210,8 @@ def export_command(args):
 
         progress.update(task, description=f"Writing {data.total_messages} messages to file...")
 
-        from .exporter import JSONSerializer, JSONLSerializer
+        from .exporter import JSONLSerializer, JSONSerializer
+
         if args.format == "json":
             serializer = JSONSerializer(indent=args.indent if args.indent > 0 else None)
         else:
@@ -215,7 +219,9 @@ def export_command(args):
         exporter = Exporter(serializer=serializer)
         exporter.export_to_file(data, output_path)
 
-    console.print(f"\n[green]✓[/] Exported {data.total_messages} messages to [cyan]{output_path}[/]")
+    console.print(
+        f"\n[green]✓[/] Exported {data.total_messages} messages to [cyan]{output_path}[/]"
+    )
     console.print(f"[dim]Conversations: {len(data.conversations)}[/]")
 
 
@@ -228,13 +234,13 @@ def analyze_command(args):
 
         if exports_dir.exists():
             export_files = sorted(
-                [f for f in exports_dir.iterdir() if f.suffix in ['.json', '.jsonl']],
+                [f for f in exports_dir.iterdir() if f.suffix in [".json", ".jsonl"]],
                 key=lambda x: x.stat().st_mtime,
-                reverse=True
+                reverse=True,
             )
 
         if not export_files:
-            console.print(f"[yellow]ℹ[/] No export found. Exporting messages first...\n")
+            console.print("[yellow]ℹ[/] No export found. Exporting messages first...\n")
 
             export_args = argparse.Namespace(
                 year=datetime.now().year,
@@ -249,17 +255,17 @@ def analyze_command(args):
             export_command(export_args)
 
             if not exports_dir.exists():
-                console.print(f"[red]✗[/] Export failed.")
+                console.print("[red]✗[/] Export failed.")
                 sys.exit(1)
 
             export_files = sorted(
-                [f for f in exports_dir.iterdir() if f.suffix in ['.json', '.jsonl']],
+                [f for f in exports_dir.iterdir() if f.suffix in [".json", ".jsonl"]],
                 key=lambda x: x.stat().st_mtime,
-                reverse=True
+                reverse=True,
             )
 
         if not export_files:
-            console.print(f"[red]✗[/] Export failed.")
+            console.print("[red]✗[/] Export failed.")
             sys.exit(1)
 
         if args.share or len(export_files) == 1:
@@ -268,15 +274,11 @@ def analyze_command(args):
             choices = []
             for file in export_files:
                 size_mb = file.stat().st_size / (1024 * 1024)
-                choices.append(questionary.Choice(
-                    title=f"{file.name} ({size_mb:.1f} MB)",
-                    value=file
-                ))
+                choices.append(
+                    questionary.Choice(title=f"{file.name} ({size_mb:.1f} MB)", value=file)
+                )
 
-            selected = questionary.select(
-                "Select export file to analyze:",
-                choices=choices
-            ).ask()
+            selected = questionary.select("Select export file to analyze:", choices=choices).ask()
 
             if selected is None:
                 sys.exit(0)
@@ -320,9 +322,10 @@ def analyze_command(args):
 
     if args.output:
         import json
+
         output_path = Path(args.output)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(statistics, f, indent=2, ensure_ascii=False)
         console.print(f"\n[green]✓[/] Statistics saved to [cyan]{args.output}[/]")
 
@@ -335,7 +338,7 @@ def analyze_command(args):
         server_url = "http://localhost:3000" if args.dev else args.server_url
         uploader = StatsUploader(base_url=server_url)
 
-        year = data.year if hasattr(data, 'year') else datetime.now().year
+        year = data.year if hasattr(data, "year") else datetime.now().year
         share_url = uploader.upload(year, statistics)
 
         if not share_url:
@@ -348,8 +351,7 @@ def main():
 
     if args.debug:
         logging.basicConfig(
-            level=logging.DEBUG,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
         logger.debug("Debug logging enabled")
 
