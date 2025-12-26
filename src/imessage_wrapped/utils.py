@@ -62,6 +62,16 @@ def get_tapback_type(associated_message_type: int) -> str | None:
     return TAPBACK_MAP.get(associated_message_type)
 
 
+def strip_guid_prefix(guid: str | None) -> str | None:
+    if not guid:
+        return None
+    if '/' in guid:
+        return guid.split('/', 1)[1]
+    elif ':' in guid:
+        return guid.split(':', 1)[1]
+    return guid
+
+
 def extract_text_from_attributed_body(blob: bytes) -> str | None:
     if not blob:
         return None

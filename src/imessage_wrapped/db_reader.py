@@ -109,4 +109,37 @@ class DatabaseReader:
             participants[chat_id].append(participant_id)
         
         return participants
+    
+    def fetch_messages_by_guids(self, guids: list[str]) -> Iterator[dict]:
+        if not guids:
+            return
+        
+        placeholders = ','.join('?' * len(guids))
+        query = f"""
+        SELECT 
+            m.ROWID as message_id,
+            m.guid as message_guid,
+            m.text,
+            m.attributedBody as attributed_body,
+            m.date,
+            m.date_read,
+            m.is_from_me,
+            m.cache_has_attachments,
+            m.associated_message_guid,
+            m.associated_message_type,
+            h.id as sender_id,
+            h.service,
+            c.ROWID as chat_id,
+            c.chat_identifier,
+            c.display_name as chat_display_name
+        FROM message m
+        LEFT JOIN handle h ON m.handle_id = h.ROWID
+        LEFT JOIN chat_message_join cmj ON m.ROWID = cmj.message_id
+        LEFT JOIN chat c ON cmj.chat_id = c.ROWID
+        WHERE m.guid IN ({placeholders})
+        """
+        
+        cursor = self._conn.execute(query, guids)
+        for row in cursor:
+            yield dict(row)
 

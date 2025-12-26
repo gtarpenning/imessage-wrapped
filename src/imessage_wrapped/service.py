@@ -10,6 +10,7 @@ from .utils import (
     is_tapback,
     get_tapback_type,
     extract_text_from_attributed_body,
+    strip_guid_prefix,
 )
 
 
@@ -37,7 +38,7 @@ class MessageProcessor:
     def _build_conversations(self, year: int) -> dict[str, Conversation]:
         chat_participants = self.reader.fetch_chat_participants()
         conversations = {}
-        message_index = defaultdict(list)
+        message_index = {}
         tapback_queue = []
         
         for row in self.reader.fetch_messages(year):
@@ -60,6 +61,39 @@ class MessageProcessor:
             if message:
                 conversations[chat_key].messages.append(message)
                 message_index[message.guid] = message
+        
+        missing_parent_guids = []
+        for tapback_row in tapback_queue:
+            parent_guid = strip_guid_prefix(tapback_row['associated_message_guid'])
+            if parent_guid and parent_guid not in message_index:
+                missing_parent_guids.append(parent_guid)
+        
+        if missing_parent_guids:
+            unique_missing = list(set(missing_parent_guids))
+            logger.debug(f"Fetching {len(unique_missing)} unique parent messages for tapbacks from other years")
+            logger.debug(f"Sample GUIDs: {unique_missing[:5]}")
+            fetched_count = 0
+            added_to_index = 0
+            tapback_messages = 0
+            for row in self.reader.fetch_messages_by_guids(unique_missing):
+                fetched_count += 1
+                if is_tapback(row['associated_message_type']):
+                    tapback_messages += 1
+                    continue
+                message = self._create_message(row)
+                if message:
+                    message_index[message.guid] = message
+                    added_to_index += 1
+                    
+                    chat_id = row['chat_id']
+                    if chat_id:
+                        chat_key = f"chat_{chat_id}"
+                        if chat_key not in conversations:
+                            conversations[chat_key] = self._create_conversation(
+                                row, chat_id, chat_participants
+                            )
+                        conversations[chat_key].messages.append(message)
+            logger.debug(f"Fetched {fetched_count} rows from DB, skipped {tapback_messages} tapback messages, added {added_to_index} parent messages to index")
         
         self._apply_tapbacks(tapback_queue, message_index)
         
@@ -111,15 +145,27 @@ class MessageProcessor:
         )
     
     def _apply_tapbacks(self, tapback_queue: list[dict], message_index: dict[str, Message]) -> None:
+        total_tapbacks = len(tapback_queue)
+        applied_count = 0
+        skipped_no_guid = 0
+        skipped_no_type = 0
+        skipped_no_parent = 0
+        
         for tapback_row in tapback_queue:
-            parent_guid = tapback_row['associated_message_guid']
+            parent_guid = strip_guid_prefix(tapback_row['associated_message_guid'])
             tapback_type = get_tapback_type(tapback_row['associated_message_type'])
             
-            if not parent_guid or not tapback_type:
+            if not parent_guid:
+                skipped_no_guid += 1
+                continue
+            
+            if not tapback_type:
+                skipped_no_type += 1
                 continue
             
             parent_message = message_index.get(parent_guid)
             if not parent_message:
+                skipped_no_parent += 1
                 continue
             
             sender = ME if tapback_row['is_from_me'] else (tapback_row['sender_id'] or "Unknown")
@@ -127,6 +173,11 @@ class MessageProcessor:
             parent_message.tapbacks.append(
                 Tapback(type=tapback_type, by=sender)
             )
+            applied_count += 1
+        
+        logger.debug(f"Tapback application stats: total={total_tapbacks}, applied={applied_count}, "
+                    f"skipped_no_guid={skipped_no_guid}, skipped_no_type={skipped_no_type}, "
+                    f"skipped_no_parent={skipped_no_parent}")
 
 
 class MessageService:
