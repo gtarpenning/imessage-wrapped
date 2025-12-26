@@ -3,7 +3,7 @@
 
 set -e
 
-VERSION="1.0.14"
+VERSION="1.0.15"
 
 echo "🏗️  Building iMessage Wrapped v${VERSION} (Production)..."
 echo ""
@@ -37,10 +37,18 @@ VOLUME_NAME="iMessage Wrapped"
 MOUNT_DIR="/Volumes/${VOLUME_NAME}"
 
 echo "🔍 DEBUG: Checking for existing mounts at ${MOUNT_DIR}..."
-if [ -d "${MOUNT_DIR}" ]; then
-    echo "  ⚠️  Mount point already exists, attempting cleanup..."
-    hdiutil detach "${MOUNT_DIR}" -force 2>/dev/null || true
-    sleep 1
+# Check for ALL mounts at this path (there could be multiple!)
+EXISTING_MOUNTS=$(mount | grep "/Volumes/${VOLUME_NAME}" | awk '{print $1}' || true)
+if [ -n "$EXISTING_MOUNTS" ]; then
+    echo "  ⚠️  Found existing mounts, cleaning up..."
+    while IFS= read -r device; do
+        if [ -n "$device" ]; then
+            echo "    Unmounting $device..."
+            hdiutil detach "$device" -force 2>/dev/null || true
+        fi
+    done <<< "$EXISTING_MOUNTS"
+    sleep 2
+    echo "  ✅ Cleanup complete"
 fi
 
 echo "🔍 DEBUG: Cleaning up any existing temp.dmg..."
@@ -52,8 +60,9 @@ hdiutil create -size 300m -fs HFS+ -volname "${VOLUME_NAME}" "${TEMP_DMG}"
 
 # Mount it
 echo "🔍 DEBUG: Mounting DMG at ${MOUNT_DIR}..."
-hdiutil attach "${TEMP_DMG}" -mountpoint "${MOUNT_DIR}" -nobrowse
-echo "🔍 DEBUG: Mount successful"
+ATTACH_OUTPUT=$(hdiutil attach "${TEMP_DMG}" -mountpoint "${MOUNT_DIR}" -nobrowse)
+MOUNTED_DEVICE=$(echo "$ATTACH_OUTPUT" | grep "/dev/disk" | awk '{print $1}' | head -n 1)
+echo "🔍 DEBUG: Mount successful - Device: $MOUNTED_DEVICE"
 echo "🔍 DEBUG: Current mounts:"
 mount | grep -i "iMessage\|/Volumes" || echo "  No relevant mounts found"
 
@@ -89,15 +98,15 @@ sleep 2
 echo "🔍 DEBUG: Checking for processes accessing the volume..."
 lsof | grep "${MOUNT_DIR}" || echo "  No processes found accessing ${MOUNT_DIR}"
 
-echo "🔍 DEBUG: Attempting to unmount ${MOUNT_DIR}..."
+echo "🔍 DEBUG: Attempting to unmount device ${MOUNTED_DEVICE}..."
 echo "🔍 DEBUG: Current mounts before detach:"
-mount | grep -i "iMessage\|/Volumes" || echo "  No relevant mounts found"
+mount | grep -i "iMessage" || echo "  No iMessage mounts found"
 
-# Unmount quickly with retry logic
+# Unmount by DEVICE not path (handles multiple mounts at same path)
 DETACH_SUCCESS=0
 for i in {1..5}; do
-    echo "🔍 DEBUG: Detach attempt $i/5..."
-    if hdiutil detach "${MOUNT_DIR}" -quiet 2>/dev/null; then
+    echo "🔍 DEBUG: Detach attempt $i/5 for device ${MOUNTED_DEVICE}..."
+    if hdiutil detach "${MOUNTED_DEVICE}" -quiet 2>/dev/null; then
         echo "🔍 DEBUG: ✅ Successfully detached on attempt $i"
         DETACH_SUCCESS=1
         break
@@ -108,7 +117,7 @@ done
 
 if [ $DETACH_SUCCESS -eq 0 ]; then
     echo "🔍 DEBUG: ⚠️  Regular detach failed, trying force detach..."
-    if hdiutil detach "${MOUNT_DIR}" -force; then
+    if hdiutil detach "${MOUNTED_DEVICE}" -force; then
         echo "🔍 DEBUG: ✅ Force detach successful"
     else
         echo "🔍 DEBUG: ❌ Even force detach failed!"
