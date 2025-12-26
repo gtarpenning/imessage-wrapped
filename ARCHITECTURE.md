@@ -149,7 +149,7 @@ src/imessage_wrapped/
 ```
 desktop/
 ├── gui.py               # rumps menu bar app
-│   └─ iMessageWrappedApp
+│   └─ IMessageWrappedApp
 │      ├─ Analyze messages (background thread)
 │      ├─ Copy link (to clipboard)
 │      ├─ View logs (open Console.app)
@@ -580,7 +580,7 @@ export function checkRateLimit(ip) {
 ### 5. Desktop App Background Processing
 
 ```python
-# desktop/gui.py - iMessageWrappedApp
+# desktop/gui.py - IMessageWrappedApp
 
 def _run_analysis(self):
     # Runs in background thread to avoid blocking UI

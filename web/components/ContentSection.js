@@ -152,7 +152,7 @@ function EmojiSection({ content }) {
         </p>
       )}
       <div className="emoji-grid">
-        {content.most_used_emojis.slice(0, 5).map((emoji, index) => (
+        {content.most_used_emojis.slice(0, 10).map((emoji, index) => (
           <div key={index} className="emoji-item">
             <div className="emoji">{emoji.emoji}</div>
             <div className="count">{emoji.count}</div>

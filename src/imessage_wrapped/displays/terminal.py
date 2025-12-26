@@ -223,7 +223,7 @@ class TerminalDisplay(Display):
 
         self.console.print(table)
 
-        emojis = content.get("most_used_emojis", [])[:5]
+        emojis = content.get("most_used_emojis", [])[:10]
         if emojis:
             self.console.print("\n[bold]Most Used Emojis:[/]")
             emoji_texts = [Text(f"{e['emoji']} {e['count']:,}", style="yellow") for e in emojis]

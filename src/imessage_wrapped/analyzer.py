@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any
 
 from .models import ExportData, Message
+from .utils import count_emojis
 
 
 class StatisticsAnalyzer(ABC):
@@ -217,21 +218,9 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         sent_with_text = [m for m in sent_messages if m.text]
         received_with_text = [m for m in received_messages if m.text]
 
-        emoji_pattern = re.compile(
-            "["
-            "\U0001f600-\U0001f64f"  # emoticons
-            "\U0001f300-\U0001f5ff"  # symbols & pictographs
-            "\U0001f680-\U0001f6ff"  # transport & map
-            "\U0001f1e0-\U0001f1ff"  # flags
-            "\U00002702-\U000027b0"
-            "\U000024c2-\U0001f251"
-            "]+",
-            flags=re.UNICODE,
-        )
-
         punctuation_pattern = re.compile(r'[.!?,;:\-\'"()]')
 
-        sent_emojis = []
+        emoji_counter = Counter()
         sent_lengths = []
         sent_punctuation_counts = []
         received_punctuation_counts = []
@@ -242,14 +231,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         for msg in sent_with_text:
             text = msg.text or ""
             sent_lengths.append(len(text))
-            found_emojis = emoji_pattern.findall(text)
-            filtered_emojis = [
-                e
-                for e in found_emojis
-                if "\ufffc" not in e
-                and e not in ["\u2642\ufe0f", "\u2640\ufe0f", "\u2642", "\u2640", "\ufe0f"]
-            ]
-            sent_emojis.extend(filtered_emojis)
+            emoji_counter.update(count_emojis(text))
             sent_punctuation_counts.append(len(punctuation_pattern.findall(text)))
             if "?" in text:
                 question_count += 1
@@ -261,8 +243,6 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         for msg in received_with_text:
             text = msg.text or ""
             received_punctuation_counts.append(len(punctuation_pattern.findall(text)))
-
-        emoji_counter = Counter(sent_emojis)
 
         avg_length_sent = sum(sent_lengths) / len(sent_lengths) if sent_lengths else 0
         avg_length_received = (

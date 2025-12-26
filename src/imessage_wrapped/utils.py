@@ -1,4 +1,7 @@
+from collections import Counter
 from datetime import datetime, timedelta, timezone
+
+import emoji
 
 APPLE_EPOCH = datetime(2001, 1, 1, tzinfo=timezone.utc)
 TIMESTAMP_FACTOR = 1_000_000_000
@@ -10,6 +13,22 @@ TAPBACK_MAP = {
     2003: "laugh",
     2004: "emphasize",
     2005: "question",
+}
+
+EMOJI_JOINERS_AND_MODIFIERS = {
+    "\u200d",
+    "\ufe0f",
+    "\ufe0e",
+    "\u20e3",
+}
+
+EXCLUDED_EMOJIS = {
+    "\ufffc",
+    "\u2642",
+    "\u2642\ufe0f",
+    "\u2640",
+    "\u2640\ufe0f",
+    "\ufe0f",
 }
 
 
@@ -87,7 +106,13 @@ def extract_text_from_attributed_body(blob: bytes) -> str | None:
             cleaned = "".join(
                 c
                 for c in text
-                if (c.isprintable() or c in "\n\r\t " or ord(c) >= 0x1F300) and c != "�"
+                if (
+                    c.isprintable()
+                    or c in "\n\r\t "
+                    or ord(c) >= 0x1F300
+                    or c in EMOJI_JOINERS_AND_MODIFIERS
+                )
+                and c != "�"
             )
             if len(cleaned) > 0:
                 return cleaned.strip()
@@ -95,3 +120,19 @@ def extract_text_from_attributed_body(blob: bytes) -> str | None:
         return None
     except Exception:
         return None
+
+
+def count_emojis(text: str) -> Counter:
+    if not text:
+        return Counter()
+
+    extracted = emoji.emoji_list(text)
+
+    emojis = []
+    for item in extracted:
+        emoji_char = item["emoji"]
+        if emoji_char in EXCLUDED_EMOJIS:
+            continue
+        emojis.append(emoji_char)
+
+    return Counter(emojis)

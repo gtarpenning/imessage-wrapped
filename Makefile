@@ -78,10 +78,10 @@ release-desktop:
 	@python desktop/release.py
 
 lint:
-	@echo "Running ruff linter..."
-	ruff check src/ --fix --unsafe-fixes
-	@echo "Formatting JavaScript files..."
-	cd web && npm run format || true
+	@echo "Running Python linter..."
+	ruff check . --fix --unsafe-fixes
+	@echo "Running JavaScript linter..."
+	cd web && npm run lint || true
 
 format:
 	@echo "Formatting code with ruff..."
