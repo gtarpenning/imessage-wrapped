@@ -7,6 +7,12 @@ on:
     paths:
       - 'web/**'
       - '.github/workflows/web-deploy.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'web/**'
+      - '.github/workflows/web-deploy.yml'
 
 jobs:
   build:
@@ -37,6 +43,7 @@ jobs:
 
   deploy:
     needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     
     steps:

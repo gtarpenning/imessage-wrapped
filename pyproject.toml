@@ -60,4 +60,7 @@ target-version = "py310"
 select = ["E", "F", "I", "N", "W"]
 ignore = ["E501"]
 
+[tool.ty]
+strict = true
+
 

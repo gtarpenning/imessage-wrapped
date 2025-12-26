@@ -1,4 +1,4 @@
-.PHONY: help clean build upload bump-patch bump-minor bump-major build-upgrade-deploy release-desktop
+.PHONY: help clean build upload bump-patch bump-minor bump-major build-upgrade-deploy release-desktop lint format typecheck check
 
 help:
 	@echo "Available commands:"
@@ -16,6 +16,12 @@ help:
 	@echo "    make clean                  - Remove build artifacts"
 	@echo "    make build                  - Build package for PyPI"
 	@echo "    make upload                 - Upload to PyPI"
+	@echo ""
+	@echo "  Code Quality:"
+	@echo "    make lint                   - Run ruff linter"
+	@echo "    make format                 - Format code with ruff"
+	@echo "    make typecheck              - Run ty type checker"
+	@echo "    make check                  - Run all checks (lint + typecheck)"
 	@echo ""
 	@echo "See RELEASE-GUIDE.md for deployment instructions"
 
@@ -70,4 +76,19 @@ build-upgrade-deploy: bump-patch build upload
 release-desktop:
 	@echo "Building and releasing desktop app..."
 	@python desktop/release.py
+
+lint:
+	@echo "Running ruff linter..."
+	ruff check src/
+
+format:
+	@echo "Formatting code with ruff..."
+	ruff format src/
+
+typecheck:
+	@echo "Running ty type checker..."
+	ty check src/
+
+check: lint typecheck
+	@echo "✓ All checks passed!"
 

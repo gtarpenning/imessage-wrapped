@@ -148,7 +148,9 @@ pip install -e .
 ./scripts/install-git-hooks.sh
 ```
 
-**Git Hooks**: The pre-push hook validates that the web build compiles before pushing to `main`, preventing broken builds from reaching production.
+**Git Hooks**: 
+- **pre-commit**: Automatically runs linting and type checking on staged Python/web files
+- **pre-push**: Validates that the web build compiles before pushing to `main`
 
 ## macOS Permissions
 

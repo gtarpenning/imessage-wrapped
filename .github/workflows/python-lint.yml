@@ -1,0 +1,39 @@
+name: Python Lint & Type Check
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'pyproject.toml'
+      - 'requirements.txt'
+      - '.github/workflows/python-lint.yml'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install -e ".[dev]"
+      
+      - name: Run ruff linter
+        run: ruff check src/
+      
+      - name: Run ruff formatter check
+        run: ruff format --check src/
+      
+      - name: Run ty type checker
+        run: ty check src/
+
