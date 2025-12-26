@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Any
 
 from rich.columns import Columns
@@ -83,6 +84,7 @@ class TerminalDisplay(Display):
         self._render_conversations_section(stats.get("conversations", {}))
         self._render_response_times_section(stats.get("response_times", {}))
         self._render_tapbacks_section(stats.get("tapbacks", {}))
+        self._render_ghosts_section(stats.get("ghosts", {}))
 
     def _render_volume_section(self, volume: dict[str, Any]) -> None:
         self.console.print("\n[bold cyan]📊 Volume & Activity[/]")
@@ -223,11 +225,114 @@ class TerminalDisplay(Display):
 
         self.console.print(table)
 
-        emojis = content.get("most_used_emojis", [])[:10]
+        emojis = content.get("most_used_emojis", [])[:5]
         if emojis:
             self.console.print("\n[bold]Most Used Emojis:[/]")
             emoji_texts = [Text(f"{e['emoji']} {e['count']:,}", style="yellow") for e in emojis]
             self.console.print(Columns(emoji_texts, padding=(0, 3)))
+
+        phrases = content.get("phrases")
+        by_contact = content.get("_phrases_by_contact") or []
+        if phrases:
+            self._render_phrase_section(phrases, by_contact)
+
+        sentiment = content.get("sentiment")
+        if sentiment:
+            self._render_sentiment_overview(sentiment)
+            self._render_sentiment_periods(sentiment.get("periods"))
+
+    def _render_phrase_section(self, phrases: dict[str, Any], by_contact: list[dict[str, Any]]) -> None:
+        overall = phrases.get("overall") or []
+        if overall:
+            self.console.print("\n[bold]Most Used Phrases:[/]")
+            table = Table(show_header=True, header_style="bold green")
+            table.add_column("Rank", style="dim", width=4)
+            table.add_column("Phrase", style="white")
+            table.add_column("Count", style="green", justify="right")
+
+            for idx, phrase in enumerate(overall[:5], start=1):
+                table.add_row(f"{idx}.", phrase["text"], f"{phrase['occurrences']:,}")
+
+            self.console.print(table)
+
+        filtered = [entry for entry in by_contact if entry.get("top_phrases")]
+        if filtered:
+            self.console.print("\n[bold]Signature Lines by Contact:[/]")
+            table = Table(show_header=True, header_style="bold blue")
+            table.add_column("Contact", style="cyan")
+            table.add_column("Phrase", style="white")
+            table.add_column("Count", style="green", justify="right")
+
+            for entry in filtered[:3]:
+                top = entry["top_phrases"][0]
+                contact_name = entry.get("contact_name") or entry.get("contact_id")
+                table.add_row(contact_name, top["text"], f"{top['occurrences']:,}")
+
+            self.console.print(table)
+
+    def _render_sentiment_overview(self, sentiment: dict[str, Any]) -> None:
+        self.console.print("\n[bold cyan]🧠 Sentiment Snapshot[/]")
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("Perspective", style="dim")
+        table.add_column("Positive", justify="right")
+        table.add_column("Neutral", justify="right")
+        table.add_column("Negative", justify="right")
+        table.add_column("Avg Score", justify="right")
+
+        perspectives = [
+            ("Overall", sentiment.get("overall")),
+            ("You", sentiment.get("sent")),
+            ("Them", sentiment.get("received")),
+        ]
+
+        has_data = False
+        for label, data in perspectives:
+            if not data or data.get("message_count", 0) == 0:
+                continue
+            has_data = True
+            percentages = self._sentiment_percentages(data.get("distribution", {}))
+            avg_score = data.get("avg_score", 0.0)
+            table.add_row(
+                label,
+                percentages["positive"],
+                percentages["neutral"],
+                percentages["negative"],
+                f"{avg_score:+.2f}",
+            )
+
+        if has_data:
+            self.console.print(table)
+        else:
+            self.console.print("[dim]No sentiment-ready messages found.[/]")
+
+    def _render_sentiment_periods(self, periods: dict[str, Any] | None) -> None:
+        if not periods:
+            return
+
+        interval = periods.get("interval")
+        if interval != "month":
+            return
+
+        sent = periods.get("sent", [])
+        received = periods.get("received", [])
+        rows = self._merge_period_rows(sent, received)
+        if not rows:
+            return
+
+        self.console.print("\n[bold cyan]📅 Monthly Sentiment (You vs Them)[/]")
+        table = Table(show_header=True, header_style="bold cyan")
+        table.add_column("Month", style="dim")
+        table.add_column("You (avg)", justify="right")
+        table.add_column("Them (avg)", justify="right")
+
+        for row in rows:
+            table.add_row(
+                self._format_period_label(row["period"], interval),
+                self._format_sentiment_value(row["sent"]),
+                self._format_sentiment_value(row["received"]),
+            )
+
+        self.console.print(table)
 
     def _render_conversations_section(self, conversations: dict[str, Any]) -> None:
         self.console.print("\n[bold cyan]💭 Conversations[/]")
@@ -318,8 +423,145 @@ class TerminalDisplay(Display):
 
         self.console.print(table)
 
+    def _render_ghosts_section(self, ghosts: dict[str, Any]) -> None:
+        if not ghosts:
+            return
+
+        total_you = ghosts.get("people_you_ghosted", 0)
+        total_them = ghosts.get("people_who_ghosted_you", 0)
+        if total_you == 0 and total_them == 0:
+            return
+
+        self.console.print("\n[bold cyan]👻 Ghost Mode[/]")
+
+        table = Table(show_header=False, box=None, padding=(0, 2))
+        table.add_column("Metric", style="dim")
+        table.add_column("Value", style="magenta")
+
+        timeline = ghosts.get("timeline_days")
+        if timeline:
+            table.add_row("Ghost Timeline", f"{timeline} days without a reply")
+        table.add_row("People You Ghosted", f"{total_you:,}")
+        table.add_row("People Who Ghosted You", f"{total_them:,}")
+
+        ratio = ghosts.get("ghost_ratio")
+        if ratio is not None:
+            table.add_row("Ghost Ratio (You/Them)", f"{ratio:.2f}")
+
+        self.console.print(table)
+
+        def _render_examples(entries: list[dict[str, Any]], title: str) -> None:
+            if not entries:
+                return
+            self.console.print(f"\n[bold]{title} (latest first):[/]")
+            table = Table(show_header=True, header_style="bold cyan")
+            table.add_column("Contact", style="cyan")
+            table.add_column("Days Waiting", style="red", justify="right")
+            table.add_column("Last Message", style="yellow")
+
+            for entry in entries[:5]:
+                timestamp = self._parse_iso_timestamp(entry.get("last_message"))
+                table.add_row(
+                    entry.get("contact_name") or entry.get("contact_id") or "Unknown",
+                    self._format_wait_duration(timestamp),
+                    self._format_timestamp(timestamp),
+                )
+
+            self.console.print(table)
+
+        _render_examples(ghosts.get("you_ghosted") or [], "You left them hanging")
+        _render_examples(ghosts.get("ghosted_you") or [], "They never replied to you")
+
+    def _parse_iso_timestamp(self, value: str | None) -> datetime | None:
+        if not value:
+            return None
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError:
+            return None
+
+    def _format_wait_duration(self, timestamp: datetime | None) -> str:
+        if timestamp is None:
+            return "—"
+        now = datetime.now(timestamp.tzinfo or timezone.utc)
+        delta = now - timestamp
+        days = int(delta.total_seconds() // 86400)
+        if days <= 0:
+            return "<1 day"
+        if days == 1:
+            return "1 day"
+        return f"{days} days"
+
+    def _format_timestamp(self, timestamp: datetime | None) -> str:
+        if not timestamp:
+            return "Unknown"
+        month = timestamp.strftime("%b")
+        day = timestamp.day
+        year = timestamp.year
+        time_part = timestamp.strftime("%I:%M %p").lstrip("0")
+        tz = ""
+        if timestamp.tzinfo:
+            tz = timestamp.tzname() or ""
+        formatted = f"{month} {day}, {year} · {time_part}"
+        if tz:
+            formatted = f"{formatted} {tz}"
+        return formatted
+
     def _render_stub_section(self, title: str, stub_data: dict[str, Any]) -> None:
         self.console.print(f"\n[bold cyan]{title}[/]")
 
         if stub_data.get("status") == "not_implemented":
             self.console.print(f"[dim]{stub_data.get('message', 'Not yet implemented')}[/]")
+
+    def _sentiment_percentages(self, distribution: dict[str, int]) -> dict[str, str]:
+        total = sum(distribution.values())
+        if total == 0:
+            return {"positive": "0%", "neutral": "0%", "negative": "0%"}
+
+        def _format(value: int) -> str:
+            percent = (value / total) * 100
+            return f"{percent:.0f}%"
+
+        return {
+            "positive": _format(distribution.get("positive", 0)),
+            "neutral": _format(distribution.get("neutral", 0)),
+            "negative": _format(distribution.get("negative", 0)),
+        }
+
+    def _format_period_label(self, period: str, interval: str) -> str:
+        if interval == "month":
+            try:
+                dt = datetime.strptime(period, "%Y-%m")
+                return dt.strftime("%b %Y")
+            except ValueError:
+                return period
+        if interval == "week":
+            return period.replace("-", " ")
+        return period
+
+    def _format_sentiment_value(self, entry: dict[str, Any] | None) -> str:
+        if not entry:
+            return "—"
+        avg = entry.get("avg_score")
+        if avg is None:
+            return "—"
+        return f"{avg:+.2f}"
+
+    def _merge_period_rows(
+        self,
+        sent: list[dict[str, Any]],
+        received: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        sent_map = {entry["period"]: entry for entry in sent}
+        received_map = {entry["period"]: entry for entry in received}
+        periods = sorted(set(sent_map) | set(received_map))
+        rows = []
+        for period in periods:
+            rows.append(
+                {
+                    "period": period,
+                    "sent": sent_map.get(period),
+                    "received": received_map.get(period),
+                }
+            )
+        return rows
