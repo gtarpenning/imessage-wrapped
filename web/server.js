@@ -10,7 +10,15 @@ const port = parseInt(process.env.PORT || '3000', 10)
 const app = next({ dev, hostname, port })
 const handle = app.getRequestHandler()
 
-app.prepare().then(() => {
+app.prepare().then(async () => {
+  // Initialize database tables on startup
+  try {
+    const { initDatabase } = await import('./lib/db.js')
+    await initDatabase()
+  } catch (err) {
+    console.error('Failed to initialize database:', err)
+  }
+
   createServer(async (req, res) => {
     try {
       const parsedUrl = parse(req.url, true)

@@ -77,6 +77,15 @@ export async function initDatabase() {
     
     CREATE INDEX IF NOT EXISTS idx_year ON wrapped_stats(year);
     CREATE INDEX IF NOT EXISTS idx_created_at ON wrapped_stats(created_at);
+    
+    CREATE TABLE IF NOT EXISTS llm_cache (
+      prompt_hash TEXT PRIMARY KEY,
+      prompt TEXT NOT NULL,
+      completion TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+    
+    CREATE INDEX IF NOT EXISTS idx_llm_created_at ON llm_cache(created_at);
   `
   
   await pool.query(sql)

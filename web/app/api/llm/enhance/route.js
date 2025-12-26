@@ -71,8 +71,16 @@ export async function POST(request) {
   } catch (error) {
     console.error('LLM enhancement error:', error)
     
+    // Provide more informative error messages
+    let errorMessage = 'Failed to generate enhancement'
+    if (error.code === '42P01') {
+      errorMessage = 'Database table missing. Please ensure database is initialized.'
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to generate enhancement', fallback: '' },
+      { error: errorMessage, fallback: '' },
       { status: 500 }
     )
   }
