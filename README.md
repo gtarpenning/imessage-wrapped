@@ -13,16 +13,6 @@ pip install imessage-wrapped
 imexport analyze
 ```
 
-## 🌐 Web Sharing
-
-Share your iMessage Wrapped with friends via a web dashboard
-
-### Quick Start
-
-```bash
-imexport analyze
-```
-
 That's it! By default, the command will:
 1. 🔄 Auto-export your messages (if not already exported)
 2. 📊 Analyze your messaging patterns
