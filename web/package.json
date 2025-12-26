@@ -1,0 +1,22 @@
+{
+  "name": "imessage-wrapped-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node server.js",
+    "build": "next build",
+    "start": "NODE_ENV=production node server.js",
+    "init-db": "node scripts/init-db.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.0",
+    "next": "^14.2.0",
+    "pg": "^8.11.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.10.0"
+  },
+  "devDependencies": {
+    "@flydotio/dockerfile": "^0.7.10"
+  }
+}
