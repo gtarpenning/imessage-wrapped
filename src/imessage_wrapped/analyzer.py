@@ -69,6 +69,15 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             default=(None, 0)
         )
         
+        daily_activity = {}
+        all_dates = set(sent_by_date.keys()) | set(received_by_date.keys())
+        for date in all_dates:
+            daily_activity[date.isoformat()] = {
+                "sent": sent_by_date.get(date, 0),
+                "received": received_by_date.get(date, 0),
+                "total": sent_by_date.get(date, 0) + received_by_date.get(date, 0),
+            }
+        
         return {
             "total_messages": len(all_messages),
             "total_sent": len(sent_messages),
@@ -84,6 +93,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "active_days": len(set(sent_by_date.keys()) | set(received_by_date.keys())),
             "days_sent": len(sent_by_date),
             "days_received": len(received_by_date),
+            "daily_activity": daily_activity,
         }
     
     def _analyze_temporal_patterns(

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import HeroSection from '@/components/HeroSection'
 import VolumeSection from '@/components/VolumeSection'
+import HeatmapSection from '@/components/HeatmapSection'
 import ContactsSection from '@/components/ContactsSection'
 import TemporalSection from '@/components/TemporalSection'
 import ContentSection from '@/components/ContentSection'
@@ -62,6 +63,7 @@ export default function WrappedPage() {
     <main className="container">
       <HeroSection year={data.year} volume={stats.volume} />
       <VolumeSection volume={stats.volume} />
+      <HeatmapSection volume={stats.volume} />
       <ContactsSection contacts={stats.contacts} />
       <TemporalSection temporal={stats.temporal} />
       <ContentSection content={stats.content} />

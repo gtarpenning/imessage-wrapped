@@ -8,13 +8,45 @@ export default function Home() {
         <p style={{ fontSize: '1.5rem', marginBottom: '2rem', opacity: 0.8 }}>
           Your year in messages, beautifully visualized
         </p>
+        
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          marginBottom: '2rem',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          <a
+            href="/api/download"
+            style={{
+              background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
+              color: 'white',
+              padding: '1rem 2rem',
+              borderRadius: '0.75rem',
+              textDecoration: 'none',
+              fontWeight: '600',
+              fontSize: '1.1rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'transform 0.2s',
+            }}
+            onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+          >
+            🖥️ Download for macOS
+          </a>
+        </div>
+
         <div style={{ 
           background: 'rgba(255,255,255,0.1)', 
           padding: '2rem', 
           borderRadius: '1rem',
           maxWidth: '600px'
         }}>
-          <p style={{ marginBottom: '1rem' }}>To create your Wrapped:</p>
+          <p style={{ marginBottom: '1rem', opacity: 0.8 }}>
+            Or use the command line:
+          </p>
           <ol style={{ textAlign: 'left', lineHeight: '2' }}>
             <li>Install: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>pip install imessage-wrapped</code></li>
             <li>Run: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }}>imexport analyze</code></li>
