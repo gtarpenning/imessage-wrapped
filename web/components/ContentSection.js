@@ -22,10 +22,10 @@ export default function ContentSection({ content }) {
             valueStyle={{ fontSize: '2rem' }}
           />
         )}
-        {content.questions_asked !== undefined && (
+        {content.questions_percentage !== undefined && (
           <StatCard 
             label="❓ Questions Asked" 
-            value={content.questions_asked.toLocaleString()}
+            value={`${content.questions_percentage}%`}
             valueStyle={{ fontSize: '2rem' }}
           />
         )}

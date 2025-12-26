@@ -296,6 +296,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 for emoji, count in emoji_counter.most_common(10)
             ],
             "questions_asked": question_count,
+            "questions_percentage": (
+                round(question_count / len(sent_with_text) * 100, 2)
+                if sent_with_text else 0
+            ),
             "exclamations_sent": exclamation_count,
             "enthusiasm_percentage": (
                 round(exclamation_count / len(sent_with_text) * 100, 2)

@@ -207,7 +207,7 @@ class TerminalDisplay(Display):
         
         table.add_row("Avg Message Length (Sent)", f"{content.get('avg_message_length_sent', 0)} chars")
         table.add_row("Avg Message Length (Received)", f"{content.get('avg_message_length_received', 0)} chars")
-        table.add_row("Questions Asked", f"{content.get('questions_asked', 0):,}")
+        table.add_row("Questions Asked", f"{content.get('questions_percentage', 0)}%")
         table.add_row("Enthusiasm Level", f"{content.get('enthusiasm_percentage', 0)}%")
         table.add_row("Attachments Sent", f"{content.get('attachments_sent', 0):,}")
         table.add_row("Attachments Received", f"{content.get('attachments_received', 0):,}")
