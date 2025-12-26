@@ -63,7 +63,21 @@ rm -rf build dist *.dmg
 # Output: iMessage-Wrapped-1.0.0.dmg (~15-20 MB)
 ```
 
-## Distribution
+## Code Signing & Distribution
+
+### Signing and Notarization
+
+```bash
+# Sign and notarize the DMG
+./sign-dmg.sh iMessage-Wrapped-1.0.15.dmg
+
+# Verify signing (check for issues)
+./verify-signing.sh iMessage-Wrapped-1.0.15.dmg
+```
+
+See `SIGNING-GUIDE.md` for detailed documentation on the signing process.
+
+### Distribution
 
 See `DEPLOY.md` for deployment instructions.
 
@@ -73,8 +87,11 @@ See `DEPLOY.md` for deployment instructions.
 - `setup.py` - py2app build configuration
 - `requirements.txt` - Dependencies
 - `icon.icns` - App icon (💌 emoji)
+- `entitlements.plist` - Code signing entitlements (required!)
 - `build.sh` - Fast dev builds
 - `build-release.sh` - Production builds
+- `sign-dmg.sh` - Sign and notarize DMG
+- `check-signing.sh` - Check available certificates
 - `deploy-to-web.sh` - Deploy to Fly.io
 - `generate-emoji-icon.py` - Regenerate icon from emoji
 - `create-icon.sh` - Convert PNG to .icns

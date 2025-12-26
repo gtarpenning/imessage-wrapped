@@ -19,6 +19,13 @@ if [ ! -f "$ORIGINAL_DMG" ]; then
     exit 1
 fi
 
+# Check for entitlements file
+if [ ! -f "entitlements.plist" ]; then
+    echo "❌ entitlements.plist not found in current directory"
+    echo "   This file is required for proper code signing"
+    exit 1
+fi
+
 echo "🔐 Signing: $ORIGINAL_DMG"
 echo ""
 
@@ -41,6 +48,49 @@ echo "✅ Extracted"
 
 APP_PATH="iMessage Wrapped.app"
 
+# Fix broken symlinks (Gatekeeper rejects apps with invalid symlinks)
+echo ""
+echo "🔧 Checking for broken symlinks..."
+echo "  Scanning app bundle: $APP_PATH"
+
+# Find all symlinks first
+ALL_SYMLINKS=$(find "$APP_PATH" -type l 2>/dev/null || true)
+if [ -n "$ALL_SYMLINKS" ]; then
+    echo "  Found $(echo "$ALL_SYMLINKS" | wc -l | tr -d ' ') total symlinks"
+    echo "  Checking which ones are broken..."
+fi
+
+# Find broken symlinks
+BROKEN_LINKS=$(find "$APP_PATH" -type l ! -exec test -e {} \; -print 2>/dev/null || true)
+if [ -n "$BROKEN_LINKS" ]; then
+    echo "  ⚠️  Found broken symlinks (Gatekeeper will reject these):"
+    while IFS= read -r link; do
+        if [ -n "$link" ]; then
+            TARGET=$(readlink "$link" 2>/dev/null || echo "unknown")
+            echo "    ❌ $link -> $TARGET"
+        fi
+    done <<< "$BROKEN_LINKS"
+    
+    echo "  Removing broken symlinks..."
+    REMOVED_COUNT=0
+    while IFS= read -r link; do
+        if [ -n "$link" ] && [ -L "$link" ]; then
+            rm "$link" && REMOVED_COUNT=$((REMOVED_COUNT + 1))
+        fi
+    done <<< "$BROKEN_LINKS"
+    
+    echo "✅ Removed $REMOVED_COUNT broken symlink(s)"
+    
+    # Verify removal
+    STILL_BROKEN=$(find "$APP_PATH" -type l ! -exec test -e {} \; -print 2>/dev/null || true)
+    if [ -n "$STILL_BROKEN" ]; then
+        echo "⚠️  Warning: Some broken symlinks remain:"
+        echo "$STILL_BROKEN" | sed 's/^/    /'
+    fi
+else
+    echo "✅ No broken symlinks found"
+fi
+
 # Sign all binaries inside the app
 echo ""
 echo "📝 Signing all internal binaries..."
@@ -48,19 +98,19 @@ echo "📝 Signing all internal binaries..."
 # Sign all .so files
 echo "  Signing Python extension modules..."
 find "$APP_PATH" -type f -name "*.so" | while read file; do
-    codesign --force --sign "$SIGNING_IDENTITY" --options runtime --timestamp "$file" 2>&1 | grep -v "signed Mach-O" || true
+    codesign --force --sign "$SIGNING_IDENTITY" --options runtime --timestamp --entitlements entitlements.plist "$file" 2>&1 | grep -v "signed Mach-O" || true
 done
 
 # Sign all .dylib files  
 echo "  Signing dynamic libraries..."
 find "$APP_PATH" -type f -name "*.dylib" | while read file; do
-    codesign --force --sign "$SIGNING_IDENTITY" --options runtime --timestamp "$file" 2>&1 | grep -v "signed Mach-O" || true
+    codesign --force --sign "$SIGNING_IDENTITY" --options runtime --timestamp --entitlements entitlements.plist "$file" 2>&1 | grep -v "signed Mach-O" || true
 done
 
 # Sign frameworks
 echo "  Signing frameworks..."
 find "$APP_PATH/Contents/Frameworks" -type d -name "*.framework" 2>/dev/null | while read framework; do
-    codesign --force --sign "$SIGNING_IDENTITY" --options runtime --timestamp "$framework" 2>&1 | grep -v "signed Mach-O" || true
+    codesign --force --sign "$SIGNING_IDENTITY" --options runtime --timestamp --entitlements entitlements.plist "$framework" 2>&1 | grep -v "signed Mach-O" || true
 done
 
 echo "✅ All internal binaries signed"
@@ -71,6 +121,7 @@ echo "📝 Signing app bundle..."
 codesign --force --sign "$SIGNING_IDENTITY" \
     --options runtime \
     --timestamp \
+    --entitlements entitlements.plist \
     --deep \
     "$APP_PATH"
 
