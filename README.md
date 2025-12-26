@@ -6,7 +6,21 @@ Export and analyze your iMessage conversations from the macOS SQLite database.
 <img width="1507" alt="image" src="https://github.com/user-attachments/assets/bcc55823-34b8-4f26-94ba-418f9bce455b" />
 
 
-## Quick Install & Run
+## Quick Start
+
+### 🖥️ Desktop App (No Terminal Required!)
+
+[**Download for macOS**](https://imessage-wrapped.fly.dev/api/download)
+
+1. Download and open `iMessage-Wrapped.dmg`
+2. Drag to Applications folder
+3. Launch the app
+4. Click "Analyze My Messages"
+5. Your wrapped opens in browser automatically
+
+See [`desktop/`](desktop/) for building from source.
+
+### 💻 Command Line
 
 ```bash
 pip install imessage-wrapped
@@ -116,26 +130,31 @@ python -m imessage_wrapped export --year 2024
 
 ## Installation
 
-### Install in Development Mode
+### From PyPI
 
 ```bash
-pip install -e .
+pip install imessage-wrapped
+imexport
 ```
 
-This installs the package and creates the `imexport` command.
-
-### Install Dependencies Only
+### From Source (Development)
 
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/gtarpenning/imessage-wrapped.git
+cd imessage-wrapped
+pip install -e .
 ```
 
 ## macOS Permissions
 
-This application requires **Full Disk Access** to read the iMessage database:
+Requires **Full Disk Access** to read the iMessage database:
 
 1. Open **System Settings**
 2. Go to **Privacy & Security → Full Disk Access**
-3. Add Terminal or your Python application
+3. Add Terminal (for CLI) or the Desktop App
 4. Restart the application
+
+## Deployment
+
+See [RELEASE-GUIDE.md](RELEASE-GUIDE.md) for deploying the CLI, Desktop App, or Web App.
 

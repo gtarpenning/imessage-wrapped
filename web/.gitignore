@@ -6,3 +6,7 @@ dist
 build
 *.log
 
+# Desktop app downloads (large binary files)
+public/downloads/*.dmg
+public/downloads/*.zip
+

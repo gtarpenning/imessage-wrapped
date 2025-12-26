@@ -1,0 +1,79 @@
+name: Build Desktop App
+
+on:
+  push:
+    tags:
+      - 'desktop-v*'
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install package dependencies
+        run: |
+          pip install -e .
+      
+      - name: Install build dependencies
+        run: |
+          cd desktop
+          pip install -r requirements.txt
+      
+      - name: Create placeholder icon
+        run: |
+          cd desktop
+          # Create a simple icon if none exists
+          if [ ! -f icon.icns ]; then
+            echo "Creating placeholder icon..."
+            # For now, skip icon - will use default
+            sed -i '' "s/'iconfile': 'icon.icns',/# 'iconfile': 'icon.icns',/" setup.py
+          fi
+      
+      - name: Build app
+        run: |
+          cd desktop
+          python setup.py py2app
+      
+      - name: Create DMG
+        run: |
+          cd desktop
+          VERSION=$(echo ${{ github.ref_name }} | sed 's/desktop-v//')
+          DMG_NAME="iMessage-Wrapped-${VERSION}.dmg"
+          
+          hdiutil create -volname "iMessage Wrapped" \
+            -srcfolder "dist/iMessage Wrapped.app" \
+            -ov -format UDZO "${DMG_NAME}"
+          
+          echo "DMG_NAME=${DMG_NAME}" >> $GITHUB_ENV
+      
+      - name: Upload DMG as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iMessage-Wrapped-macOS
+          path: desktop/*.dmg
+      
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: desktop/*.dmg
+          draft: false
+          generate_release_notes: true
+          body: |
+            ## Download
+            Download the DMG file below and drag the app to your Applications folder.
+            
+            ## What's New
+            See below for automatically generated release notes.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

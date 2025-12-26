@@ -1,0 +1,21 @@
+# py2app build artifacts
+build/
+dist/
+*.dmg
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info
+.eggs/
+
+# macOS
+.DS_Store
+
+# Keep the icon files
+!icon.icns
+!icon.png
+
+# Temporary
+*.log

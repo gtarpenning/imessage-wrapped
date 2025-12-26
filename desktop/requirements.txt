@@ -1,0 +1,14 @@
+# Build dependencies
+py2app>=0.28.6
+macholib>=1.16
+altgraph>=0.17
+modulegraph
+
+# GUI framework - Menu bar app
+rumps>=0.4.0
+
+# Runtime dependencies
+rich>=13.0.0
+questionary>=2.0.0
+requests>=2.31.0
+
