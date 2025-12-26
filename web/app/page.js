@@ -1,3 +1,5 @@
+'use client'
+
 export default function Home() {
   return (
     <main className="container">
@@ -6,7 +8,7 @@ export default function Home() {
           iMessage <span className="gradient-text">Wrapped</span>
         </h1>
         <p style={{ fontSize: '1.5rem', marginBottom: '2rem', opacity: 0.8 }}>
-          Your year in messages, beautifully visualized
+          Your year in messages, visualized
         </p>
         
         <div style={{ 
