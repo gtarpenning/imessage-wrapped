@@ -39,7 +39,7 @@ Want to see full details in the terminal instead? Use `imexport analyze --no-sha
 
 ✅ **Dashboard** - Interactive visualizations of your messaging patterns  
 ✅ **Easy Sharing** - One command to upload and get a shareable link  
-✅ **Secure** - HTTPS, encrypted database  
+✅ **Secure** - HTTPS, encrypted database  git status
 ✅ **Deploy Anywhere** - Fly.io ready (free tier available)  
 
 ## 🔒 Data Privacy
@@ -143,7 +143,12 @@ imexport
 git clone https://github.com/gtarpenning/imessage-wrapped.git
 cd imessage-wrapped
 pip install -e .
+
+# Install git hooks (recommended for contributors)
+./scripts/install-git-hooks.sh
 ```
+
+**Git Hooks**: The pre-push hook validates that the web build compiles before pushing to `main`, preventing broken builds from reaching production.
 
 ## macOS Permissions
 
