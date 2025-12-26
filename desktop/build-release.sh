@@ -3,7 +3,7 @@
 
 set -e
 
-VERSION="1.0.15"
+VERSION="1.0.16"
 
 echo "🏗️  Building iMessage Wrapped v${VERSION} (Production)..."
 echo ""
@@ -43,7 +43,8 @@ if [ -n "$EXISTING_MOUNTS" ]; then
     sleep 1
 fi
 
-rm -f "${TEMP_DMG}"
+# Remove any existing DMG files
+rm -f "${TEMP_DMG}" "${DMG_NAME}"
 
 # Create a temporary DMG
 hdiutil create -size 300m -fs HFS+ -volname "${VOLUME_NAME}" "${TEMP_DMG}"
