@@ -6,9 +6,9 @@ export default function HeatmapSection({ volume, year }) {
   const [hoveredDay, setHoveredDay] = useState(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
   
-  if (!volume?.daily_activity) return null
-
   const heatmapData = useMemo(() => {
+    if (!volume?.daily_activity) return null
+    
     const dailyActivity = volume.daily_activity
     
     const filteredActivity = {}
@@ -75,7 +75,7 @@ export default function HeatmapSection({ volume, year }) {
     ]
     
     return { monthsData, maxCount, percentiles, totalDays: dates.length }
-  }, [volume.daily_activity, year])
+  }, [volume?.daily_activity, year])
 
   if (!heatmapData) return null
 
