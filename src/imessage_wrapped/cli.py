@@ -115,9 +115,18 @@ def parse_args():
     )
     
     analyze_parser.add_argument(
+        "--no-share",
+        action="store_false",
+        dest="share",
+        help="Don't upload statistics (show full terminal output instead)",
+    )
+    
+    analyze_parser.add_argument(
         "--share",
         action="store_true",
-        help="Upload statistics to web and get shareable link",
+        dest="share",
+        default=True,
+        help="Upload statistics to web and get shareable link (default)",
     )
     
     analyze_parser.add_argument(
@@ -200,37 +209,64 @@ def analyze_command(args):
     
     if not args.input:
         exports_dir = Path("exports")
-        if not exports_dir.exists() or not any(exports_dir.iterdir()):
-            console.print(f"[red]✗[/] No exports folder found. Run [cyan]imexport export[/] first.")
-            sys.exit(1)
+        export_files = []
         
-        export_files = sorted(
-            [f for f in exports_dir.iterdir() if f.suffix in ['.json', '.jsonl']],
-            key=lambda x: x.stat().st_mtime,
-            reverse=True
-        )
+        if exports_dir.exists():
+            export_files = sorted(
+                [f for f in exports_dir.iterdir() if f.suffix in ['.json', '.jsonl']],
+                key=lambda x: x.stat().st_mtime,
+                reverse=True
+            )
         
         if not export_files:
-            console.print(f"[red]✗[/] No export files found in exports/. Run [cyan]imexport export[/] first.")
+            console.print(f"[yellow]ℹ[/] No export found. Exporting messages first...\n")
+            
+            export_args = argparse.Namespace(
+                year=datetime.now().year,
+                output=None,
+                database=None,
+                format="jsonl",
+                indent=2,
+                skip_permission_check=False,
+                debug=args.debug,
+                replace_cache=False,
+            )
+            export_command(export_args)
+            
+            if not exports_dir.exists():
+                console.print(f"[red]✗[/] Export failed.")
+                sys.exit(1)
+            
+            export_files = sorted(
+                [f for f in exports_dir.iterdir() if f.suffix in ['.json', '.jsonl']],
+                key=lambda x: x.stat().st_mtime,
+                reverse=True
+            )
+            
+        if not export_files:
+            console.print(f"[red]✗[/] Export failed.")
             sys.exit(1)
         
-        choices = []
-        for file in export_files:
-            size_mb = file.stat().st_size / (1024 * 1024)
-            choices.append(questionary.Choice(
-                title=f"{file.name} ({size_mb:.1f} MB)",
-                value=file
-            ))
-        
-        selected = questionary.select(
-            "Select export file to analyze:",
-            choices=choices
-        ).ask()
-        
-        if selected is None:
-            sys.exit(0)
-        
-        input_path = selected
+        if args.share or len(export_files) == 1:
+            input_path = export_files[0]
+        else:
+            choices = []
+            for file in export_files:
+                size_mb = file.stat().st_size / (1024 * 1024)
+                choices.append(questionary.Choice(
+                    title=f"{file.name} ({size_mb:.1f} MB)",
+                    value=file
+                ))
+            
+            selected = questionary.select(
+                "Select export file to analyze:",
+                choices=choices
+            ).ask()
+            
+            if selected is None:
+                sys.exit(0)
+            
+            input_path = selected
     else:
         input_path = Path(args.input)
         if not input_path.exists():
@@ -276,7 +312,7 @@ def analyze_command(args):
         console.print(f"\n[green]✓[/] Statistics saved to [cyan]{args.output}[/]")
     
     display = TerminalDisplay()
-    display.render(statistics)
+    display.render(statistics, brief=args.share)
     
     if args.share:
         from .uploader import StatsUploader

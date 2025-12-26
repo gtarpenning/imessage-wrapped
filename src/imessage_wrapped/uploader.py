@@ -40,9 +40,9 @@ class StatsUploader:
             if share_url:
                 self.console.print()
                 self.console.print(Panel.fit(
-                    f"[bold green]✓ Shareable link created![/]\n\n"
+                    f"[bold green]View the full analysis at this link[/]\n\n"
                     f"[cyan]🔗 {share_url}[/]\n\n"
-                    f"Copy this link to share your Wrapped with friends!",
+                    f"Copy and share your imessage wrapped with friends!",
                     title="Share Your Wrapped",
                     border_style="green"
                 ))

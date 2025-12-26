@@ -14,19 +14,57 @@ class TerminalDisplay(Display):
     def __init__(self):
         self.console = Console()
     
-    def render(self, statistics: dict[str, Any]) -> None:
+    def render(self, statistics: dict[str, Any], brief: bool = False) -> None:
+        if brief:
+            self.render_brief(statistics)
+        else:
+            self.console.print()
+            self._render_header(statistics)
+            
+            if "raw" in statistics:
+                self._render_raw_statistics(statistics["raw"])
+            
+            if "nlp" in statistics:
+                self._render_stub_section("NLP Analysis", statistics["nlp"])
+            
+            if "llm" in statistics:
+                self._render_stub_section("LLM Analysis", statistics["llm"])
+            
+            self.console.print()
+    
+    def render_brief(self, statistics: dict[str, Any]) -> None:
         self.console.print()
-        self._render_header(statistics)
         
-        if "raw" in statistics:
-            self._render_raw_statistics(statistics["raw"])
+        if "raw" not in statistics:
+            return
         
-        if "nlp" in statistics:
-            self._render_stub_section("NLP Analysis", statistics["nlp"])
+        stats = statistics["raw"]
+        volume = stats.get("volume", {})
+        contacts = stats.get("contacts", {})
+        content = stats.get("content", {})
         
-        if "llm" in statistics:
-            self._render_stub_section("LLM Analysis", statistics["llm"])
+        title = Text("Your iMessage Year in Review (Summary)", style="bold magenta")
+        self.console.print(Panel(title, border_style="magenta"))
         
+        table = Table(show_header=False, box=None, padding=(0, 2))
+        table.add_column("", style="dim", width=25)
+        table.add_column("", style="bold cyan")
+        
+        table.add_row("📊 Total Messages", f"{volume.get('total_messages', 0):,}")
+        table.add_row("💬 Messages Sent", f"{volume.get('total_sent', 0):,}")
+        table.add_row("📥 Messages Received", f"{volume.get('total_received', 0):,}")
+        
+        top_contacts = contacts.get("top_sent_to", [])
+        if top_contacts:
+            top_contact = top_contacts[0]
+            table.add_row("👤 Top Contact", f"{top_contact['name']} ({top_contact['count']:,} msgs)")
+        
+        emojis = content.get("most_used_emojis", [])
+        if emojis:
+            top_emoji = emojis[0]
+            table.add_row("😊 Favorite Emoji", f"{top_emoji['emoji']} ({top_emoji['count']:,} times)")
+        
+        self.console.print(table)
         self.console.print()
     
     def _render_header(self, statistics: dict[str, Any]) -> None:

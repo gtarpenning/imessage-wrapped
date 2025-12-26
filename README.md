@@ -10,8 +10,7 @@ Export and analyze your iMessage conversations from the macOS SQLite database.
 
 ```bash
 pip install imessage-wrapped
-imexport export --year 2024
-imexport analyze --share
+imexport analyze
 ```
 
 ## 🌐 Web Sharing
@@ -21,67 +20,47 @@ Share your iMessage Wrapped with friends via a web dashboard
 ### Quick Start
 
 ```bash
-imessage-wrapped analyze --share
+imexport analyze
 ```
 
-You'll get a shareable URL like: `https://imessage-wrapped.fly.dev/2025/abc123xyz`
+That's it! By default, the command will:
+1. 🔄 Auto-export your messages (if not already exported)
+2. 📊 Analyze your messaging patterns
+3. ☁️ Upload anonymized statistics
+4. 🔗 Give you a shareable URL like: `https://imessage-wrapped.fly.dev/2025/abc123xyz`
+
+Want to see full details in the terminal instead? Use `imexport analyze --no-share`
 
 ### Features
 
-✅ **Privacy First** - Only anonymized aggregate stats uploaded (no message content)  
-✅ **Beautiful Dashboard** - Interactive visualizations of your messaging patterns  
+✅ **Dashboard** - Interactive visualizations of your messaging patterns  
 ✅ **Easy Sharing** - One command to upload and get a shareable link  
-✅ **Secure** - HTTPS, rate limiting, encrypted database  
+✅ **Secure** - HTTPS, encrypted database  
 ✅ **Deploy Anywhere** - Fly.io ready (free tier available)  
 
-See [QUICKSTART.md](QUICKSTART.md) for detailed setup instructions.
+## 🔒 Data Privacy
 
-## Architecture
+**Your message content NEVER leaves your computer.**
 
-The codebase follows a clean layered architecture with strong separation of concerns:
+By default, we only upload aggregated statistics to create your shareable link. Here's exactly what is and isn't uploaded:
 
-```
-src/imessage_wrapped/
-├── models.py          # Data models (Message, Conversation, ExportData)
-├── utils.py           # Pure utility functions (timestamps, formatting)
-├── db_reader.py       # Database access layer
-├── service.py         # Business logic (MessageProcessor, MessageService)
-├── exporter.py        # Serialization layer (Protocol-based)
-├── permissions.py     # macOS permission handling
-├── cli.py             # Command-line interface
-└── __init__.py        # Public API
-```
+### ✅ What IS Uploaded (Statistics Only)
 
-### Layer Responsibilities
+- **Counts**: Total messages sent/received, tapbacks given/received, attachments, etc.
+- **Averages**: Message length, response times, punctuation usage
+- **Distributions**: Hour of day, day of week, month patterns
+- **Emojis**: Which emojis you used and how often
+- **Dates**: Your busiest messaging days, streak lengths
+- **Anonymized Identifiers**: Contact identifiers are SHA256-hashed (e.g., `phone_a3b2c1d4e5f6`)
 
-**Models** (`models.py`)
-- Immutable data structures using dataclasses
-- Domain entities with computed properties
-- No business logic
+### ❌ What is NOT Uploaded (Stays Private)
 
-**Utilities** (`utils.py`)
-- Pure functions for timestamp conversion
-- Text extraction from attributed bodies
-- Tapback type mapping
-
-**Database** (`db_reader.py`)
-- SQLite connection management
-- Query execution with streaming support
-- Context manager interface
-
-**Service** (`service.py`)
-- `MessageProcessor`: Transforms raw DB rows into domain models
-- `MessageService`: Orchestrates the export process
-- Handles tapback linking and conversation grouping
-
-**Exporter** (`exporter.py`)
-- Protocol-based serialization (easily extensible)
-- `JSONSerializer` implementation
-- File I/O abstraction
-
-**Permissions** (`permissions.py`)
-- Database access validation
-- User-friendly error messages with rich formatting
+- **Message Text**: No actual message content is ever sent
+- **Contact Names**: All names are stripped out before upload
+- **Phone Numbers/Emails**: Original identifiers are one-way hashed
+- **Conversation Content**: No snippets, samples, or quotes
+- **Attachments**: No photos, videos, or file content
+- **Personal Info**: Nothing that could identify you or your contacts
 
 ## Usage
 
@@ -119,8 +98,11 @@ imexport export --database /path/to/test/chat.db
 # Compact JSON (no indentation)
 imexport export --indent 0
 
-# Analyze and share
-imexport analyze --share
+# Analyze and share (default behavior)
+imexport analyze
+
+# Analyze with full terminal output (no sharing)
+imexport analyze --no-share
 
 # Show help
 imexport --help
@@ -134,20 +116,7 @@ python -m imessage_wrapped export --year 2024
 
 **CLI Commands:**
 - `imexport export`: Export iMessage conversations to JSON
-- `imexport analyze`: Analyze and display statistics
-
-**Export Options:**
-- `--year, -y`: Year to export (default: current year)
-- `--output, -o`: Output file path (default: `exports/imessage_export_YEAR.jsonl`)
-- `--database, -d`: Custom database path (default: `~/Library/Messages/chat.db`)
-- `--format`: Export format (jsonl or json, default: jsonl)
-- `--indent`: JSON indentation (default: 2, use 0 for compact)
-- `--skip-permission-check`: Skip permission validation (testing only)
-
-**Analyze Options:**
-- `--share`: Upload statistics and get shareable URL
-- `--server-url`: Web server URL for sharing
-- `--analyzers`: Comma-separated analyzers to run (raw,nlp,llm)
+- `imexport analyze`: Analyze and share your wrapped (auto-exports if needed, use `--no-share` for full terminal output)
 
 ## Requirements
 
@@ -169,54 +138,6 @@ This installs the package and creates the `imexport` command.
 
 ```bash
 pip install -r requirements.txt
-```
-
-## Quick Start
-
-1. **Install the package:**
-
-```bash
-./install.sh
-# or manually: pip install -e .
-```
-
-2. **Run the exporter:**
-
-```bash
-imexport export --year 2024 --output my_messages.json
-```
-
-3. **Analyze your messages:**
-
-```bash
-# Analyze locally
-imexport analyze
-
-# Analyze and share online
-imexport analyze --share
-```
-
-## Extending
-
-### Custom Serializers
-
-Implement the `Serializer` protocol:
-
-```python
-from imessage_wrapped import Exporter, ExportData
-
-class CSVSerializer:
-    def serialize(self, data: ExportData) -> str:
-        # Your implementation
-        pass
-
-exporter = Exporter(serializer=CSVSerializer())
-```
-
-### Custom Database Paths
-
-```python
-service = MessageService(db_path="/path/to/chat.db")
 ```
 
 ## macOS Permissions
