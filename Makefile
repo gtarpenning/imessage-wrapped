@@ -18,7 +18,7 @@ help:
 	@echo "    make upload                 - Upload to PyPI"
 	@echo ""
 	@echo "  Code Quality:"
-	@echo "    make lint                   - Run ruff linter"
+	@echo "    make lint                   - Run ruff linter and format JS files"
 	@echo "    make format                 - Format code with ruff"
 	@echo "    make typecheck              - Run ty type checker"
 	@echo "    make check                  - Run all checks (lint + typecheck)"
@@ -80,6 +80,8 @@ release-desktop:
 lint:
 	@echo "Running ruff linter..."
 	ruff check src/ --fix --unsafe-fixes
+	@echo "Formatting JavaScript files..."
+	cd web && npm run format || true
 
 format:
 	@echo "Formatting code with ruff..."

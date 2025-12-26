@@ -1,12 +1,12 @@
-import StatCard from './StatCard'
+import StatCard from "./StatCard";
 
 export default function ContactsSection({ contacts }) {
-  if (!contacts) return null
+  if (!contacts) return null;
 
   return (
     <div className="section">
       <h2 className="section-title">👥 Your Top People</h2>
-      
+
       {/* Top 5 contacts lists - commented out for privacy
       {contacts.top_sent_to && contacts.top_sent_to.length > 0 && (
         <div style={{ marginBottom: '2rem' }}>
@@ -47,25 +47,27 @@ export default function ContactsSection({ contacts }) {
 
       <div className="stats-grid">
         {contacts.unique_contacts_messaged !== undefined && (
-          <StatCard 
-            label="Unique Contacts Messaged" 
+          <StatCard
+            label="Unique Contacts Messaged"
             value={contacts.unique_contacts_messaged}
-            valueStyle={{ fontSize: '2rem' }}
+            valueStyle={{ fontSize: "2rem" }}
           />
         )}
         {contacts.unique_contacts_received_from !== undefined && (
-          <StatCard 
-            label="Unique Contacts Received From" 
+          <StatCard
+            label="Unique Contacts Received From"
             value={contacts.unique_contacts_received_from}
-            valueStyle={{ fontSize: '2rem' }}
+            valueStyle={{ fontSize: "2rem" }}
           />
         )}
       </div>
 
       {contacts.social_butterfly_day && contacts.social_butterfly_day.date && (
-        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+        <div style={{ marginTop: "2rem", textAlign: "center" }}>
           <p style={{ opacity: 0.8 }}>🦋 Social Butterfly Day</p>
-          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f59e0b' }}>
+          <p
+            style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#f59e0b" }}
+          >
             {contacts.social_butterfly_day.date}
           </p>
           <p style={{ opacity: 0.7 }}>
@@ -75,17 +77,19 @@ export default function ContactsSection({ contacts }) {
       )}
 
       {contacts.fan_club_day && contacts.fan_club_day.date && (
-        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+        <div style={{ marginTop: "2rem", textAlign: "center" }}>
           <p style={{ opacity: 0.8 }}>⭐ Fan Club Day</p>
-          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>
+          <p
+            style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#ec4899" }}
+          >
             {contacts.fan_club_day.date}
           </p>
           <p style={{ opacity: 0.7 }}>
-            {contacts.fan_club_day.unique_contacts} different people messaged you
+            {contacts.fan_club_day.unique_contacts} different people messaged
+            you
           </p>
         </div>
       )}
     </div>
-  )
+  );
 }
-

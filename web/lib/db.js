@@ -1,36 +1,36 @@
 // Database connection and queries
-import { Pool } from 'pg'
-import crypto from 'crypto'
+import { Pool } from "pg";
+import crypto from "crypto";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('fly.io') 
+  ssl: process.env.DATABASE_URL?.includes("fly.io")
     ? { rejectUnauthorized: false }
-    : false
-})
+    : false,
+});
 
 // Test connection
-pool.on('error', (err) => {
-  console.error('Database connection error:', err)
-})
+pool.on("error", (err) => {
+  console.error("Database connection error:", err);
+});
 
 // Generate a unique ID for a wrapped
 export function generateId() {
-  return crypto.randomBytes(6).toString('base64url')
+  return crypto.randomBytes(6).toString("base64url");
 }
 
 // Save wrapped statistics to database
 export async function createWrapped(year, data) {
-  const id = generateId()
-  
+  const id = generateId();
+
   const sql = `
     INSERT INTO wrapped_stats (id, year, data, created_at, views)
     VALUES ($1, $2, $3, NOW(), 0)
     RETURNING id, year, created_at
-  `
-  
-  const result = await pool.query(sql, [id, year, JSON.stringify(data)])
-  return result.rows[0]
+  `;
+
+  const result = await pool.query(sql, [id, year, JSON.stringify(data)]);
+  return result.rows[0];
 }
 
 // Get wrapped statistics by ID and year
@@ -39,29 +39,28 @@ export async function getWrapped(year, id) {
     SELECT id, year, data, created_at, views
     FROM wrapped_stats
     WHERE id = $1 AND year = $2
-  `
-  
-  const result = await pool.query(sql, [id, year])
-  
+  `;
+
+  const result = await pool.query(sql, [id, year]);
+
   if (result.rows.length === 0) {
-    return null
+    return null;
   }
-  
-  const wrapped = result.rows[0]
-  
+
+  const wrapped = result.rows[0];
+
   // Increment view counter
-  await pool.query(
-    'UPDATE wrapped_stats SET views = views + 1 WHERE id = $1',
-    [id]
-  )
-  
+  await pool.query("UPDATE wrapped_stats SET views = views + 1 WHERE id = $1", [
+    id,
+  ]);
+
   return {
     id: wrapped.id,
     year: wrapped.year,
     statistics: wrapped.data,
     created_at: wrapped.created_at,
-    views: wrapped.views + 1
-  }
+    views: wrapped.views + 1,
+  };
 }
 
 // Initialize database schema
@@ -86,9 +85,8 @@ export async function initDatabase() {
     );
     
     CREATE INDEX IF NOT EXISTS idx_llm_created_at ON llm_cache(created_at);
-  `
-  
-  await pool.query(sql)
-  console.log('Database initialized')
-}
+  `;
 
+  await pool.query(sql);
+  console.log("Database initialized");
+}

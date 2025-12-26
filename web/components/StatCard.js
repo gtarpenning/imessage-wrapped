@@ -6,6 +6,5 @@ export default function StatCard({ label, value, valueStyle = {} }) {
         {value}
       </div>
     </div>
-  )
+  );
 }
-
