@@ -142,11 +142,11 @@ Once deployed, update your local CLI to use production instead of localhost:
 
 ```bash
 # Use your production server
-mexport analyze --share --server-url https://imessage-wrapped.fly.dev
+imexport analyze --share --server-url https://imessage-wrapped.fly.dev
 
 # Or set as environment variable (so you don't have to type it each time)
 export IMESSAGE_SERVER_URL="https://imessage-wrapped.fly.dev"
-mexport analyze --share --server-url $IMESSAGE_SERVER_URL
+imexport analyze --share --server-url $IMESSAGE_SERVER_URL
 
 # Or add to your shell config (~/.zshrc or ~/.bashrc)
 echo 'export IMESSAGE_SERVER_URL="https://imessage-wrapped.fly.dev"' >> ~/.zshrc

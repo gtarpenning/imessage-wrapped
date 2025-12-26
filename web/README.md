@@ -2,35 +2,35 @@
 
 Beautiful, shareable dashboards for your iMessage statistics.
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
-# 1. Install dependencies
+# Install dependencies
 npm install
 
-# 2. Setup environment
+# Setup environment
 cp env.example .env.local
 # Edit .env.local: Set DATABASE_URL
 
-# 3. Initialize database (if using Postgres)
+# Initialize database (if using Postgres)
 npm run init-db
 
-# 4. Start server
+# Start server
 npm run dev
 ```
 
 Visit http://localhost:3000
 
-## 📋 Requirements
+## Requirements
 
-- **Node.js** 18+ 
-- **Database**: PostgreSQL or SQLite
+- Node.js 18+
+- Database: PostgreSQL or SQLite
   - PostgreSQL: Better for production
   - SQLite: Simpler for local testing
 
-## 🔧 Environment Setup
+## Environment Setup
 
-### Option 1: SQLite (Easiest)
+### SQLite (Easiest)
 
 ```bash
 # .env.local
@@ -38,9 +38,9 @@ DATABASE_URL=sqlite:///./wrapped.db
 BASE_URL=http://localhost:3000
 ```
 
-No additional setup needed! Database file created automatically.
+Database file created automatically.
 
-### Option 2: PostgreSQL (Production-ready)
+### PostgreSQL (Production)
 
 ```bash
 # Install Postgres
@@ -58,7 +58,7 @@ BASE_URL=http://localhost:3000
 npm run init-db
 ```
 
-## 🧪 Testing
+## Testing
 
 ### Test API Endpoints
 
@@ -76,13 +76,9 @@ npm run dev
 ./scripts/test-full-flow.sh
 ```
 
-This tests:
-- ✅ Health check
-- ✅ Upload statistics
-- ✅ Fetch by ID
-- ✅ PII sanitization
+This tests health checks, upload, fetch, and PII sanitization.
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### POST `/api/upload`
 
@@ -138,38 +134,38 @@ Health check endpoint.
 }
 ```
 
-## 🔐 Security Features
+## Security Features
 
 ### Data Privacy
-- ✅ **No PII Stored**: Phone numbers and emails are one-way hashed
-- ✅ **No Message Content**: Only aggregate statistics
-- ✅ **Automatic Sanitization**: Recursive PII scanning before storage
+- No PII stored (phone numbers and emails are one-way hashed)
+- No message content stored (only aggregate statistics)
+- Automatic sanitization before storage
 
 ### Network Security
-- ✅ **HTTPS Only**: Forced in production (automatic on Fly.io)
-- ✅ **CORS Configured**: Restricts API access
-- ✅ **Rate Limiting**: Prevents abuse
+- HTTPS enforced in production
+- CORS configured
+- Rate limiting
 
 ### Database Security
-- ✅ **Parameterized Queries**: SQL injection protection
-- ✅ **SSL Connections**: Required for production databases
-- ✅ **Encrypted at Rest**: Fly.io Postgres has disk encryption
+- Parameterized queries (SQL injection protection)
+- SSL connections required for production
+- Encrypted at rest
 
-## 🚀 Deploy to Fly.io
+## Deployment
 
 See [DEPLOY.md](DEPLOY.md) for complete deployment guide.
 
-**Quick version:**
+**Quick Fly.io deployment:**
 
 ```bash
-# 1. Install Fly CLI
+# Install Fly CLI
 brew install flyctl
 fly auth login
 
-# 2. Create app (without expensive auto-database)
+# Create app
 fly launch --name imessage-wrapped --region lax --no-deploy --no-db --copy-config -y
 
-# 3. Create database (CHEAP: ~$1-2/month)
+# Create database
 fly postgres create \
   --name imessage-wrapped-db \
   --region lax \
@@ -178,21 +174,21 @@ fly postgres create \
   --volume-size 1
 fly postgres attach imessage-wrapped-db --app imessage-wrapped
 
-# 4. Set secrets
+# Set secrets
 fly secrets set BASE_URL="https://imessage-wrapped.fly.dev" -a imessage-wrapped
 fly secrets set OPENAI_API_KEY="sk-..." -a imessage-wrapped  # Optional
 
-# 5. Deploy
+# Deploy
 fly deploy
 
-# 6. Initialize database
+# Initialize database
 fly ssh console -a imessage-wrapped -C "node scripts/init-db.js"
 
-# 7. Test
+# Test
 curl https://imessage-wrapped.fly.dev/api/health
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 web/
@@ -216,11 +212,10 @@ web/
 │   └── test-full-flow.sh                # Integration test
 ├── server.js                            # Custom Node server
 ├── fly.toml                             # Fly.io config
-├── package.json                         # Dependencies
-└── README.md                            # This file
+└── package.json                         # Dependencies
 ```
 
-## 🛠️ Development
+## Development
 
 ### Available Scripts
 
@@ -231,23 +226,16 @@ npm run start      # Start production server
 npm run init-db    # Initialize database schema
 ```
 
-### Adding New Features
+### Adding Features
 
-1. **New API Endpoint**: Add to `app/api/`
-2. **New Page**: Add to `app/`
-3. **New Utility**: Add to `lib/`
-4. **New Style**: Edit `app/globals.css`
+- **New API Endpoint**: Add to `app/api/`
+- **New Page**: Add to `app/`
+- **New Utility**: Add to `lib/`
+- **New Style**: Edit `app/globals.css`
 
-### Code Style
+## Troubleshooting
 
-- Use **functional components** (React)
-- Use **async/await** (not callbacks)
-- **Comment** complex logic
-- **Error handling** on all async operations
-
-## 🐛 Troubleshooting
-
-### "Database connection failed"
+### Database connection failed
 
 ```bash
 # Check Postgres is running
@@ -257,15 +245,14 @@ brew services list | grep postgresql
 echo "DATABASE_URL=sqlite:///./wrapped.db" > .env.local
 ```
 
-### "Module not found"
+### Module not found
 
 ```bash
-# Reinstall dependencies
 rm -rf node_modules package-lock.json
 npm install
 ```
 
-### "Port 3000 already in use"
+### Port 3000 already in use
 
 ```bash
 # Kill process on port 3000
@@ -275,115 +262,53 @@ lsof -ti:3000 | xargs kill -9
 PORT=3001 npm run dev
 ```
 
-### "Upload failed" from CLI
+### Upload failed from CLI
 
 ```bash
-# For local development - make sure server is running
+# For local development
 cd web && npm run dev
-mexport analyze --share --server-url http://localhost:3000
+imexport analyze --share --server-url http://localhost:3000
 
-# For production - use your Fly.io URL
-mexport analyze --share --server-url https://imessage-wrapped.fly.dev
+# For production
+imexport analyze --share --server-url https://imessage-wrapped.fly.dev
 ```
 
-## 📊 Database Schema
+## Database Schema
 
 ```sql
 CREATE TABLE wrapped_stats (
-  id TEXT PRIMARY KEY,           -- Random 12-char ID
-  year INTEGER NOT NULL,         -- Year of wrapped
-  data JSONB NOT NULL,           -- Anonymized statistics
+  id TEXT PRIMARY KEY,
+  year INTEGER NOT NULL,
+  data JSONB NOT NULL,
   created_at TIMESTAMP DEFAULT NOW(),
-  views INTEGER DEFAULT 0        -- View counter
+  views INTEGER DEFAULT 0
 );
 
 CREATE INDEX idx_year ON wrapped_stats(year);
 CREATE INDEX idx_created_at ON wrapped_stats(created_at);
 ```
 
-## 🎨 Customization
-
-### Change Colors
-
-Edit `app/globals.css`:
-
-```css
-.gradient-text {
-  background: linear-gradient(135deg, #your-color 0%, #your-color 100%);
-}
-```
-
-### Add New Dashboard Section
-
-Edit `app/[year]/[id]/page.js`:
-
-```javascript
-{stats.your_new_section && (
-  <div className="section">
-    <h2 className="section-title">Your New Section</h2>
-    {/* Your content here */}
-  </div>
-)}
-```
-
-### Modify Privacy Rules
-
-Edit `lib/privacy.js`:
-
-```javascript
-export function sanitizeStatistics(statistics) {
-  // Add your custom sanitization logic
-}
-```
-
-## 💰 Cost Estimates
+## Cost Estimates
 
 ### Local Development
-- **Cost**: $0/month
-- **Database**: SQLite (free) or local Postgres
+- Cost: Free
+- Database: SQLite or local Postgres
 
-### Fly.io Development Setup (Recommended)
-- **Cost**: ~$1-3/month
-- **Includes**: 
-  - 2x app VMs (auto-stop when idle)
-  - 1GB Postgres (shared-cpu-1x)
-  - 160GB bandwidth
-- **Perfect for**: Personal use, 0-1K users/month
+### Fly.io (Hobby)
+- Cost: $1-3/month
+- Includes: 2x app VMs (auto-stop), 1GB Postgres, 160GB bandwidth
+- Good for: Personal use, light traffic
 
-### Fly.io Production
-- **Cost**: $10-20/month
-- **Includes**: More VMs, storage, bandwidth
-- **Perfect for**: 1K-10K users/month
+### Fly.io (Production)
+- Cost: $10-20/month
+- Includes: More VMs, storage, bandwidth
+- Good for: Higher traffic
 
-**⚠️ Avoid**: Managed Postgres ($38/month) - only needed for high-availability production apps
+## Documentation
 
-## 📚 Additional Documentation
+- [DEPLOY.md](DEPLOY.md) - Complete deployment guide
+- [ARCHITECTURE.md](../ARCHITECTURE.md) - System architecture
 
-- **[DEPLOY.md](DEPLOY.md)** - Complete Fly.io deployment guide
-- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Command cheat sheet
-- **[../QUICKSTART.md](../QUICKSTART.md)** - Overall project quick start
-- **[../ARCHITECTURE.md](../ARCHITECTURE.md)** - System architecture
-
-## 🤝 Contributing
-
-1. Keep code simple and readable
-2. Add comments for complex logic
-3. Test before committing
-4. Follow existing code style
-
-## 📝 License
+## License
 
 See parent project LICENSE file.
-
-## 🆘 Support
-
-- **Issues**: Check troubleshooting section above
-- **Fly.io Docs**: https://fly.io/docs
-- **Next.js Docs**: https://nextjs.org/docs
-
----
-
-**Ready to deploy?** Follow [DEPLOY.md](DEPLOY.md)
-
-**Need help?** Read [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
-

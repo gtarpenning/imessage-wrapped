@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        prog="imessage-wrapped",
+        prog="imexport",
         description="Export and analyze iMessage conversations from macOS",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -201,7 +201,7 @@ def analyze_command(args):
     if not args.input:
         exports_dir = Path("exports")
         if not exports_dir.exists() or not any(exports_dir.iterdir()):
-            console.print(f"[red]✗[/] No exports folder found. Run [cyan]mexport export[/] first.")
+            console.print(f"[red]✗[/] No exports folder found. Run [cyan]imexport export[/] first.")
             sys.exit(1)
         
         export_files = sorted(
@@ -211,7 +211,7 @@ def analyze_command(args):
         )
         
         if not export_files:
-            console.print(f"[red]✗[/] No export files found in exports/. Run [cyan]mexport export[/] first.")
+            console.print(f"[red]✗[/] No export files found in exports/. Run [cyan]imexport export[/] first.")
             sys.exit(1)
         
         choices = []

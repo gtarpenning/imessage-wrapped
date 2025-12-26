@@ -1,36 +1,26 @@
-# iMessage Year Review
+# iMessage Wrapped
 
 Export and analyze your iMessage conversations from the macOS SQLite database.
 
 ## Quick Install & Run
 
 ```bash
-./install.sh          # Install the mexport command
-mexport -y 2024       # Export messages from 2024
-mexport --help        # Show all options
+pip install imessage-wrapped
+imexport export --year 2024
+imexport analyze --share
 ```
 
-## 🌐 Web Sharing (NEW!)
+## 🌐 Web Sharing
 
-Share your iMessage Wrapped with friends via a beautiful web dashboard!
+Share your iMessage Wrapped with friends via a web dashboard
 
 ### Quick Start
 
 ```bash
-# 1. Setup web server (one-time)
-cd web
-npm install
-cp env.example .env.local
-# Edit .env.local with your DATABASE_URL
-
-# 2. Start server
-npm run dev
-
-# 3. In another terminal: Analyze & Share
 imessage-wrapped analyze --share
 ```
 
-You'll get a shareable URL like: `http://localhost:3000/2025/abc123xyz`
+You'll get a shareable URL like: `https://imessage-wrapped.fly.dev/2025/abc123xyz`
 
 ### Features
 
@@ -107,43 +97,53 @@ See `example_usage.py` for a complete working example.
 
 ### As a CLI
 
-After installation, use the `mexport` command:
+After installation, use the `imexport` command:
 
 ```bash
 # Export current year (default)
-mexport
+imexport export
 
 # Export specific year
-mexport -y 2024
+imexport export --year 2024
 
 # Custom output path
-mexport -o my_messages.json
+imexport export --output my_messages.json
 
 # Custom database path (for testing)
-mexport -d /path/to/test/chat.db
+imexport export --database /path/to/test/chat.db
 
 # Compact JSON (no indentation)
-mexport --indent 0
+imexport export --indent 0
 
-# All options together
-mexport -y 2023 -o archive.json -d ~/test.db --indent 4
+# Analyze and share
+imexport analyze --share
 
 # Show help
-mexport --help
+imexport --help
 ```
 
 **Alternatively**, run without installation:
 
 ```bash
-python -m imessage_wrapped -y 2024
+python -m imessage_wrapped export --year 2024
 ```
 
-**CLI Options:**
-- `-y, --year`: Year to export (default: current year)
-- `-o, --output`: Output file path (default: `imessage_export_YEAR.json`)
-- `-d, --database`: Custom database path (default: `~/Library/Messages/chat.db`)
+**CLI Commands:**
+- `imexport export`: Export iMessage conversations to JSON
+- `imexport analyze`: Analyze and display statistics
+
+**Export Options:**
+- `--year, -y`: Year to export (default: current year)
+- `--output, -o`: Output file path (default: `exports/imessage_export_YEAR.jsonl`)
+- `--database, -d`: Custom database path (default: `~/Library/Messages/chat.db`)
+- `--format`: Export format (jsonl or json, default: jsonl)
 - `--indent`: JSON indentation (default: 2, use 0 for compact)
 - `--skip-permission-check`: Skip permission validation (testing only)
+
+**Analyze Options:**
+- `--share`: Upload statistics and get shareable URL
+- `--server-url`: Web server URL for sharing
+- `--analyzers`: Comma-separated analyzers to run (raw,nlp,llm)
 
 ## Requirements
 
@@ -159,7 +159,7 @@ python -m imessage_wrapped -y 2024
 pip install -e .
 ```
 
-This installs the package and creates the `mexport` command.
+This installs the package and creates the `imexport` command.
 
 ### Install Dependencies Only
 
@@ -179,26 +179,17 @@ pip install -r requirements.txt
 2. **Run the exporter:**
 
 ```bash
-mexport -y 2024 -o my_messages.json
+imexport export --year 2024 --output my_messages.json
 ```
 
-3. **Run the test script:**
+3. **Analyze your messages:**
 
 ```bash
-./test_export.sh
-```
+# Analyze locally
+imexport analyze
 
-Or test manually:
-
-```bash
-# Quick test with current year
-mexport -o test.json
-
-# Test with custom year
-mexport -y 2024 -o test_2024.json
-
-# Test library usage
-python example_usage.py
+# Analyze and share online
+imexport analyze --share
 ```
 
 ## Extending

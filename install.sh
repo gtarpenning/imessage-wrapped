@@ -22,9 +22,10 @@ if [ $? -eq 0 ]; then
     echo ""
     echo "✓ Installation complete!"
     echo ""
-    echo "You can now use the 'mexport' command:"
-    echo "  mexport -y 2024"
-    echo "  mexport --help"
+    echo "You can now use the 'imexport' command:"
+    echo "  imexport export --year 2024"
+    echo "  imexport analyze --share"
+    echo "  imexport --help"
 else
     echo ""
     echo "❌ Installation failed"
