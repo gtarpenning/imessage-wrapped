@@ -3,7 +3,7 @@
 
 set -e
 
-VERSION="1.0.10"
+VERSION="1.0.11"
 
 echo "🏗️  Building iMessage Wrapped v${VERSION} (Production)..."
 echo ""
@@ -75,8 +75,9 @@ echo '
    end tell
 ' | osascript || true
 
-# Unmount
-hdiutil detach "${MOUNT_DIR}" || hdiutil detach "${MOUNT_DIR}" -force
+# Unmount (force if needed, don't fail the build)
+sleep 1
+hdiutil detach "${MOUNT_DIR}" 2>/dev/null || hdiutil detach "${MOUNT_DIR}" -force || true
 
 # Convert to compressed DMG
 hdiutil convert "${TEMP_DMG}" -format UDZO -o "${DMG_NAME}"
