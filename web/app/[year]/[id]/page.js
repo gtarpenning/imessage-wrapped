@@ -71,7 +71,7 @@ export default function WrappedPage() {
       <ResponseTimesSection response_times={stats.response_times} />
       <TapbacksSection tapbacks={stats.tapbacks} />
       <StreaksSection streaks={stats.streaks} />
-      <WrappedFooter views={data.views} />
+      <WrappedFooter views={data.views} volume={stats.volume} />
     </main>
   )
 }
