@@ -156,6 +156,10 @@ footer {
   color: rgba(255, 255, 255, 0.4);
 }
 
+.heatmap-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .hero h1 {
     font-size: 2.5rem;

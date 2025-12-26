@@ -1,8 +1,11 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 export default function HeatmapSection({ volume, year }) {
+  const [hoveredDay, setHoveredDay] = useState(null)
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
+  
   if (!volume?.daily_activity) return null
 
   const heatmapData = useMemo(() => {
@@ -90,8 +93,49 @@ export default function HeatmapSection({ volume, year }) {
   const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   return (
-    <div className="section">
+    <div className="section" style={{ position: 'relative' }}>
       <h2 className="section-title">📅 Activity Heatmap</h2>
+      
+      {hoveredDay && (
+        <div style={{
+          position: 'fixed',
+          left: `${tooltipPos.x}px`,
+          top: `${tooltipPos.y}px`,
+          transform: 'translate(-50%, -120%)',
+          backgroundColor: 'rgba(0, 0, 0, 0.95)',
+          color: 'white',
+          padding: '0.75rem 1rem',
+          borderRadius: '0.5rem',
+          border: '1px solid rgba(236, 72, 153, 0.3)',
+          fontSize: '0.875rem',
+          pointerEvents: 'none',
+          zIndex: 1000,
+          whiteSpace: 'nowrap',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+        }}>
+          <div style={{ fontWeight: '600', marginBottom: '0.25rem', color: '#ec4899' }}>
+            {new Date(hoveredDay.date).toLocaleDateString('en-US', { 
+              weekday: 'short',
+              month: 'short', 
+              day: 'numeric', 
+              year: 'numeric' 
+            })}
+          </div>
+          <div style={{ fontSize: '0.8rem', opacity: 0.9 }}>
+            <span style={{ fontWeight: '600', color: '#a855f7' }}>{hoveredDay.count}</span> total messages
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            gap: '1rem', 
+            marginTop: '0.25rem',
+            fontSize: '0.75rem',
+            opacity: 0.8,
+          }}>
+            <span>↑ {hoveredDay.sent} sent</span>
+            <span>↓ {hoveredDay.received} received</span>
+          </div>
+        </div>
+      )}
       
       <div style={{ 
         marginBottom: '2rem', 
@@ -121,7 +165,10 @@ export default function HeatmapSection({ volume, year }) {
       <div style={{ 
         overflowX: 'auto',
         paddingBottom: '1rem',
-      }}>
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none',
+      }}
+      className="heatmap-scroll">
         <div style={{ 
           display: 'flex',
           gap: '1rem',
@@ -169,6 +216,13 @@ export default function HeatmapSection({ volume, year }) {
                           e.currentTarget.style.transform = 'scale(1.4)'
                           e.currentTarget.style.boxShadow = '0 0 12px rgba(236, 72, 153, 0.6)'
                           e.currentTarget.style.zIndex = '10'
+                          
+                          const rect = e.currentTarget.getBoundingClientRect()
+                          setTooltipPos({
+                            x: rect.left + rect.width / 2,
+                            y: rect.top,
+                          })
+                          setHoveredDay(day)
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -176,9 +230,9 @@ export default function HeatmapSection({ volume, year }) {
                           e.currentTarget.style.transform = 'scale(1)'
                           e.currentTarget.style.boxShadow = 'none'
                           e.currentTarget.style.zIndex = '1'
+                          setHoveredDay(null)
                         }
                       }}
-                      title={day ? `${new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}\n${day.count} total messages\n↑ ${day.sent} sent\n↓ ${day.received} received` : ''}
                     />
                   )
                 })}
