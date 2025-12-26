@@ -8,9 +8,6 @@ export default function StreaksSection({ streaks }) {
         <p style={{ fontSize: '3rem', fontWeight: 'bold', color: '#f59e0b' }}>
           {streaks.longest_streak_days} days
         </p>
-        <p style={{ opacity: 0.8, marginTop: '1rem' }}>
-          with {streaks.longest_streak_contact}
-        </p>
       </div>
     </div>
   )
