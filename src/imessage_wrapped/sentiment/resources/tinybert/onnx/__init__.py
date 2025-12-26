@@ -1,0 +1,1 @@
+# TinyBERT ONNX asset package.

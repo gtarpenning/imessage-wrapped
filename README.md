@@ -157,7 +157,20 @@ Requires **Full Disk Access** to read the iMessage database:
 3. Add Terminal (for CLI) or the Desktop App
 4. Restart the application
 
+## Advanced: TinyBERT Sentiment Backend
+
+The package now bundles a TinyBERT ONNX model (via `onnxruntime` + `numpy<2`) so you don’t need extra installs. Toggle the backend per-run:
+
+```bash
+# Use ONNX TinyBERT instead of the default lexicon model
+imexport analyze --sentiment-backend tinybert --no-share
+
+# or via environment variable (still defaults to lexical if unset)
+IMESSAGE_WRAPPED_SENTIMENT_BACKEND=tinybert imexport analyze --no-share
+```
+
+If ONNX runtime fails to load for any reason, the CLI/Desktop automatically falls back to the lexicon-based analyzer.
+
 ## Deployment
 
 See [RELEASE-GUIDE.md](RELEASE-GUIDE.md) for deploying the CLI, Desktop App, or Web App.
-
