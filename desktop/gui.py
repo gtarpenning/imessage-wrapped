@@ -79,13 +79,17 @@ class iMessageWrappedApp(rumps.App):
         """Update menu item enabled/disabled states"""
         if self.current_url:
             self.copy_link_item.title = "📋 Copy link"
+            self.copy_link_item.set_callback(self.copy_link)
         else:
             self.copy_link_item.title = "📋 Copy link (not available)"
+            self.copy_link_item.set_callback(None)
         
         if self.has_error:
             self.view_logs_item.title = "📄 View logs"
+            self.view_logs_item.set_callback(self.view_logs)
         else:
             self.view_logs_item.title = "📄 View logs (no errors)"
+            self.view_logs_item.set_callback(None)
     
     @rumps.clicked("Copy link")
     def copy_link(self, _):
