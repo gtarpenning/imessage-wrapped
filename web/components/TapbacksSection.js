@@ -24,8 +24,9 @@ export default function TapbacksSection({ tapbacks }) {
   }
 
   const tapbackDistribution = tapbacks.tapback_distribution_given || {}
-  const orderedTapbacks = ['love', 'like', 'laugh', 'emphasize', 'dislike', 'question']
-    .filter(type => tapbackDistribution[type] > 0)
+  const orderedTapbacks = Object.entries(tapbackDistribution)
+    .sort((a, b) => b[1] - a[1])
+    .map(([type]) => type)
 
   return (
     <div className="section">
