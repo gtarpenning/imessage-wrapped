@@ -6,6 +6,9 @@ on:
       - 'desktop-v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-macos:
     runs-on: macos-latest
@@ -74,6 +77,4 @@ jobs:
             
             ## What's New
             See below for automatically generated release notes.
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
