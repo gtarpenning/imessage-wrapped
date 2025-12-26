@@ -1,0 +1,27 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#16213e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f3460;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <text x="600" y="180" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="120" text-anchor="middle" fill="#fff">💌</text>
+  
+  <text x="590" y="320" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="80" font-weight="800" text-anchor="end" fill="#fff">iMessage</text>
+  
+  <text x="610" y="320" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="80" font-weight="800" text-anchor="start" fill="url(#textGradient)">Wrapped</text>
+  
+  <text x="600" y="410" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="40" text-anchor="middle" fill="rgba(255, 255, 255, 0.8)">Your year in messages, visualized</text>
+  
+  <rect x="450" y="480" width="300" height="70" rx="35" fill="rgba(255, 255, 255, 0.1)" stroke="rgba(255, 255, 255, 0.2)" stroke-width="2"/>
+  <text x="600" y="527" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="28" text-anchor="middle" fill="rgba(255, 255, 255, 0.7)">Download for macOS</text>
+</svg>
+
