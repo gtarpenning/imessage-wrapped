@@ -159,8 +159,8 @@ tell application "Finder"
         set arrangement of viewOptions to not arranged
         set icon size of viewOptions to 100
         set background picture of viewOptions to file ".background:dmg-background.png"
-        set position of item "iMessage Wrapped.app" of container window to {150, 200}
-        set position of item "Applications" of container window to {450, 200}
+        set position of item "iMessage Wrapped.app" of container window to {150, 235}
+        set position of item "Applications" of container window to {450, 235}
         update without registering applications
         delay 1
     end tell
