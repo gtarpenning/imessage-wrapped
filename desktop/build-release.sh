@@ -3,7 +3,7 @@
 
 set -e
 
-VERSION="1.0.21"
+VERSION="1.0.22"
 
 echo "🏗️  Building iMessage Wrapped v${VERSION} (Production)..."
 echo ""
@@ -113,10 +113,11 @@ echo "  2. Sign (optional): codesign --deep --force --sign 'Developer ID' 'dist/
 echo "  3. Distribute: Upload ${DMG_NAME} to GitHub Releases"
 echo ""
 
-# Optional: Open dist folder
-read -p "Open dist folder? (y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    open dist
+# Optional: Open dist folder when running interactively
+if [ -t 0 ]; then
+    read -p "Open dist folder? (y/n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        open dist
+    fi
 fi
-
