@@ -79,7 +79,7 @@ release-desktop:
 
 lint:
 	@echo "Running ruff linter..."
-	ruff check src/
+	ruff check src/ --fix --unsafe-fixes
 
 format:
 	@echo "Formatting code with ruff..."
