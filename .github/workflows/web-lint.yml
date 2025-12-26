@@ -6,7 +6,7 @@ on:
       - 'web/**'
   push:
     branches:
-      - master
+      - main
     paths:
       - 'web/**'
 
