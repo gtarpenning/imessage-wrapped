@@ -253,7 +253,6 @@ export default function HeatmapSection({ volume, year }) {
         flexWrap: 'wrap',
       }}>
         <span>Active days in {year}: {heatmapData.totalDays}</span>
-        <span>•</span>
         <span>Peak: {heatmapData.maxCount} messages</span>
       </div>
     </div>
