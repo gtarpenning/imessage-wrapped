@@ -8,13 +8,41 @@
 make release-desktop
 ```
 
-Automatically: bumps version, commits, tags, pushes. GitHub Actions builds and publishes DMG.
+**This command:**
+1. Bumps version (1.0.0 → 1.0.1)
+2. Builds DMG locally
+3. Signs & notarizes (requires Developer ID certificate)
+4. Creates GitHub release with signed DMG
+
+**Time:** ~5-10 minutes (notarization takes 2-5 min)
 
 **Download URL:** https://imessage-wrapped.fly.dev/api/download
 
+## Prerequisites
+
+### Required for Signing & Notarization
+
+1. **Apple Developer ID Certificate** ($99/year)
+   - Install "Developer ID Application" certificate in Keychain
+   - Verify: `security find-identity -v | grep "Developer ID Application"`
+
+2. **App-Specific Password**
+   - Create at: https://appleid.apple.com/account/manage
+   - Store in Keychain:
+     ```bash
+     security add-generic-password -a "griffin@tarpenning.com" \
+       -s "notarization-password" -w "your-app-specific-password"
+     ```
+
+3. **GitHub CLI**
+   ```bash
+   brew install gh
+   gh auth login
+   ```
+
 ## Step-by-Step
 
-### 1. Create Release
+### 1. Full Release (Recommended)
 
 ```bash
 make release-desktop
@@ -23,62 +51,80 @@ make release-desktop
 This automatically:
 - Bumps version (1.0.0 → 1.0.1)
 - Updates `build-release.sh` and `setup.py`
-- Commits and creates git tag
-- Pushes to GitHub
-- Triggers GitHub Actions
+- Commits version bump
+- Builds unsigned DMG
+- Signs and notarizes DMG (2-5 min)
+- Creates git tag
+- Creates GitHub release with signed DMG
 
-### 2. Monitor Build
-
-GitHub Actions: https://github.com/gtarpenning/imessage-wrapped/actions
-
-Builds app, creates DMG, publishes release.
-
-### 3. Verify
+### 2. Verify Release
 
 ```bash
+# Check GitHub release
+open https://github.com/gtarpenning/imessage-wrapped/releases
+
+# Test download endpoint
 curl -I https://imessage-wrapped.fly.dev/api/download
+
+# Download and test locally
+curl -L https://imessage-wrapped.fly.dev/api/download -o test.dmg
+open test.dmg
 ```
 
-### 4. Test Locally (Optional)
+## Manual Steps (Advanced)
+
+### Build Only
 
 ```bash
 cd desktop
 ./build-release.sh
-open iMessage-Wrapped-*.dmg
 ```
 
-## Manual Deployment
+Creates unsigned `iMessage-Wrapped-<version>.dmg` in `desktop/` directory.
 
-### Option 1: Automated (Recommended)
+### Sign Existing DMG
 
 ```bash
-make release-desktop
+cd desktop
+./sign-dmg.sh iMessage-Wrapped-1.0.5.dmg
 ```
 
-### Option 2: Manual Tag
+Creates `signed-iMessage-Wrapped-1.0.5.dmg` with:
+- Code signed app bundle
+- Notarized by Apple
+- Ready for distribution
+
+### Publish to GitHub
 
 ```bash
-# 1. Update versions manually
+cd desktop
+./publish-release.sh 1.0.5 signed-iMessage-Wrapped-1.0.5.dmg
+```
+
+Creates GitHub release with signed DMG.
+
+### Manual Release (No Automation)
+
+```bash
+# 1. Update versions
 vim desktop/build-release.sh  # Change VERSION
 vim desktop/setup.py          # Change CFBundleVersion
 
-# 2. Commit and tag
-git add desktop/build-release.sh desktop/setup.py
-git commit -m "Bump desktop version to 1.0.1"
-git tag desktop-v1.0.1
-git push && git push origin desktop-v1.0.1
-
-# 3. GitHub Actions will build and create release
-```
-
-### Option 3: Local Build + Manual Upload
-
-```bash
+# 2. Build
 cd desktop
 ./build-release.sh
 
-# Upload DMG manually to:
-# https://github.com/gtarpenning/imessage-wrapped/releases/new
+# 3. Sign
+./sign-dmg.sh iMessage-Wrapped-1.0.5.dmg
+
+# 4. Commit and tag
+git add build-release.sh setup.py
+git commit -m "Bump desktop version to 1.0.5"
+git tag desktop-v1.0.5
+git push && git push origin desktop-v1.0.5
+
+# 5. Create release
+./publish-release.sh 1.0.5 signed-iMessage-Wrapped-1.0.5.dmg
 ```
 
 ## Versioning
@@ -89,31 +135,54 @@ cd desktop
 
 Versions follow semantic versioning: `MAJOR.MINOR.PATCH`
 
-## Code Signing (Optional)
+## Troubleshooting
 
-For distribution without Gatekeeper warnings:
+### Notarization Fails with "Invalid"
 
+Check notarization logs:
 ```bash
-# Sign app
-codesign --deep --force --sign "Developer ID Application: Your Name" \
-  "dist/iMessage Wrapped.app"
-
-# Sign DMG
-codesign --sign "Developer ID Application: Your Name" \
-  "iMessage-Wrapped-1.0.0.dmg"
-
-# Notarize
-xcrun notarytool submit iMessage-Wrapped-1.0.0.dmg \
-  --apple-id "your@email.com" \
-  --password "app-specific-password" \
-  --team-id "TEAM_ID" \
-  --wait
-
-# Staple
-xcrun stapler staple iMessage-Wrapped-1.0.0.dmg
+xcrun notarytool history --apple-id griffin@tarpenning.com
+xcrun notarytool log <submission-id> --apple-id griffin@tarpenning.com
 ```
 
-Requires Apple Developer Program ($99/year).
+Common issues:
+- **Unsigned binaries:** All `.dylib`, `.so`, and executables must be signed
+- **Missing hardened runtime:** Use `--options runtime` when signing
+- **Invalid entitlements:** Check app entitlements don't conflict
+
+### Stapling Fails
+
+If notarization succeeds but stapling fails with "Record not found":
+- Wait 5-10 minutes for Apple's CDN to propagate
+- Retry stapling: `xcrun stapler staple signed-iMessage-Wrapped-1.0.5.dmg`
+- If still fails, DMG is still valid (users just need internet to verify)
+
+### Build Fails
+
+```bash
+# Clean and retry
+cd desktop
+rm -rf build dist
+./build-release.sh
+```
+
+### Signing Certificate Not Found
+
+```bash
+# List available certificates
+security find-identity -v | grep "Developer ID"
+
+# Update SIGNING_IDENTITY in sign-local.sh if needed
+```
+
+### App-Specific Password Issues
+
+```bash
+# Re-add password to Keychain
+security delete-generic-password -s "notarization-password"
+security add-generic-password -a "griffin@tarpenning.com" \
+  -s "notarization-password" -w "xxxx-xxxx-xxxx-xxxx"
+```
 
 ## Storage
 
@@ -184,10 +253,21 @@ make release-desktop  # Creates new version
 
 Supports unlimited downloads with no bandwidth charges.
 
+## Scripts Reference
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `build-release.sh` | Build unsigned DMG | `./build-release.sh` |
+| `sign-dmg.sh` | Sign & notarize DMG | `./sign-dmg.sh <dmg-file>` |
+| `publish-release.sh` | Create GitHub release | `./publish-release.sh <version> <signed-dmg>` |
+| `sign-release.sh` | Legacy: Sign from GitHub | Downloads & signs latest release |
+
 ## Checklist
 
+- [ ] Developer ID certificate installed
+- [ ] App-specific password in Keychain
+- [ ] GitHub CLI authenticated
 - [ ] `make release-desktop`
-- [ ] Monitor: https://github.com/gtarpenning/imessage-wrapped/actions
 - [ ] Verify: https://github.com/gtarpenning/imessage-wrapped/releases
 - [ ] Test: `curl -I https://imessage-wrapped.fly.dev/api/download`
 
@@ -195,5 +275,5 @@ Supports unlimited downloads with no bandwidth charges.
 
 - **Download**: https://imessage-wrapped.fly.dev/api/download
 - **Releases**: https://github.com/gtarpenning/imessage-wrapped/releases
-- **Actions**: https://github.com/gtarpenning/imessage-wrapped/actions
+- **Apple Developer**: https://developer.apple.com/account
 

@@ -31,10 +31,13 @@ imexport --version
 make release-desktop
 ```
 
-Bumps version (1.0.0 → 1.0.1), creates tag, pushes to GitHub.  
-GitHub Actions builds DMG and creates release automatically.
+Bumps version (1.0.0 → 1.0.1), builds DMG locally, signs & notarizes it, then creates GitHub release.
 
-**Monitor:** https://github.com/gtarpenning/imessage-wrapped/actions
+**Process:**
+1. Version bump
+2. Build DMG
+3. Sign & notarize (2-5 min)
+4. Create GitHub release with signed DMG
 
 **Download:** https://imessage-wrapped.fly.dev/api/download
 
@@ -66,7 +69,7 @@ curl https://imessage-wrapped.fly.dev/api/health
 | Component | Command | What it does |
 |-----------|---------|--------------|
 | Python CLI | `make build-upgrade-deploy` | PyPI release (patch bump) |
-| Desktop GUI | `make release-desktop` | GitHub release + DMG build |
+| Desktop GUI | `make release-desktop` | Build, sign, and publish to GitHub |
 | Web App | `cd web && fly deploy` | Fly.io deployment |
 
 ---
@@ -82,6 +85,8 @@ curl https://imessage-wrapped.fly.dev/api/health
 ## Troubleshooting
 
 **PyPI upload fails:** Check `~/.pypirc` credentials  
-**GitHub Actions fails:** Check `.github/workflows/build-desktop-app.yml` logs  
+**Desktop build fails:** Check `desktop/build-release.sh` and py2app installation  
+**Signing fails:** Verify Developer ID certificate is installed in Keychain  
+**Notarization fails:** Check Apple ID app-specific password in Keychain  
 **Fly.io deploy fails:** Run `fly auth login` and check `web/fly.toml`
 

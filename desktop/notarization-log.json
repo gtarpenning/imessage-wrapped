@@ -1,0 +1,1997 @@
+{
+  "logFormatVersion": 1,
+  "jobId": "557da3e0-2d7d-49bd-9ebc-7dfc8ee91f58",
+  "status": "Invalid",
+  "statusSummary": "Archive contains critical validation errors",
+  "statusCode": 4000,
+  "archiveFilename": "signed-iMessage-Wrapped-1.0.4.dmg",
+  "uploadDate": "2025-12-26T04:45:48.449Z",
+  "sha256": "c8ea2f3038148682597c1b806fd8a53306cd019cecabc10f0d5da82e86204b09",
+  "ticketContents": null,
+  "issues": [
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/zlib.cpython-311-darwin.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/zlib.cpython-311-darwin.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/zlib.cpython-311-darwin.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/zlib.cpython-311-darwin.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_asyncio.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_asyncio.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_asyncio.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_asyncio.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_bisect.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_bisect.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_bisect.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_bisect.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_blake2.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_blake2.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_blake2.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_blake2.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_bz2.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_bz2.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_bz2.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_bz2.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_cn.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_cn.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_cn.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_cn.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_hk.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_hk.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_hk.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_hk.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_iso2022.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_iso2022.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_iso2022.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_iso2022.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_jp.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_jp.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_jp.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_jp.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_kr.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_kr.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_kr.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_kr.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_tw.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_tw.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_tw.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_codecs_tw.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_contextvars.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_contextvars.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_contextvars.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_contextvars.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_csv.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_csv.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_csv.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_csv.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_ctypes.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_ctypes.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_ctypes.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_ctypes.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_datetime.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_datetime.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_datetime.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_datetime.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_decimal.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_decimal.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_decimal.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_decimal.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_elementtree.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_elementtree.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_elementtree.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_elementtree.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_hashlib.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_hashlib.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_hashlib.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_hashlib.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_heapq.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_heapq.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_heapq.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_heapq.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_json.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_json.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_json.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_json.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_lzma.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_lzma.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_lzma.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_lzma.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_md5.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_md5.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_md5.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_md5.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_multibytecodec.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_multibytecodec.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_multibytecodec.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_multibytecodec.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_multiprocessing.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_multiprocessing.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_multiprocessing.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_multiprocessing.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_opcode.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_opcode.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_opcode.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_opcode.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_pickle.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_pickle.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_pickle.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_pickle.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_posixshmem.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_posixshmem.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_posixshmem.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_posixshmem.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_posixsubprocess.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_posixsubprocess.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_posixsubprocess.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_posixsubprocess.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_queue.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_queue.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_queue.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_queue.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_random.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_random.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_random.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_random.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_scproxy.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_scproxy.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_scproxy.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_scproxy.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha1.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha1.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha1.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha1.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha256.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha256.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha256.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha256.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha3.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha3.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha3.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha3.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha512.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha512.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha512.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sha512.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_socket.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_socket.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_socket.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_socket.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sqlite3.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sqlite3.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sqlite3.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_sqlite3.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_ssl.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_ssl.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_ssl.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_ssl.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_statistics.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_statistics.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_statistics.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_statistics.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_struct.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_struct.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_struct.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_struct.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_typing.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_typing.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_typing.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/_typing.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/array.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/array.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/array.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/array.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/binascii.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/binascii.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/binascii.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/binascii.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/fcntl.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/fcntl.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/fcntl.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/fcntl.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/grp.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/grp.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/grp.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/grp.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/math.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/math.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/math.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/math.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/mmap.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/mmap.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/mmap.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/mmap.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/pyexpat.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/pyexpat.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/pyexpat.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/pyexpat.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/resource.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/resource.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/resource.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/resource.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/select.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/select.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/select.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/select.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/termios.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/termios.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/termios.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/termios.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/unicodedata.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/unicodedata.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/unicodedata.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/unicodedata.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/zlib.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/zlib.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/zlib.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/zlib.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/AppKit/_AppKit.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/AppKit/_AppKit.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/AppKit/_AppKit.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/AppKit/_AppKit.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/AppKit/_inlines.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/AppKit/_inlines.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/AppKit/_inlines.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/AppKit/_inlines.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/charset_normalizer/md.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/charset_normalizer/md.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/charset_normalizer/md.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/charset_normalizer/md.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/CoreFoundation/_CoreFoundation.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/CoreFoundation/_CoreFoundation.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/CoreFoundation/_CoreFoundation.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/CoreFoundation/_CoreFoundation.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/CoreFoundation/_inlines.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/CoreFoundation/_inlines.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/CoreFoundation/_inlines.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/CoreFoundation/_inlines.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/Foundation/_Foundation.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/Foundation/_Foundation.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/Foundation/_Foundation.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/Foundation/_Foundation.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/Foundation/_inlines.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/Foundation/_inlines.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/Foundation/_inlines.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/Foundation/_inlines.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/objc/_machsignals.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/objc/_machsignals.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/objc/_machsignals.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/objc/_machsignals.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/objc/_objc.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/objc/_objc.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "x86_64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/objc/_objc.so",
+      "message": "The binary is not signed with a valid Developer ID certificate.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087721",
+      "architecture": "arm64"
+    },
+    {
+      "severity": "error",
+      "code": null,
+      "path": "signed-iMessage-Wrapped-1.0.4.dmg/iMessage Wrapped.app/Contents/Resources/lib/python3.11/lib-dynload/objc/_objc.so",
+      "message": "The signature does not include a secure timestamp.",
+      "docUrl": "https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/resolving_common_notarization_issues#3087733",
+      "architecture": "arm64"
+    }
+  ]
+}
