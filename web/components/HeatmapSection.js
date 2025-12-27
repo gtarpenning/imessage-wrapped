@@ -293,11 +293,19 @@ export default function HeatmapSection({ volume, year }) {
           flexWrap: "wrap",
         }}
       >
-        <span>
-          Active days in {year}: {heatmapData.totalDays}
-        </span>
-        <span>Peak: {heatmapData.maxCount} messages</span>
       </div>
+
+      {volume?.busiest_day && (
+        <div style={{ textAlign: "center", marginTop: "2rem" }}>
+          <p style={{ opacity: 0.8 }}>Your Busiest Day</p>
+          <p style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>
+            {volume.busiest_day.date}
+          </p>
+          <p style={{ fontSize: "3rem", fontWeight: "bold", color: "#3b82f6" }}>
+            {volume.busiest_day.total} messages
+          </p>
+        </div>
+      )}
     </div>
   );
 }
