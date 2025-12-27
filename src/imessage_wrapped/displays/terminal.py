@@ -368,7 +368,7 @@ class TerminalDisplay(Display):
             label = self._format_period_label(row["period"], interval)
             magnitude = min(1.0, abs(score))
             width = max(1, int(magnitude * 20))
-            color = "green" if score >= 0 else "red"
+            color = "magenta" if score >= 0 else "cyan"
             bar = "█" * width
             self.console.print(f"{label:>7} [bold {color}]{bar}[/]")
 

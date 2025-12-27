@@ -1,6 +1,6 @@
 const stageColors = {
-  sent: "#34d399",
-  received: "#60a5fa",
+  sent: "linear-gradient(135deg, #ec4899, #8b5cf6)",
+  received: "linear-gradient(135deg, #0ea5e9, #22d3ee)",
 };
 
 const stageLabel = {
@@ -121,7 +121,8 @@ export default function SentimentScatter({ scatter }) {
           {points.map((point, idx) => {
             const x = jitter(normalize(point.x), idx);
             const y = jitter(normalize(point.y), idx + 137);
-            const color = stageColors[point.stage] || "#fbbf24";
+            const gradient = stageColors[point.stage];
+            const fallback = point.stage === "sent" ? "#ec4899" : "#22d3ee";
             const size = point.stage === "sent" ? 11 : 8;
             const isSent = point.stage === "sent";
             return (
@@ -140,8 +141,19 @@ export default function SentimentScatter({ scatter }) {
                     ? "translate(-50%, -50%)"
                     : "translate(-50%, -50%) rotate(45deg)",
                   borderRadius: isSent ? "50%" : "4px",
-                  background: color,
-                  opacity: isSent ? 0.95 : 0.85,
+                  background:
+                    typeof gradient === "string" &&
+                    gradient.startsWith("linear-gradient")
+                      ? undefined
+                      : gradient || fallback,
+                  backgroundImage:
+                    gradient && gradient.startsWith("linear-gradient")
+                      ? gradient
+                      : undefined,
+                  opacity: 0.9,
+                  boxShadow: isSent
+                    ? "0 0 12px rgba(236,72,153,0.35)"
+                    : "0 0 12px rgba(34,211,238,0.35)",
                 }}
               />
             );
@@ -232,7 +244,12 @@ function Legend({ stages }) {
               width: "11px",
               height: "11px",
               borderRadius: stage === "sent" ? "50%" : "3px",
-              background: color,
+              background:
+                typeof color === "string" && color.startsWith("linear-gradient")
+                  ? undefined
+                  : color,
+              backgroundImage:
+                color && color.startsWith("linear-gradient") ? color : undefined,
             }}
           />
           {stageLabel[stage] || stage}

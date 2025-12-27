@@ -1,18 +1,23 @@
 import { Histogram } from "@/lib/histogram";
 
-const PERCENT_TICKS = [1, 0.75, 0.5, 0.25, 0];
-
 function createHistogramConfig(distribution) {
   const capped = distribution.slice(0, 20);
   return {
     processData: () => {
-      const buckets = capped.map((entry, index) => ({
-        rank: entry.rank ?? index + 1,
-        count: entry.share ?? 0,
-        share: entry.share ?? 0,
-        messageCount: entry.count ?? 0,
-      }));
-      return { buckets, maxCount: 1 };
+      const buckets = capped.map((entry, index) => {
+        const share = entry.share ?? 0;
+        return {
+          rank: entry.rank ?? index + 1,
+          count: share,
+          share,
+          messageCount: entry.count ?? 0,
+        };
+      });
+      const maxShare = buckets.reduce(
+        (max, bucket) => Math.max(max, bucket.share ?? 0),
+        0,
+      );
+      return { buckets, maxCount: maxShare || 1 };
     },
     generateTicks: () => [],
     formatLabel: (bucket) => `Chat #${String(bucket.rank).padStart(2, "0")}`,
@@ -26,25 +31,31 @@ function createHistogramConfig(distribution) {
       const hue = hueStart + (hueEnd - hueStart) * intensity;
       return `linear-gradient(180deg, hsla(${hue}, 85%, 65%, 0.9) 0%, hsla(${hue}, 85%, 45%, 0.35) 100%)`;
     },
-    renderYAxis: () => (
-      <div
-        style={{
-          position: "absolute",
-          left: "-2.5rem",
-          top: 0,
-          bottom: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          fontSize: "0.75rem",
-          opacity: 0.55,
-        }}
-      >
-        {PERCENT_TICKS.map((tick) => (
-          <span key={tick}>{Math.round(tick * 100)}%</span>
-        ))}
-      </div>
-    ),
+    renderYAxis: (buckets, maxCount) => {
+      const fractions = [1, 0.75, 0.5, 0.25, 0];
+      return (
+        <div
+          style={{
+            position: "absolute",
+            left: "-2.5rem",
+            top: 0,
+            bottom: 0,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            fontSize: "0.75rem",
+            opacity: 0.55,
+          }}
+        >
+          {fractions.map((fraction) => {
+            const value = (maxCount || 1) * fraction;
+            return (
+              <span key={fraction}>{Math.round(value * 100)}%</span>
+            );
+          })}
+        </div>
+      );
+    },
     highlightLargest: false,
   };
 }

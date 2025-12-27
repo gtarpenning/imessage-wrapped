@@ -41,7 +41,11 @@ export default function SentimentTrend({ sentiment }) {
         </div>
         <p style={{ margin: 0, opacity: 0.7, fontSize: "0.9rem" }}>
           Avg Sentiment:{" "}
-          <strong style={{ color: "#34d399" }}>
+          <strong
+            style={{
+              color: average >= 0 ? "#f472b6" : "#22d3ee",
+            }}
+          >
             {average >= 0 ? "+" : ""}
             {average.toFixed(2)}
           </strong>
@@ -73,7 +77,7 @@ function MoodTimeline({ data, average, scale }) {
           height: "4px",
           borderRadius: "999px",
           background:
-            "linear-gradient(90deg, rgba(99,102,241,0.35), rgba(52,211,153,0.4))",
+            "linear-gradient(90deg, rgba(139,92,246,0.5), rgba(236,72,153,0.45))",
           opacity: 0.85,
         }}
       />
@@ -127,6 +131,12 @@ function MoodTimeline({ data, average, scale }) {
           const deviation = (score - average) * scale;
           const size = 16 + Math.min(26, Math.abs(deviation) * 25);
           const isPositive = score >= 0;
+          const bg = isPositive
+            ? "radial-gradient(circle at 35% 35%, #fbcfe8, #ec4899)"
+            : "radial-gradient(circle at 35% 35%, #bfdbfe, #22d3ee)";
+          const shadow = isPositive
+            ? "0 0 18px rgba(236,72,153,0.35)"
+            : "0 0 18px rgba(34,211,238,0.3)";
           return (
             <div
               key={entry.period}
@@ -142,12 +152,8 @@ function MoodTimeline({ data, average, scale }) {
                   width: `${size}px`,
                   height: `${size}px`,
                   borderRadius: "50%",
-                  background: isPositive
-                    ? "radial-gradient(circle at 35% 35%, #5eead4, #10b981)"
-                    : "radial-gradient(circle at 35% 35%, #fca5a5, #ef4444)",
-                  boxShadow: isPositive
-                    ? "0 0 18px rgba(16,185,129,0.35)"
-                    : "0 0 18px rgba(239,68,68,0.35)",
+                  background: bg,
+                  boxShadow: shadow,
                   transform: "translateY(-6px)",
                 }}
               />
