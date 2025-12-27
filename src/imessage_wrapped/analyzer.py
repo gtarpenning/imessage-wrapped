@@ -222,6 +222,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         emoji_counter = Counter()
         sent_lengths = []
+        sent_word_counts = []
         sent_punctuation_counts = []
         received_punctuation_counts = []
         question_count = 0
@@ -231,6 +232,8 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         for msg in sent_with_text:
             text = msg.text or ""
             sent_lengths.append(len(text))
+            word_count = len(text.split()) if text.strip() else 0
+            sent_word_counts.append(word_count)
             emoji_counter.update(count_emojis(text))
             sent_punctuation_counts.append(len(punctuation_pattern.findall(text)))
             if "?" in text:
@@ -264,9 +267,18 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         double_texts = self._count_double_texts(sent_messages)
 
+        word_count_histogram = self._create_word_count_histogram(sent_word_counts)
+        mode_word_count = Counter(sent_word_counts).most_common(1)[0][0] if sent_word_counts else 0
+        avg_word_count_sent = (
+            sum(sent_word_counts) / len(sent_word_counts) if sent_word_counts else 0
+        )
+
         return {
             "avg_message_length_sent": round(avg_length_sent, 2),
             "avg_message_length_received": round(avg_length_received, 2),
+            "avg_word_count_sent": round(avg_word_count_sent, 2),
+            "word_count_histogram": word_count_histogram,
+            "mode_word_count": mode_word_count,
             "avg_punctuation_sent": round(avg_punctuation_sent, 2),
             "avg_punctuation_received": round(avg_punctuation_received, 2),
             "most_used_emojis": [
@@ -316,6 +328,16 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "count": double_text_count,
             "percentage": percentage,
         }
+
+    def _create_word_count_histogram(self, word_counts: list[int]) -> dict[str, int]:
+        if not word_counts:
+            return {}
+
+        histogram = Counter()
+        for count in word_counts:
+            histogram[count] += 1
+
+        return dict(histogram)
 
     def _analyze_conversations(self, data: ExportData) -> dict[str, Any]:
         group_chats = [c for c in data.conversations.values() if c.is_group_chat]
