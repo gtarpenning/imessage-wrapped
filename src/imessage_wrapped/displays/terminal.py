@@ -205,14 +205,9 @@ class TerminalDisplay(Display):
             self.console.print("\n[bold]Chat Concentration[/]")
             max_rows = min(10, len(distribution))
             for entry in distribution[:max_rows]:
-                name = (
-                    entry.get("contact_name")
-                    or entry.get("contact_id")
-                    or f"Chat #{entry.get('rank')}"
-                )
                 share = entry.get("share", 0.0)
                 bar = self._share_bar(share)
-                self.console.print(f"{entry.get('rank', 0):>2}. {name:<24} {bar}")
+                self.console.print(f"{entry.get('rank', 0):>2}. {bar}")
 
     def _render_content_section(self, content: dict[str, Any]) -> None:
         self.console.print("\n[bold cyan]💬 Message Content[/]")

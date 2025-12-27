@@ -142,5 +142,6 @@ def test_chat_concentration_distribution():
     assert len(distribution) == 3
     assert distribution[0]["contact_id"] == "a"
     assert distribution[0]["share"] == round(6 / 10, 4)
+    assert distribution[0]["count"] == 6
     assert distribution[1]["contact_id"] == "b"
     assert distribution[2]["contact_id"] == "c"

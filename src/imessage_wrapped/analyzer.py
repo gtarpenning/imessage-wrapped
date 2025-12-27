@@ -21,6 +21,7 @@ from .sentiment import (
     LexicalSentimentAnalyzer,
     SentimentResult,
 )
+from .utils import count_emojis
 
 
 class StatisticsAnalyzer(ABC):
@@ -38,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 EMBEDDING_LIMIT_STAGE = "sent"
 EMBEDDING_LIMIT_INTERVAL = "week"
-EMBEDDING_LIMIT_PER_INTERVAL = 20
+EMBEDDING_LIMIT_PER_INTERVAL = 25
 
 
 class RawStatisticsAnalyzer(StatisticsAnalyzer):
@@ -62,10 +63,6 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         if raw_rate is None:
             raw_rate = getattr(self._sentiment_analyzer, "embedding_sample_rate", 1.0)
         self._sentiment_sample_rate = self._clamp_sample_rate(raw_rate)
-        self._embedding_sample_rate = getattr(
-            self._sentiment_analyzer, "embedding_sample_rate", self._sentiment_sample_rate
-        )
-        self._embedding_usage_counts: defaultdict[tuple[str, str], int] = defaultdict(int)
         self._sentiment_axes_cache: list[dict[str, Any]] | None = None
         self._phrase_extractor = PhraseExtractor(config=phrase_config)
 
@@ -381,6 +378,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                     "contact_id": contact_id,
                     "contact_name": contact_names.get(contact_id),
                     "share": share,
+                    "count": count,
                     "cumulative_share": min(cumulative, 1.0),
                 }
             )
@@ -397,25 +395,13 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         sent_with_text = [m for m in sent_messages if m.text]
         received_with_text = [m for m in received_messages if m.text]
 
-        emoji_pattern = re.compile(
-            "["
-            "\U0001f600-\U0001f64f"  # emoticons
-            "\U0001f300-\U0001f5ff"  # symbols & pictographs
-            "\U0001f680-\U0001f6ff"  # transport & map
-            "\U0001f1e0-\U0001f1ff"  # flags
-            "\U00002702-\U000027b0"
-            "\U000024c2-\U0001f251"
-            "]+",
-            flags=re.UNICODE,
-        )
-
         punctuation_pattern = re.compile(r'[.!?,;:\-\'"()]')
 
-        sent_emojis = []
-        sent_lengths = []
-        sent_word_counts = []
-        sent_punctuation_counts = []
-        received_punctuation_counts = []
+        emoji_counter: Counter[str] = Counter()
+        sent_lengths: list[int] = []
+        sent_word_counts: list[int] = []
+        sent_punctuation_counts: list[int] = []
+        received_punctuation_counts: list[int] = []
         question_count = 0
         exclamation_count = 0
         link_count = 0
@@ -423,20 +409,9 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         for msg in sent_with_text:
             text = msg.text or ""
             sent_lengths.append(len(text))
-<<<<<<< HEAD
-            found_emojis = emoji_pattern.findall(text)
-            filtered_emojis = [
-                e
-                for e in found_emojis
-                if "\ufffc" not in e
-                and e not in ["\u2642\ufe0f", "\u2640\ufe0f", "\u2642", "\u2640", "\ufe0f"]
-            ]
-            sent_emojis.extend(filtered_emojis)
-=======
             word_count = len(text.split()) if text.strip() else 0
             sent_word_counts.append(word_count)
             emoji_counter.update(count_emojis(text))
->>>>>>> f394b1dd6145e4b92222e36b4fa963fcd9637c6e
             sent_punctuation_counts.append(len(punctuation_pattern.findall(text)))
             if "?" in text:
                 question_count += 1
@@ -448,8 +423,6 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         for msg in received_with_text:
             text = msg.text or ""
             received_punctuation_counts.append(len(punctuation_pattern.findall(text)))
-
-        emoji_counter = Counter(sent_emojis)
 
         avg_length_sent = sum(sent_lengths) / len(sent_lengths) if sent_lengths else 0
         avg_length_received = (
@@ -476,17 +449,13 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             interval=self._sentiment_interval,
         )
 
-<<<<<<< HEAD
-        result = {
-=======
         word_count_histogram = self._create_word_count_histogram(sent_word_counts)
         mode_word_count = Counter(sent_word_counts).most_common(1)[0][0] if sent_word_counts else 0
         avg_word_count_sent = (
             sum(sent_word_counts) / len(sent_word_counts) if sent_word_counts else 0
         )
 
-        return {
->>>>>>> f394b1dd6145e4b92222e36b4fa963fcd9637c6e
+        result = {
             "avg_message_length_sent": round(avg_length_sent, 2),
             "avg_message_length_received": round(avg_length_received, 2),
             "avg_word_count_sent": round(avg_word_count_sent, 2),
@@ -554,7 +523,6 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "percentage": percentage,
         }
 
-<<<<<<< HEAD
     def _analyze_phrases(
         self,
         data: ExportData,
@@ -641,7 +609,6 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         received_messages: list[Message],
         interval: str = "month",
     ) -> dict[str, Any]:
-        self._embedding_usage_counts.clear()
         sent_bucket = self._score_sentiment_messages(sent_messages, interval, stage="sent")
         received_bucket = self._score_sentiment_messages(received_messages, interval, stage="received")
         overall_bucket = self._combine_sentiment_buckets(sent_bucket, received_bucket)
@@ -702,6 +669,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 selected_counts[(stage, period_key)] += 1
             selections.append((msg, period_key, include_msg))
 
+        embedding_targets: set[str] = set()
+        if can_project:
+            embedding_targets = self._select_embedding_guids(scored_messages, stage)
+
         selected_total = sum(1 for _, _, include in selections if include)
         effective_total = selected_total if selected_total else len(scored_messages)
         self._report_sentiment_progress(stage, 0, max(effective_total, 1))
@@ -713,11 +684,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 continue
 
             text = (msg.text or "").strip()
-            include_embedding = (
-                can_project
-                and self._embedding_provider is not None
-                and self._should_sample_embedding(msg, stage, period_key)
-            )
+            include_embedding = can_project and (msg.guid in embedding_targets)
             result, embedding = self._run_sentiment(text, include_embedding)
             if use_sampling:
                 selected_in_period = selected_counts.get((stage, period_key), 0) or 1
@@ -827,21 +794,36 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             self._sentiment_sample_rate, message, stage, period_key, "sentiment"
         )
 
-    def _should_sample_embedding(self, message: Message, stage: str, period_key: str) -> bool:
-        if not self._embedding_provider:
-            return False
-        if self._embedding_provider is self._sentiment_analyzer:
-            return self._deterministic_sample(
-                self._embedding_sample_rate, message, stage, period_key, "embedding"
-            )
-        if stage != EMBEDDING_LIMIT_STAGE:
-            return False
-        week_key = self._week_key(message.timestamp)
-        limit_key = (stage, week_key)
-        if self._embedding_usage_counts[limit_key] >= EMBEDDING_LIMIT_PER_INTERVAL:
-            return False
-        self._embedding_usage_counts[limit_key] += 1
-        return True
+    def _select_embedding_guids(
+        self,
+        messages: list[Message],
+        stage: str,
+    ) -> set[str]:
+        if (
+            not self._embedding_provider
+            or stage != EMBEDDING_LIMIT_STAGE
+            or EMBEDDING_LIMIT_PER_INTERVAL <= 0
+        ):
+            return set()
+
+        buckets: dict[str, list[tuple[float, str]]] = defaultdict(list)
+        for msg in messages:
+            week_key = self._week_key(msg.timestamp)
+            priority = self._embedding_priority(msg, stage, week_key)
+            buckets[week_key].append((priority, msg.guid))
+
+        selected: set[str] = set()
+        for candidates in buckets.values():
+            candidates.sort(key=lambda item: item[0])
+            for _, guid in candidates[:EMBEDDING_LIMIT_PER_INTERVAL]:
+                selected.add(guid)
+
+        return selected
+
+    def _embedding_priority(self, message: Message, stage: str, interval_key: str) -> float:
+        seed = f"embedding:{stage}:{interval_key}:{message.guid}"
+        digest = hashlib.sha256(seed.encode("utf-8")).digest()
+        return int.from_bytes(digest[:8], "big") / float(1 << 64)
 
     def _deterministic_sample(
         self,
@@ -877,7 +859,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         }
         if self._sentiment_sample_rate:
             scatter["sample_rate"] = self._sentiment_sample_rate
-        if self._embedding_provider and self._embedding_provider is not self._sentiment_analyzer:
+        if self._embedding_provider:
             scatter["limit"] = {
                 "stage": EMBEDDING_LIMIT_STAGE,
                 "interval": EMBEDDING_LIMIT_INTERVAL,
@@ -1030,15 +1012,6 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             if self._should_include_message(msg, year, include_context=False)
         ]
 
-    def _analyze_conversations(
-        self,
-        data: ExportData,
-        conversations: dict[str, Conversation] | None = None,
-    ) -> dict[str, Any]:
-        convs = conversations or data.conversations
-        group_chats = [c for c in convs.values() if c.is_group_chat]
-        one_on_one = [c for c in convs.values() if not c.is_group_chat]
-=======
     def _create_word_count_histogram(self, word_counts: list[int]) -> dict[str, int]:
         if not word_counts:
             return {}
@@ -1049,10 +1022,14 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         return dict(histogram)
 
-    def _analyze_conversations(self, data: ExportData) -> dict[str, Any]:
-        group_chats = [c for c in data.conversations.values() if c.is_group_chat]
-        one_on_one = [c for c in data.conversations.values() if not c.is_group_chat]
->>>>>>> f394b1dd6145e4b92222e36b4fa963fcd9637c6e
+    def _analyze_conversations(
+        self,
+        data: ExportData,
+        conversations: dict[str, Conversation] | None = None,
+    ) -> dict[str, Any]:
+        convs = conversations or data.conversations
+        group_chats = [c for c in convs.values() if c.is_group_chat]
+        one_on_one = [c for c in convs.values() if not c.is_group_chat]
 
         group_message_count = sum(c.message_count for c in group_chats)
         one_on_one_message_count = sum(c.message_count for c in one_on_one)

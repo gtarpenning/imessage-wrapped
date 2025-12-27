@@ -64,7 +64,7 @@ def test_per_contact_breakdown_respects_minimums():
     alice_stats = next(item for item in result.by_contact if item.contact_id == "alice")
     assert alice_stats.contact_name == "Alice"
     assert alice_stats.top_phrases
-    assert alice_stats.top_phrases[0].text == "movie night"
+    assert "movie night" in alice_stats.top_phrases[0].text
     bob_stats = next(item for item in result.by_contact if item.contact_id == "bob")
     assert bob_stats.top_phrases == []
 

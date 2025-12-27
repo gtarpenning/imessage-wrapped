@@ -1,86 +1,67 @@
+import { Histogram } from "@/lib/histogram";
+
+const PERCENT_TICKS = [1, 0.75, 0.5, 0.25, 0];
+
+function createHistogramConfig(distribution) {
+  const capped = distribution.slice(0, 20);
+  return {
+    processData: () => {
+      const buckets = capped.map((entry, index) => ({
+        rank: entry.rank ?? index + 1,
+        count: entry.share ?? 0,
+        share: entry.share ?? 0,
+        messageCount: entry.count ?? 0,
+      }));
+      return { buckets, maxCount: 1 };
+    },
+    generateTicks: () => [],
+    formatLabel: (bucket) => `Chat #${String(bucket.rank).padStart(2, "0")}`,
+    formatValue: (bucket) =>
+      `${Math.round((bucket.share ?? 0) * 100)}% share · ${bucket.messageCount.toLocaleString()} msgs`,
+    getBucketKey: (bucket) => bucket.rank,
+    getBarStyle: (bucket) => {
+      const intensity = bucket.share ?? 0;
+      const hueStart = 280;
+      const hueEnd = 330;
+      const hue = hueStart + (hueEnd - hueStart) * intensity;
+      return `linear-gradient(180deg, hsla(${hue}, 85%, 65%, 0.9) 0%, hsla(${hue}, 85%, 45%, 0.35) 100%)`;
+    },
+    renderYAxis: () => (
+      <div
+        style={{
+          position: "absolute",
+          left: "-2.5rem",
+          top: 0,
+          bottom: 0,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          fontSize: "0.75rem",
+          opacity: 0.55,
+        }}
+      >
+        {PERCENT_TICKS.map((tick) => (
+          <span key={tick}>{Math.round(tick * 100)}%</span>
+        ))}
+      </div>
+    ),
+    highlightLargest: false,
+  };
+}
+
 export default function ContactDistributionChart({ distribution }) {
   if (!distribution || distribution.length === 0) return null;
 
-  const topChats = distribution.slice(0, 20);
-
   return (
-    <div
-      style={{
-        marginTop: "2.5rem",
-        padding: "1.5rem",
-        borderRadius: "1.5rem",
-        background: "linear-gradient(145deg, #1f2937, #111827)",
-        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.45)",
+    <Histogram
+      histogram={distribution}
+      config={createHistogramConfig(distribution)}
+      title="Chat Concentration"
+      containerStyle={{
+        paddingLeft: "3.5rem",
+        paddingRight: "1.5rem",
       }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-          marginBottom: "1rem",
-        }}
-      >
-        <h3 style={{ fontSize: "1.4rem", margin: 0 }}>Chat Concentration</h3>
-        <p style={{ margin: 0, opacity: 0.6, fontSize: "0.95rem" }}>
-          Top {topChats.length} chats (share of your messages)
-        </p>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-        {topChats.map((entry) => {
-          const share = Math.min(1, Math.max(0, entry.share || 0));
-          return (
-            <div
-              key={entry.rank}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-              }}
-            >
-              <div
-                style={{
-                  width: "3rem",
-                  textAlign: "right",
-                  opacity: 0.6,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                #{String(entry.rank).padStart(2, "0")}
-              </div>
-              <div
-                style={{
-                  flex: 1,
-                  height: "0.85rem",
-                  borderRadius: "999px",
-                  background: "rgba(255,255,255,0.08)",
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${share * 100}%`,
-                    height: "100%",
-                    background:
-                      "linear-gradient(90deg, #8b5cf6, #ec4899, #f97316)",
-                    transition: "width 0.6s ease",
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  width: "3rem",
-                  textAlign: "left",
-                  opacity: 0.6,
-                  fontSize: "0.9rem",
-                }}
-              >
-                {Math.round(share * 100)}%
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+      highlightLargest={false}
+    />
   );
 }
