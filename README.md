@@ -158,20 +158,6 @@ Requires **Full Disk Access** to read the iMessage database:
 3. Add Terminal (for CLI) or the Desktop App
 4. Restart the application
 
-## Advanced: DistilBERT Embeddings
-
-Lexicon scoring remains the default (and only) sentiment analyzer, ensuring every message is scored
-quickly and locally. On top of that, the app now bundles the
-`optimum/distilbert-base-uncased-finetuned-sst-2-english` ONNX model (via `onnxruntime` + `numpy<2`)
-strictly for *visualization* purposes:
-
-- DistilBERT runs automatically in the background to generate embeddings for up to **20 of your sent
-  messages per ISO week** (received texts are never processed by the neural model).
-- Those embeddings are projected onto the two seeded axes and rendered in the scatter plot inside the
-  web dashboard.
-- No CLI flag or environment variable is required; if the ONNX runtime isn’t available, the scatter
-  quietly disappears while the lexical sentiment stats continue to work normally.
-
 ## Deployment
 
 See [RELEASE-GUIDE.md](RELEASE-GUIDE.md) for deploying the CLI, Desktop App, or Web App.

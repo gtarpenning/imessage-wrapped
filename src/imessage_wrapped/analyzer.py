@@ -16,11 +16,7 @@ from .ghost import (
 )
 from .models import Conversation, ExportData, Message
 from .phrases import PhraseExtractionConfig, PhraseExtractor
-from .sentiment import (
-    DistilBertOnnxSentimentAnalyzer,
-    LexicalSentimentAnalyzer,
-    SentimentResult,
-)
+from .sentiment import LexicalSentimentAnalyzer, SentimentResult
 from .utils import count_emojis
 
 
@@ -37,11 +33,6 @@ class StatisticsAnalyzer(ABC):
 
 logger = logging.getLogger(__name__)
 
-EMBEDDING_LIMIT_STAGE = "sent"
-EMBEDDING_LIMIT_INTERVAL = "week"
-EMBEDDING_LIMIT_PER_INTERVAL = 25
-
-
 class RawStatisticsAnalyzer(StatisticsAnalyzer):
     def __init__(
         self,
@@ -53,17 +44,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         conversation_filters: Sequence[ConversationFilter] | None = None,
         include_group_chats_in_ghosts: bool = False,
     ) -> None:
-        self._sentiment_backend = "lexical"
         self._sentiment_analyzer = self._build_sentiment_analyzer()
-        self._embedding_provider = self._build_embedding_provider()
         self._sentiment_interval = "month"
         self._sentiment_progress = sentiment_progress
-        self._sentiment_model_info = self._compose_model_info()
-        raw_rate = getattr(self._sentiment_analyzer, "sample_rate", None)
-        if raw_rate is None:
-            raw_rate = getattr(self._sentiment_analyzer, "embedding_sample_rate", 1.0)
-        self._sentiment_sample_rate = self._clamp_sample_rate(raw_rate)
-        self._sentiment_axes_cache: list[dict[str, Any]] | None = None
+        self._sentiment_model_info = getattr(self._sentiment_analyzer, "model_info", None)
         self._phrase_extractor = PhraseExtractor(config=phrase_config)
 
         if ghost_timeline_days <= 0:
@@ -627,9 +611,6 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 "received": self._format_period_trend(received_bucket["period_totals"]),
             },
         }
-        scatter = self._compose_embedding_scatter(sent_bucket, received_bucket)
-        if scatter:
-            sentiment["scatter"] = scatter
         return sentiment
 
     def _score_sentiment_messages(
@@ -642,60 +623,19 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         total_score = 0.0
         total_messages = 0.0
         period_totals: dict[str, dict[str, Any]] = {}
-        embeddings: list[dict[str, Any]] = []
-        axis_ids = self._sentiment_axis_ids()
-        embedding_source = self._embedding_provider or self._sentiment_analyzer
-        can_project = (
-            embedding_source is not None
-            and hasattr(embedding_source, "project_embedding")
-            and len(axis_ids) >= 2
-        )
-        sample_rate = self._sentiment_sample_rate
-        use_sampling = 0 < sample_rate < 1
-        selected_counts: dict[tuple[str, str], int] = defaultdict(int)
-        period_message_counts: dict[tuple[str, str], int] = defaultdict(int)
 
         scored_messages = [msg for msg in messages if (msg.text or "").strip()]
-        selections: list[tuple[Message, str, bool]] = []
-        for msg in scored_messages:
-            period_key = self._period_key(msg.timestamp, interval)
-            period_message_counts[(stage, period_key)] += 1
-            include_msg = True
-            if use_sampling:
-                include_msg = self._should_sample_sentiment(msg, stage, period_key)
-                if not include_msg and selected_counts[(stage, period_key)] == 0:
-                    include_msg = True
-            if include_msg:
-                selected_counts[(stage, period_key)] += 1
-            selections.append((msg, period_key, include_msg))
+        total = len(scored_messages)
+        self._report_sentiment_progress(stage, 0, max(total, 1))
 
-        embedding_targets: set[str] = set()
-        if can_project:
-            embedding_targets = self._select_embedding_guids(scored_messages, stage)
-
-        selected_total = sum(1 for _, _, include in selections if include)
-        effective_total = selected_total if selected_total else len(scored_messages)
-        self._report_sentiment_progress(stage, 0, max(effective_total, 1))
-
-        processed_selected = 0
-
-        for msg, period_key, include_msg in selections:
-            if not include_msg:
-                continue
-
+        for idx, msg in enumerate(scored_messages, start=1):
             text = (msg.text or "").strip()
-            include_embedding = can_project and (msg.guid in embedding_targets)
-            result, embedding = self._run_sentiment(text, include_embedding)
-            if use_sampling:
-                selected_in_period = selected_counts.get((stage, period_key), 0) or 1
-                total_in_period = period_message_counts.get((stage, period_key), 0) or 1
-                weight = total_in_period / selected_in_period
-            else:
-                weight = 1.0
-            distribution[result.label] += weight
-            total_score += result.score * weight
-            total_messages += weight
+            result = self._run_sentiment(text)
+            distribution[result.label] += 1
+            total_score += result.score
+            total_messages += 1
 
+            period_key = self._period_key(msg.timestamp, interval)
             period_bucket = period_totals.setdefault(
                 period_key,
                 {
@@ -704,32 +644,17 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                     "distribution": {"positive": 0, "neutral": 0, "negative": 0},
                 },
             )
-            period_bucket["sum"] += result.score * weight
-            period_bucket["count"] += weight
-            period_bucket["distribution"][result.label] += weight
-            if can_project and include_embedding and embedding is not None:
-                coords = self._project_embedding(embedding)
-                if coords:
-                    embeddings.append(
-                        {
-                            "stage": stage,
-                            "period": period_key,
-                            "score": round(result.score, 3),
-                            "x": coords.get(axis_ids[0], 0.0),
-                            "y": coords.get(axis_ids[1], 0.0),
-                        }
-                    )
-            processed_selected += 1
-            self._report_sentiment_progress(
-                stage, processed_selected, max(effective_total, 1)
-            )
+            period_bucket["sum"] += result.score
+            period_bucket["count"] += 1
+            period_bucket["distribution"][result.label] += 1
+
+            self._report_sentiment_progress(stage, idx, max(total, 1))
 
         return {
             "distribution": distribution,
             "score_sum": total_score,
             "message_count": total_messages,
             "period_totals": period_totals,
-            "embeddings": embeddings,
         }
 
     def _report_sentiment_progress(self, stage: str, completed: int, total: int) -> None:
@@ -747,139 +672,21 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         rate = max(0.0, min(1.0, rate))
         return rate if rate > 0 else 1.0
 
-    def _run_sentiment(
-        self,
-        text: str,
-        include_embedding: bool = False,
-    ) -> tuple[SentimentResult, Sequence[float] | None]:
-        analyzer = self._sentiment_analyzer
-        if include_embedding and hasattr(analyzer, "analyze_with_embedding"):
-            return analyzer.analyze_with_embedding(text)
-        result = analyzer.analyze(text)
-        embedding = self._compute_embedding(text) if include_embedding else None
-        return result, embedding
+    def _run_sentiment(self, text: str) -> SentimentResult:
+        return self._sentiment_analyzer.analyze(text)
 
-    def _compute_embedding(self, text: str) -> Sequence[float] | None:
-        provider = self._embedding_provider
-        if not provider:
-            return None
-        if hasattr(provider, "analyze_with_embedding"):
-            _, embedding = provider.analyze_with_embedding(text)
-            return embedding
-        return None
-
-    def _sentiment_axis_metadata(self) -> list[dict[str, Any]]:
-        if self._sentiment_axes_cache is not None:
-            return self._sentiment_axes_cache
-        provider = self._embedding_provider or self._sentiment_analyzer
-        info = getattr(provider, "model_info", {}) or {}
-        seeds = info.get("axis_seeds") or []
-        axes = [
-            {"id": axis_id, "label": axis_id, "seed": phrase} for axis_id, phrase in seeds
-        ]
-        self._sentiment_axes_cache = axes
-        return axes
-
-    def _sentiment_axis_ids(self) -> list[str]:
-        return [axis["id"] for axis in self._sentiment_axis_metadata()]
-
-    def _project_embedding(self, embedding: Sequence[float]) -> dict[str, float]:
-        provider = self._embedding_provider or self._sentiment_analyzer
-        if hasattr(provider, "project_embedding"):
-            return provider.project_embedding(embedding)
-        return {}
-
-    def _should_sample_sentiment(self, message: Message, stage: str, period_key: str) -> bool:
-        return self._deterministic_sample(
-            self._sentiment_sample_rate, message, stage, period_key, "sentiment"
-        )
-
-    def _select_embedding_guids(
-        self,
-        messages: list[Message],
-        stage: str,
-    ) -> set[str]:
-        if (
-            not self._embedding_provider
-            or stage != EMBEDDING_LIMIT_STAGE
-            or EMBEDDING_LIMIT_PER_INTERVAL <= 0
-        ):
-            return set()
-
-        buckets: dict[str, list[tuple[float, str]]] = defaultdict(list)
-        for msg in messages:
-            week_key = self._week_key(msg.timestamp)
-            priority = self._embedding_priority(msg, stage, week_key)
-            buckets[week_key].append((priority, msg.guid))
-
-        selected: set[str] = set()
-        for candidates in buckets.values():
-            candidates.sort(key=lambda item: item[0])
-            for _, guid in candidates[:EMBEDDING_LIMIT_PER_INTERVAL]:
-                selected.add(guid)
-
-        return selected
-
-    def _embedding_priority(self, message: Message, stage: str, interval_key: str) -> float:
-        seed = f"embedding:{stage}:{interval_key}:{message.guid}"
-        digest = hashlib.sha256(seed.encode("utf-8")).digest()
-        return int.from_bytes(digest[:8], "big") / float(1 << 64)
-
-    def _deterministic_sample(
-        self,
-        rate: float,
-        message: Message,
-        stage: str,
-        period_key: str,
-        tag: str,
-    ) -> bool:
-        if rate >= 1:
-            return True
-        if rate <= 0:
-            return False
-        seed = f"{tag}:{message.guid}:{stage}:{period_key}:{message.timestamp.isoformat()}"
-        digest = hashlib.sha256(seed.encode("utf-8")).digest()
-        value = int.from_bytes(digest[:8], "big") / float(1 << 64)
-        return value <= rate
-
-    def _compose_embedding_scatter(
-        self, sent_bucket: dict[str, Any], received_bucket: dict[str, Any]
-    ) -> dict[str, Any] | None:
-        axes = self._sentiment_axis_metadata()
-        if len(axes) < 2:
-            return None
-        points: list[dict[str, Any]] = []
-        for bucket in (sent_bucket, received_bucket):
-            points.extend(bucket.get("embeddings", []))
-        if not points:
-            return None
-        scatter: dict[str, Any] = {
-            "axes": axes,
-            "points": points,
-        }
-        if self._sentiment_sample_rate:
-            scatter["sample_rate"] = self._sentiment_sample_rate
-        if self._embedding_provider:
-            scatter["limit"] = {
-                "stage": EMBEDDING_LIMIT_STAGE,
-                "interval": EMBEDDING_LIMIT_INTERVAL,
-                "max_messages": EMBEDDING_LIMIT_PER_INTERVAL,
-            }
-        return scatter
 
     def _combine_sentiment_buckets(self, *buckets: dict[str, Any]) -> dict[str, Any]:
         distribution = {"positive": 0, "neutral": 0, "negative": 0}
         total_score = 0.0
         total_messages = 0
         period_totals: dict[str, dict[str, Any]] = {}
-        embeddings: list[dict[str, Any]] = []
 
         for bucket in buckets:
             for label, count in bucket["distribution"].items():
                 distribution[label] += count
             total_score += bucket["score_sum"]
             total_messages += bucket["message_count"]
-            embeddings.extend(bucket.get("embeddings", []))
 
             for period, values in bucket["period_totals"].items():
                 period_bucket = period_totals.setdefault(
@@ -900,7 +707,6 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "score_sum": total_score,
             "message_count": total_messages,
             "period_totals": period_totals,
-            "embeddings": embeddings,
         }
 
     def _public_sentiment_view(self, bucket: dict[str, Any]) -> dict[str, Any]:
@@ -958,43 +764,8 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             return timestamp.strftime("%Y-%m-%d")
         raise ValueError(f"Unsupported sentiment interval: {interval}")
 
-    def _week_key(self, timestamp: datetime) -> str:
-        iso = timestamp.isocalendar()
-        return f"{iso.year}-W{iso.week:02d}"
-
     def _build_sentiment_analyzer(self):
         return LexicalSentimentAnalyzer()
-
-    def _build_embedding_provider(self):
-        analyzer = self._sentiment_analyzer
-        if hasattr(analyzer, "project_embedding"):
-            return analyzer
-        try:
-            return DistilBertOnnxSentimentAnalyzer()
-        except Exception as exc:
-            logger.info(
-                "DistilBERT embeddings unavailable (%s); scatter projections disabled", exc
-            )
-            return None
-
-    def _compose_model_info(self) -> dict[str, Any] | None:
-        base_info = getattr(self._sentiment_analyzer, "model_info", None)
-        info: dict[str, Any] = dict(base_info or {})
-        if self._embedding_provider and self._embedding_provider is not self._sentiment_analyzer:
-            embedding_info = getattr(self._embedding_provider, "model_info", None) or {}
-            name = embedding_info.get("name") or embedding_info.get("model", "DistilBERT")
-            info["embedding_backend"] = name
-            info["embedding_limit"] = (
-                f"≤{EMBEDDING_LIMIT_PER_INTERVAL} {EMBEDDING_LIMIT_STAGE} msgs/{EMBEDDING_LIMIT_INTERVAL}"
-            )
-        return info or None
-
-    def _should_include_message(
-        self,
-        message: Message,
-        year: int,
-        include_context: bool = False,
-    ) -> bool:
         if include_context:
             return True
         if getattr(message, "is_context_only", False):

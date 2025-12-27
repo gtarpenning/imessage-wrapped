@@ -21,8 +21,9 @@ export default function SentimentTrend({ sentiment }) {
         marginTop: "2.5rem",
         padding: "1.75rem",
         borderRadius: "1.5rem",
-        background: "linear-gradient(160deg, #111827, #0f172a)",
-        boxShadow: "0 30px 60px -20px rgba(0,0,0,0.65)",
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        boxShadow: "0 30px 60px -30px rgba(0,0,0,0.7)",
       }}
     >
       <div

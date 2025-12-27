@@ -29,10 +29,6 @@ dependencies = [
     "questionary>=2.0.0",
     "requests>=2.31.0",
     "emoji>=2.0.0",
-    "numpy>=1.24,<2",
-    "onnx>=1.16.0",
-    "onnxruntime>=1.17,<1.18; (platform_system != 'Darwin') or (platform_machine != 'arm64')",
-    "onnxruntime-silicon>=1.16,<1.17; (platform_system == 'Darwin') and (platform_machine == 'arm64')",
 ]
 
 [project.optional-dependencies]

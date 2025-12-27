@@ -12,8 +12,9 @@ function PhraseTable({ title, rows, columns }) {
         minWidth: 0,
         padding: "1.5rem",
         borderRadius: "1.25rem",
-        background: "linear-gradient(145deg, #111827, #0f172a)",
-        boxShadow: "0 20px 45px -25px rgba(0,0,0,0.8)",
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        boxShadow: "0 25px 40px -30px rgba(0,0,0,0.65)",
       }}
     >
       <h4 style={{ marginTop: 0, marginBottom: "1rem", fontSize: "1.1rem" }}>

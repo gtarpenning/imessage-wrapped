@@ -343,13 +343,6 @@ def analyze_command(args):
             details: list[str] = []
             if params:
                 details.append(f"{params} parameters")
-            sample_rate = info.get("sample_rate") or info.get("embedding_sample_rate")
-            try:
-                sample_rate_val = float(sample_rate) if sample_rate is not None else None
-            except (TypeError, ValueError):
-                sample_rate_val = None
-            if sample_rate_val and 0 < sample_rate_val < 1:
-                details.append(f"{sample_rate_val * 100:.0f}% sample")
             detail_text = f" ({', '.join(details)})" if details else ""
             progress.console.print(f"[dim]Using sentiment backend: {name}{detail_text}[/]")
 

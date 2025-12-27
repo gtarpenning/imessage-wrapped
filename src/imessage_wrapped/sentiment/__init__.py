@@ -8,14 +8,8 @@ inference without touching the callers.
 """
 
 from .lexica import LexicalSentimentAnalyzer, SentimentResult
-from .onnx_model import DistilBertOnnxSentimentAnalyzer
-
-# Backwards compatibility: keep the old export name until callers migrate.
-TinyBertOnnxSentimentAnalyzer = DistilBertOnnxSentimentAnalyzer
 
 __all__ = [
     "LexicalSentimentAnalyzer",
     "SentimentResult",
-    "DistilBertOnnxSentimentAnalyzer",
-    "TinyBertOnnxSentimentAnalyzer",
 ]
