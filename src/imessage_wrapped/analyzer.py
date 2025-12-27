@@ -128,6 +128,18 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 messages.append(msg)
         return sorted(messages, key=lambda m: m.timestamp)
 
+    def _should_include_message(
+        self,
+        message: Message,
+        year: int,
+        include_context: bool = False,
+    ) -> bool:
+        if include_context:
+            return True
+        if getattr(message, "is_context_only", False):
+            return False
+        return message.timestamp.year == year
+
     def _analyze_volume(
         self,
         all_messages: list[Message],
@@ -977,24 +989,5 @@ class NLPStatisticsAnalyzer(StatisticsAnalyzer):
                 "word_frequency_analysis",
                 "linguistic_patterns",
                 "named_entity_extraction",
-            ],
-        }
-
-
-class LLMStatisticsAnalyzer(StatisticsAnalyzer):
-    @property
-    def name(self) -> str:
-        return "llm"
-
-    def analyze(self, data: ExportData) -> dict[str, Any]:
-        return {
-            "status": "not_implemented",
-            "message": "LLM analysis requires API configuration (OpenAI, Anthropic)",
-            "planned_features": [
-                "conversation_highlights",
-                "relationship_insights",
-                "thematic_analysis",
-                "custom_narratives",
-                "comparative_analysis",
             ],
         }

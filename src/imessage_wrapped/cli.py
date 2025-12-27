@@ -19,7 +19,6 @@ from rich.progress import (
 from . import (
     Exporter,
     ExportLoader,
-    LLMStatisticsAnalyzer,
     MessageService,
     NLPStatisticsAnalyzer,
     PermissionError,
@@ -117,7 +116,7 @@ def parse_args():
         "--analyzers",
         type=str,
         default="raw",
-        help="Comma-separated list of analyzers to run (raw,nlp,llm) (default: raw)",
+        help="Comma-separated list of analyzers to run (raw,nlp) (default: raw)",
     )
 
     analyze_parser.add_argument(
@@ -356,9 +355,6 @@ def analyze_command(args):
             _print_sentiment_info(analyzers[-1].sentiment_model_info)
         if "nlp" in analyzer_names:
             analyzers.append(NLPStatisticsAnalyzer())
-        if "llm" in analyzer_names:
-            analyzers.append(LLMStatisticsAnalyzer())
-
         analyzer_task = progress.add_task(
             f"Running {len(analyzers)} analyzer(s)...", total=max(len(analyzers), 1)
         )

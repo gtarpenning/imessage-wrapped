@@ -1,5 +1,4 @@
 from .analyzer import (
-    LLMStatisticsAnalyzer,
     NLPStatisticsAnalyzer,
     RawStatisticsAnalyzer,
     StatisticsAnalyzer,
@@ -27,7 +26,6 @@ __all__ = [
     "StatisticsAnalyzer",
     "RawStatisticsAnalyzer",
     "NLPStatisticsAnalyzer",
-    "LLMStatisticsAnalyzer",
     "Display",
     "TerminalDisplay",
 ]
