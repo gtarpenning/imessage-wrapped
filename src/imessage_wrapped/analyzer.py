@@ -3,7 +3,7 @@ import logging
 import re
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Optional, Sequence
 
 from .ghost import (
@@ -91,6 +91,14 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
     @property
     def sentiment_model_info(self) -> dict[str, Any] | None:
         return self._sentiment_model_info
+    @staticmethod
+    def _to_local_time(dt):
+        """Convert UTC datetime to local timezone for temporal analysis."""
+        if dt.tzinfo is None:
+            return dt
+        if dt.tzinfo == timezone.utc:
+            return dt.astimezone()
+        return dt
 
     def analyze(self, data: ExportData) -> dict[str, Any]:
         conversations = self._filtered_conversations(data)
@@ -149,10 +157,12 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         received_by_date = defaultdict(int)
 
         for msg in sent_messages:
-            sent_by_date[msg.timestamp.date()] += 1
+            local_time = self._to_local_time(msg.timestamp)
+            sent_by_date[local_time.date()] += 1
 
         for msg in received_messages:
-            received_by_date[msg.timestamp.date()] += 1
+            local_time = self._to_local_time(msg.timestamp)
+            received_by_date[local_time.date()] += 1
 
         busiest_day_total = max(
             (
@@ -195,9 +205,15 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
     def _analyze_temporal_patterns(
         self, all_messages: list[Message], sent_messages: list[Message]
     ) -> dict[str, Any]:
-        hour_distribution = Counter(msg.timestamp.hour for msg in sent_messages)
-        day_of_week_distribution = Counter(msg.timestamp.weekday() for msg in sent_messages)
-        month_distribution = Counter(msg.timestamp.month for msg in sent_messages)
+        hour_distribution = Counter(
+            self._to_local_time(msg.timestamp).hour for msg in sent_messages
+        )
+        day_of_week_distribution = Counter(
+            self._to_local_time(msg.timestamp).weekday() for msg in sent_messages
+        )
+        month_distribution = Counter(
+            self._to_local_time(msg.timestamp).month for msg in sent_messages
+        )
 
         return {
             "hour_distribution": dict(sorted(hour_distribution.items())),
@@ -225,7 +241,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 continue
             messages = sorted(messages, key=lambda m: m.timestamp)
 
-            dates = sorted(set(msg.timestamp.date() for msg in messages))
+            dates = sorted(set(self._to_local_time(msg.timestamp).date() for msg in messages))
 
             current_streak = 1
             for i in range(1, len(dates)):
@@ -289,12 +305,14 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         for conv in data.conversations.values():
             contact_id = conv.chat_identifier
+
             messages = self._filter_conversation_messages(conv, data.year)
             for msg in messages:
+                local_time = self._to_local_time(msg.timestamp)
                 if msg.is_from_me:
-                    contacts_by_date_sent[msg.timestamp.date()].add(contact_id)
+                    contacts_by_date_sent[local_time.date()].add(contact_id)
                 else:
-                    contacts_by_date_received[msg.timestamp.date()].add(contact_id)
+                    contacts_by_date_received[local_time.date()].add(contact_id)
 
         social_butterfly_day = max(
             contacts_by_date_sent.items(), key=lambda x: len(x[1]), default=(None, set())
@@ -395,6 +413,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         sent_emojis = []
         sent_lengths = []
+        sent_word_counts = []
         sent_punctuation_counts = []
         received_punctuation_counts = []
         question_count = 0
@@ -404,6 +423,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         for msg in sent_with_text:
             text = msg.text or ""
             sent_lengths.append(len(text))
+<<<<<<< HEAD
             found_emojis = emoji_pattern.findall(text)
             filtered_emojis = [
                 e
@@ -412,6 +432,11 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 and e not in ["\u2642\ufe0f", "\u2640\ufe0f", "\u2642", "\u2640", "\ufe0f"]
             ]
             sent_emojis.extend(filtered_emojis)
+=======
+            word_count = len(text.split()) if text.strip() else 0
+            sent_word_counts.append(word_count)
+            emoji_counter.update(count_emojis(text))
+>>>>>>> f394b1dd6145e4b92222e36b4fa963fcd9637c6e
             sent_punctuation_counts.append(len(punctuation_pattern.findall(text)))
             if "?" in text:
                 question_count += 1
@@ -451,9 +476,22 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             interval=self._sentiment_interval,
         )
 
+<<<<<<< HEAD
         result = {
+=======
+        word_count_histogram = self._create_word_count_histogram(sent_word_counts)
+        mode_word_count = Counter(sent_word_counts).most_common(1)[0][0] if sent_word_counts else 0
+        avg_word_count_sent = (
+            sum(sent_word_counts) / len(sent_word_counts) if sent_word_counts else 0
+        )
+
+        return {
+>>>>>>> f394b1dd6145e4b92222e36b4fa963fcd9637c6e
             "avg_message_length_sent": round(avg_length_sent, 2),
             "avg_message_length_received": round(avg_length_received, 2),
+            "avg_word_count_sent": round(avg_word_count_sent, 2),
+            "word_count_histogram": word_count_histogram,
+            "mode_word_count": mode_word_count,
             "avg_punctuation_sent": round(avg_punctuation_sent, 2),
             "avg_punctuation_received": round(avg_punctuation_received, 2),
             "most_used_emojis": [
@@ -516,6 +554,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "percentage": percentage,
         }
 
+<<<<<<< HEAD
     def _analyze_phrases(
         self,
         data: ExportData,
@@ -999,6 +1038,21 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         convs = conversations or data.conversations
         group_chats = [c for c in convs.values() if c.is_group_chat]
         one_on_one = [c for c in convs.values() if not c.is_group_chat]
+=======
+    def _create_word_count_histogram(self, word_counts: list[int]) -> dict[str, int]:
+        if not word_counts:
+            return {}
+
+        histogram = Counter()
+        for count in word_counts:
+            histogram[count] += 1
+
+        return dict(histogram)
+
+    def _analyze_conversations(self, data: ExportData) -> dict[str, Any]:
+        group_chats = [c for c in data.conversations.values() if c.is_group_chat]
+        one_on_one = [c for c in data.conversations.values() if not c.is_group_chat]
+>>>>>>> f394b1dd6145e4b92222e36b4fa963fcd9637c6e
 
         group_message_count = sum(c.message_count for c in group_chats)
         one_on_one_message_count = sum(c.message_count for c in one_on_one)

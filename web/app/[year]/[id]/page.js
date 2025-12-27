@@ -8,6 +8,7 @@ import HeatmapSection from "@/components/HeatmapSection";
 import ContactsSection from "@/components/ContactsSection";
 import TemporalSection from "@/components/TemporalSection";
 import ContentSection from "@/components/ContentSection";
+import MessageLengthSection from "@/components/MessageLengthSection";
 import ConversationsSection from "@/components/ConversationsSection";
 import GhostSection from "@/components/GhostSection";
 import ResponseTimesSection from "@/components/ResponseTimesSection";
@@ -73,6 +74,7 @@ export default function WrappedPage() {
       <ContactsSection contacts={stats.contacts} />
       <TemporalSection temporal={stats.temporal} />
       <ContentSection content={stats.content} />
+      <MessageLengthSection content={stats.content} />
       <ConversationsSection conversations={stats.conversations} />
       <GhostSection ghosts={stats.ghosts} />
       <ResponseTimesSection response_times={stats.response_times} />

@@ -66,7 +66,7 @@ export default function TapbacksSection({ tapbacks }) {
 
 function TapbackReactionsSection({ orderedTapbacks, tapbackDistribution }) {
   const prompt = orderedTapbacks[0]
-    ? `Your favorite tapback reaction is ${TAPBACK_LABELS[orderedTapbacks[0]]} ${TAPBACK_EMOJIS[orderedTapbacks[0]]} which you used ${tapbackDistribution[orderedTapbacks[0]]} times. ${PLAYFUL_INSTRUCTION}`
+    ? `Your friend's favorite tapback reaction is ${TAPBACK_LABELS[orderedTapbacks[0]]} ${TAPBACK_EMOJIS[orderedTapbacks[0]]} which they used ${tapbackDistribution[orderedTapbacks[0]]} times. ${PLAYFUL_INSTRUCTION}`
     : null;
 
   const { enhancement } = useEnhancement(prompt, !!prompt);
