@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Lightweight tokenization helpers tuned for conversational English text.
 
@@ -7,9 +5,11 @@ We purposely avoid heavy NLP dependencies; this module only normalizes text,
 splits sentences, and yields lowercase word tokens.
 """
 
-from dataclasses import dataclass
+from __future__ import annotations
+
 import re
-from typing import Iterable, Iterator, Sequence
+from dataclasses import dataclass
+from typing import Iterator, Sequence
 
 __all__ = ["TokenizedMessage", "SimpleTokenizer"]
 

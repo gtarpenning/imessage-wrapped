@@ -35,7 +35,7 @@ def main():
         sys.exit(1)
 
     major, minor, patch = match.groups()
-    new_version = f"{major}.{minor}.{int(patch)+1}"
+    new_version = f"{major}.{minor}.{int(patch) + 1}"
 
     new_content = re.sub(r'VERSION="\d+\.\d+\.\d+"', f'VERSION="{new_version}"', content)
     open("build-release.sh", "w").write(new_content)

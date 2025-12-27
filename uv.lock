@@ -345,7 +345,7 @@ wheels = [
 
 [[package]]
 name = "imessage-wrapped"
-version = "0.1.10"
+version = "0.1.11"
 source = { editable = "." }
 dependencies = [
     { name = "emoji" },

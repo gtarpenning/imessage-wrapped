@@ -13,8 +13,7 @@ class ConversationFilter(Protocol):
     def name(self) -> str:  # pragma: no cover - trivial
         ...
 
-    def __call__(self, conversation: Conversation, *, year: int) -> bool:
-        ...
+    def __call__(self, conversation: Conversation, *, year: int) -> bool: ...
 
 
 def apply_conversation_filters(

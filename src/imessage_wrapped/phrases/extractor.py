@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass, field
 from functools import lru_cache
 from importlib import resources
 from typing import Iterable, Mapping, Sequence
-from collections import Counter
 
+from .scoring import FrequencyScorer, ScoredPhrase, TfIdfScorer
 from .tokenizer import SimpleTokenizer, TokenizedMessage
-from .scoring import FrequencyScorer, TfIdfScorer, ScoredPhrase
 
 STOPWORDS_PACKAGE = "imessage_wrapped.phrases.resources"
 STOPWORDS_FILE = "stopwords_en.txt"
@@ -67,7 +67,10 @@ class PhraseExtractionConfig:
             raise ValueError("min_characters must be >= 1")
         if self.min_text_messages < 1:
             raise ValueError("min_text_messages must be >= 1")
-        if self.per_contact_min_text_messages is not None and self.per_contact_min_text_messages < 1:
+        if (
+            self.per_contact_min_text_messages is not None
+            and self.per_contact_min_text_messages < 1
+        ):
             raise ValueError("per_contact_min_text_messages must be >= 1")
         if self.max_phrases < 1:
             raise ValueError("max_phrases must be >= 1")
@@ -110,8 +113,7 @@ class PhraseExtractor:
                 bucket = self._extract_bucket(
                     contact_msgs,
                     min_messages=(
-                        self._config.per_contact_min_text_messages
-                        or self._config.min_text_messages
+                        self._config.per_contact_min_text_messages or self._config.min_text_messages
                     ),
                 )
                 contact_results.append(

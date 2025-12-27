@@ -9,11 +9,11 @@ into the analyzer/CLI later without dragging extra dependencies into callers.
 """
 
 from .extractor import (
+    ContactPhraseStats,
     PhraseExtractionConfig,
     PhraseExtractionResult,
     PhraseExtractor,
     PhraseStat,
-    ContactPhraseStats,
 )
 
 __all__ = [

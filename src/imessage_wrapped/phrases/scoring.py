@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 Helpers for assigning scores to extracted phrases.
 
@@ -7,8 +5,10 @@ We keep the logic small and dependency-free so the feature can run in the
 desktop/CLI environments without pulling in scikit-learn.
 """
 
-from dataclasses import dataclass
+from __future__ import annotations
+
 import math
+from dataclasses import dataclass
 from typing import Mapping
 
 __all__ = ["ScoredPhrase", "TfIdfScorer", "FrequencyScorer"]

@@ -250,7 +250,9 @@ class TerminalDisplay(Display):
             self._render_sentiment_overview(sentiment)
             self._render_sentiment_periods(sentiment.get("periods"))
 
-    def _render_phrase_section(self, phrases: dict[str, Any], by_contact: list[dict[str, Any]]) -> None:
+    def _render_phrase_section(
+        self, phrases: dict[str, Any], by_contact: list[dict[str, Any]]
+    ) -> None:
         overall = phrases.get("overall") or []
         if overall:
             self.console.print("\n[bold]Most Used Phrases:[/]")

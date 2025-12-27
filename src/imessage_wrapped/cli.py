@@ -331,9 +331,12 @@ def analyze_command(args):
             if task_id is None:
                 task_id = progress.add_task(label, total=total)
                 sentiment_tasks[stage] = task_id
-            progress.update(task_id, completed=completed, total=total)
+            existing_task_id = sentiment_tasks.get(stage)
+            if existing_task_id is not None:
+                progress.update(existing_task_id, completed=completed, total=total)
 
         analyzers = []
+
         def _print_sentiment_info(info: dict[str, str | int | None] | None) -> None:
             if not info:
                 return

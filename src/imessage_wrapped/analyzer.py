@@ -1,4 +1,3 @@
-import hashlib
 import logging
 import re
 from abc import ABC, abstractmethod
@@ -32,6 +31,7 @@ class StatisticsAnalyzer(ABC):
 
 
 logger = logging.getLogger(__name__)
+
 
 class RawStatisticsAnalyzer(StatisticsAnalyzer):
     def __init__(
@@ -72,6 +72,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
     @property
     def sentiment_model_info(self) -> dict[str, Any] | None:
         return self._sentiment_model_info
+
     @staticmethod
     def _to_local_time(dt):
         """Convert UTC datetime to local timezone for temporal analysis."""
@@ -606,7 +607,9 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         interval: str = "month",
     ) -> dict[str, Any]:
         sent_bucket = self._score_sentiment_messages(sent_messages, interval, stage="sent")
-        received_bucket = self._score_sentiment_messages(received_messages, interval, stage="received")
+        received_bucket = self._score_sentiment_messages(
+            received_messages, interval, stage="received"
+        )
         overall_bucket = self._combine_sentiment_buckets(sent_bucket, received_bucket)
 
         if overall_bucket["message_count"] == 0:
@@ -686,7 +689,6 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
     def _run_sentiment(self, text: str) -> SentimentResult:
         return self._sentiment_analyzer.analyze(text)
-
 
     def _combine_sentiment_buckets(self, *buckets: dict[str, Any]) -> dict[str, Any]:
         distribution = {"positive": 0, "neutral": 0, "negative": 0}
@@ -778,11 +780,6 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
     def _build_sentiment_analyzer(self):
         return LexicalSentimentAnalyzer()
-        if include_context:
-            return True
-        if getattr(message, "is_context_only", False):
-            return False
-        return message.timestamp.year == year
 
     def _filter_conversation_messages(
         self,
