@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 from collections import Counter
+from copy import deepcopy
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 import emoji
 
@@ -127,7 +131,6 @@ def count_emojis(text: str) -> Counter:
         return Counter()
 
     extracted = emoji.emoji_list(text)
-
     emojis = []
     for item in extracted:
         emoji_char = item["emoji"]
@@ -136,3 +139,38 @@ def count_emojis(text: str) -> Counter:
         emojis.append(emoji_char)
 
     return Counter(emojis)
+
+
+def sanitize_statistics_for_export(statistics: dict[str, Any]) -> dict[str, Any]:
+    """
+    Return a deep-copied statistics object with privacy-sensitive fields stripped.
+
+    Currently removes per-contact phrase breakdowns so uploads never contain
+    potentially identifying content.
+    """
+
+    def _strip_private_fields(node: Any) -> None:
+        if isinstance(node, dict):
+            if "_phrases_by_contact" in node:
+                node.pop("_phrases_by_contact", None)
+            if "message_distribution" in node and isinstance(node["message_distribution"], list):
+                for entry in node["message_distribution"]:
+                    if isinstance(entry, dict):
+                        entry.pop("contact_name", None)
+                        entry.pop("contact_id", None)
+            cliff = node.get("cliffhangers")
+            if isinstance(cliff, dict):
+                cliff.pop("examples", None)
+                cliff.pop("examples_them", None)
+            if "temporal" in node and isinstance(node["temporal"], dict):
+                node["temporal"].pop("weekday_mvp", None)
+                node["temporal"].pop("weekend_mvp", None)
+            for value in node.values():
+                _strip_private_fields(value)
+        elif isinstance(node, list):
+            for item in node:
+                _strip_private_fields(item)
+
+    cleaned = deepcopy(statistics)
+    _strip_private_fields(cleaned)
+    return cleaned

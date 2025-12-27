@@ -20,6 +20,7 @@ class Message:
     has_attachment: bool
     date_read_after_seconds: float | None = None
     tapbacks: list[Tapback] = field(default_factory=list)
+    is_context_only: bool = False
 
     @property
     def timestamp_iso(self) -> str:
@@ -41,7 +42,7 @@ class Conversation:
 
     @property
     def message_count(self) -> int:
-        return len(self.messages)
+        return len([msg for msg in self.messages if not getattr(msg, "is_context_only", False)])
 
 
 @dataclass

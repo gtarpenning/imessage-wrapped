@@ -274,8 +274,8 @@ export function HistogramAxis({ buckets, ticks, formatTick, renderExtra, largest
   );
 }
 
-export function Histogram({ 
-  histogram, 
+export function Histogram({
+  histogram,
   config,
   title,
   enhancement,
@@ -315,6 +315,8 @@ export function Histogram({
 
       <div style={{ ...defaultContainerStyle, ...containerStyle }}>
         <div style={{ position: "relative" }}>
+          {config.renderYAxis &&
+            config.renderYAxis(histogramData.buckets, histogramData.maxCount)}
           <HistogramTooltip 
             bucket={hoveredBucket} 
             position={tooltipPosition}

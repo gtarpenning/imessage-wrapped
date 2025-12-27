@@ -54,6 +54,8 @@ class MessageProcessor:
 
             message = self._create_message(row)
             if message:
+                if message.timestamp.year != year:
+                    message.is_context_only = True
                 conversations[chat_key].messages.append(message)
                 message_index[message.guid] = message
 
@@ -79,6 +81,8 @@ class MessageProcessor:
                     continue
                 message = self._create_message(row)
                 if message:
+                    if message.timestamp.year != year:
+                        message.is_context_only = True
                     message_index[message.guid] = message
                     added_to_index += 1
 

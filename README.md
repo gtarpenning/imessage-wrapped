@@ -39,7 +39,8 @@ Want to see full details in the terminal instead? Use `imexport --no-share`
 
 ✅ **Dashboard** - Interactive visualizations of your messaging patterns  
 ✅ **Easy Sharing** - One command to upload and get a shareable link  
-✅ **Secure** - HTTPS, encrypted database  git status
+✅ **Secure** - HTTPS, encrypted database  
+✅ **Favorite Phrases** - Automatically surfaces the sayings you repeat most  
 ✅ **Deploy Anywhere** - Fly.io ready (free tier available)  
 
 ## 🔒 Data Privacy
@@ -160,4 +161,3 @@ Requires **Full Disk Access** to read the iMessage database:
 ## Deployment
 
 See [RELEASE-GUIDE.md](RELEASE-GUIDE.md) for deploying the CLI, Desktop App, or Web App.
-

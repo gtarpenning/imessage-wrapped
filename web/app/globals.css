@@ -92,6 +92,255 @@ body {
   gap: 0.5rem;
 }
 
+.section-subtitle {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: -1rem;
+  margin-bottom: 1.5rem;
+}
+
+.temporal-polar-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.temporal-spider-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 360px;
+}
+
+.temporal-polar-svg {
+  width: 360px;
+  height: 360px;
+  flex: 0 0 360px;
+  max-width: 100%;
+  display: block;
+}
+
+.temporal-polar-tooltip-container {
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.temporal-spider-grid {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.temporal-spider-axis {
+  stroke: rgba(255, 255, 255, 0.09);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.temporal-spider-shape {
+  fill: rgba(192, 132, 252, 0.18);
+  stroke: rgba(192, 132, 252, 0.7);
+  stroke-width: 2;
+  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.45));
+  pointer-events: none;
+}
+
+.temporal-spider-label {
+  font-size: 0.9rem;
+  fill: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.temporal-spider-point-wrapper {
+  cursor: pointer;
+  outline: none;
+}
+
+.temporal-spider-point {
+  stroke: rgba(7, 7, 18, 0.95);
+  stroke-width: 2;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.temporal-spider-point-wrapper:hover .temporal-spider-point,
+.temporal-spider-point-wrapper:focus-visible .temporal-spider-point {
+  transform: scale(1.15);
+  filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.55));
+}
+
+.temporal-polar-center {
+  fill: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.temporal-polar-percent {
+  fill: #fda4af;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.temporal-polar-tooltip {
+  min-width: 220px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.9rem;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.25);
+}
+
+.temporal-polar-tooltip strong {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.temporal-polar-tooltip span {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.temporal-polar-blurb {
+  min-width: 200px;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+.temporal-polar-blurb span {
+  font-weight: 600;
+  color: #c084fc;
+}
+
+.temporal-circle-blurb {
+  min-width: 260px;
+  font-size: 0.95rem;
+  opacity: 0.85;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.temporal-circle-blurb span {
+  font-weight: 600;
+  color: #c084fc;
+}
+
+.cliffhanger-intro {
+  font-size: 1rem;
+  opacity: 0.85;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.cliffhanger-chart {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+.cliffhanger-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cliffhanger-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.cliffhanger-bar-track {
+  width: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cliffhanger-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.35s ease;
+}
+
+.cliffhanger-examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.cliffhanger-example-group h4 {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.65rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cliffhanger-examples {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.cliffhanger-examples li {
+  padding: 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cliffhanger-example-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.cliffhanger-example-header span {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.cliffhanger-examples p {
+  margin: 0;
+  opacity: 0.85;
+}
+
 .loading {
   display: flex;
   align-items: center;
@@ -176,5 +425,14 @@ footer {
   .section {
     padding: 1.5rem;
   }
+  
+  .temporal-ring-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .temporal-ring {
+    width: 130px;
+    height: 130px;
+  }
 }
-

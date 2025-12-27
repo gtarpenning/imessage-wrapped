@@ -7,8 +7,11 @@ import HeatmapSection from "@/components/HeatmapSection";
 import ContactsSection from "@/components/ContactsSection";
 import TemporalSection from "@/components/TemporalSection";
 import ContentSection from "@/components/ContentSection";
+import MessageAnalysisSection from "@/components/MessageAnalysisSection";
 import MessageLengthSection from "@/components/MessageLengthSection";
 import ConversationsSection from "@/components/ConversationsSection";
+import GhostSection from "@/components/GhostSection";
+import CliffhangerSection from "@/components/CliffhangerSection";
 import ResponseTimesSection from "@/components/ResponseTimesSection";
 import TapbacksSection from "@/components/TapbacksSection";
 import StreaksSection from "@/components/StreaksSection";
@@ -23,8 +26,11 @@ export default function WrappedPage() {
   useEffect(() => {
     async function fetchData() {
       try {
+        const baseUrl =
+          process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/$/, "") || "";
+        const endpoint = `${baseUrl}/api/wrapped/${params.year}/${params.id}`;
         const response = await fetch(
-          `/api/wrapped/${params.year}/${params.id}`,
+          endpoint,
         );
 
         if (!response.ok) {
@@ -68,8 +74,11 @@ export default function WrappedPage() {
       <TemporalSection temporal={stats.temporal} />
       <ContactsSection contacts={stats.contacts} />
       <ContentSection content={stats.content} />
+      <MessageAnalysisSection sentiment={stats.content?.sentiment} />
       <MessageLengthSection content={stats.content} />
       <ConversationsSection conversations={stats.conversations} />
+      <GhostSection ghosts={stats.ghosts} />
+      <CliffhangerSection cliffhangers={stats.cliffhangers} />
       <ResponseTimesSection response_times={stats.response_times} />
       <TapbacksSection tapbacks={stats.tapbacks} />
       <StreaksSection streaks={stats.streaks} />

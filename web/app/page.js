@@ -66,7 +66,7 @@ export default function Home() {
               overflow: "auto",
             }}
           >
-            <code>pip install imessage-wrapped{"\n"}imexport</code>
+            <code>pip install imessage-wrapped{"\n"}imexport analyze</code>
           </pre>
           <p style={{ marginTop: "1.5rem", opacity: 0.7, textAlign: "center" }}>
             <a

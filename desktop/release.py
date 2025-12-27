@@ -35,7 +35,7 @@ def main():
         sys.exit(1)
 
     major, minor, patch = match.groups()
-    new_version = f"{major}.{minor}.{int(patch)+1}"
+    new_version = f"{major}.{minor}.{int(patch) + 1}"
 
     new_content = re.sub(r'VERSION="\d+\.\d+\.\d+"', f'VERSION="{new_version}"', content)
     open("build-release.sh", "w").write(new_content)
@@ -58,23 +58,21 @@ def main():
     subprocess.run(["git", "commit", "-m", f"Bump desktop version to {new_version}"], check=True)
 
     print("\n🏗️  Building DMG...")
-    result = subprocess.run(["./build-release.sh"], cwd="desktop", shell=True)
+    result = subprocess.run(["./build-release.sh"], cwd="desktop")
     if result.returncode != 0:
         sys.exit(1)
 
     dmg_name = f"iMessage-Wrapped-{new_version}.dmg"
 
     print("\n🔐 Signing and notarizing...")
-    result = subprocess.run(["./sign-dmg.sh", dmg_name], cwd="desktop", shell=True)
+    result = subprocess.run(["./sign-dmg.sh", dmg_name], cwd="desktop")
     if result.returncode != 0:
         sys.exit(1)
 
     signed_dmg = dmg_name
 
     print("\n📤 Publishing to GitHub...")
-    result = subprocess.run(
-        ["./publish-release.sh", new_version, signed_dmg], cwd="desktop", shell=True
-    )
+    result = subprocess.run(["./publish-release.sh", new_version, signed_dmg], cwd="desktop")
     if result.returncode != 0:
         sys.exit(1)
 

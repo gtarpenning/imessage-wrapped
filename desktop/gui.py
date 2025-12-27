@@ -23,6 +23,7 @@ from imessage_wrapped import (
     RawStatisticsAnalyzer,
 )
 from imessage_wrapped.uploader import StatsUploader
+from imessage_wrapped.utils import sanitize_statistics_for_export
 
 
 def setup_logging():
@@ -199,6 +200,7 @@ class IMessageWrappedApp(rumps.App):
 
             analyzer = RawStatisticsAnalyzer()
             statistics = {"raw": analyzer.analyze(data)}
+            sanitized_statistics = sanitize_statistics_for_export(statistics)
             self.logger.info("Statistics computed")
 
             rumps.notification(
@@ -206,7 +208,7 @@ class IMessageWrappedApp(rumps.App):
             )
 
             uploader = StatsUploader(base_url="https://imessage-wrapped.fly.dev")
-            share_url = uploader.upload(year, statistics)
+            share_url = uploader.upload(year, sanitized_statistics)
 
             if share_url:
                 self.logger.info(f"Upload successful: {share_url}")
