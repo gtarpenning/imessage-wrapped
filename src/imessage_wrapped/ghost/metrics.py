@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Iterable
 
@@ -9,34 +9,12 @@ from ..models import Conversation, Message
 
 @dataclass
 class GhostStats:
-    """
-    Container for the "ghost" style statistics.
-
-    Attributes:
-        timeline: The time span used to classify ghost events.
-        reference_time: The timestamp used when no further responses exist.
-        you_ghosted: Mapping of contact identifier → timestamp of the inbound
-            message you never responded to in time.
-        ghosted_you: Mapping of contact identifier → timestamp of the outbound
-            message that never received a timely response.
-    """
-
     timeline: timedelta
     reference_time: datetime
-    you_ghosted: dict[str, datetime] = field(default_factory=dict)
-    ghosted_you: dict[str, datetime] = field(default_factory=dict)
-
-    @property
-    def ghosts(self) -> int:
-        """Number of people you left hanging."""
-
-        return len(self.you_ghosted)
-
-    @property
-    def ghostees(self) -> int:
-        """Number of people who never responded to you."""
-
-        return len(self.ghosted_you)
+    min_consecutive_messages: int
+    min_conversation_messages: int
+    you_ghosted_count: int = 0
+    ghosted_you_count: int = 0
 
 
 def compute_ghost_stats(
@@ -44,6 +22,8 @@ def compute_ghost_stats(
     *,
     year: int,
     timeline: timedelta,
+    min_consecutive_messages: int,
+    min_conversation_messages: int,
     reference_time: datetime | None = None,
     include_group_chats: bool = False,
 ) -> GhostStats:
@@ -54,31 +34,45 @@ def compute_ghost_stats(
         conversations: Conversations to evaluate (already filtered upstream).
         year: The export year to respect when reading messages.
         timeline: Maximum allowed silence between replies.
-        reference_time: Used to determine if the outstanding silence has
-            already exceeded the threshold. Defaults to now() UTC.
+        min_consecutive_messages: Minimum run length before silence counts.
+        min_conversation_messages: Minimum sent+received messages for analysis.
+        reference_time: Used when no further responses exist.
         include_group_chats: Whether to include group conversations.
     """
 
     if timeline <= timedelta(0):
         raise ValueError("timeline must be a positive duration")
 
+    if min_consecutive_messages <= 0:
+        raise ValueError("min_consecutive_messages must be positive")
+
     reference_time = _normalize_reference_time(reference_time)
-    stats = GhostStats(timeline=timeline, reference_time=reference_time)
+    stats = GhostStats(
+        timeline=timeline,
+        reference_time=reference_time,
+        min_consecutive_messages=min_consecutive_messages,
+        min_conversation_messages=min_conversation_messages,
+    )
 
     for conversation in conversations:
         if conversation.is_group_chat and not include_group_chats:
             continue
 
         messages = _conversation_messages(conversation, year)
-        if not messages:
+        if len(messages) < min_conversation_messages:
             continue
 
-        you_ghosted, they_ghosted = _classify_conversation(messages, timeline, reference_time)
+        you_ghosted, they_ghosted = _classify_conversation(
+            messages,
+            timeline,
+            reference_time,
+            min_consecutive_messages=min_consecutive_messages,
+        )
 
         if you_ghosted:
-            stats.you_ghosted.setdefault(conversation.chat_identifier, you_ghosted)
+            stats.you_ghosted_count += 1
         if they_ghosted:
-            stats.ghosted_you.setdefault(conversation.chat_identifier, they_ghosted)
+            stats.ghosted_you_count += 1
 
     return stats
 
@@ -105,62 +99,87 @@ def _classify_conversation(
     messages: list[Message],
     timeline: timedelta,
     reference_time: datetime,
-) -> tuple[datetime | None, datetime | None]:
+    *,
+    min_consecutive_messages: int,
+) -> tuple[bool, bool]:
     """
-    Return timestamps for the offending ghost events if they exist.
-
-    The first element represents the inbound message you ignored. The second
-    element represents the outbound message that never received a reply.
+    Determine whether each direction satisfies the ghost criteria.
     """
 
-    you_left_hanging: datetime | None = None
-    they_left_you_hanging: datetime | None = None
+    runs = _generate_runs(messages)
+    you_ghosted = False
+    ghosted_you = False
 
-    next_message_from_you: datetime | None = None
-    next_message_from_them: datetime | None = None
+    for run in runs:
+        if run.length < min_consecutive_messages:
+            continue
 
-    for message in reversed(messages):
-        if message.is_from_me:
-            you_left_hanging = you_left_hanging or _classify_gap(
-                candidate_time=message.timestamp,
-                next_response=next_message_from_them,
-                fallback=reference_time,
-                timeline=timeline,
-            )
-            next_message_from_you = message.timestamp
+        response_time = _next_response_time(messages, run.end_index, reference_time)
+        if response_time is None:
+            continue
+
+        silence = response_time - run.end_timestamp
+        if silence < timeline:
+            continue
+
+        if run.actor == "me":
+            ghosted_you = True
         else:
-            they_left_you_hanging = they_left_you_hanging or _classify_gap(
-                candidate_time=message.timestamp,
-                next_response=next_message_from_you,
-                fallback=reference_time,
-                timeline=timeline,
-            )
-            next_message_from_them = message.timestamp
+            you_ghosted = True
 
-        if you_left_hanging and they_left_you_hanging:
+        if you_ghosted and ghosted_you:
             break
 
-    return you_left_hanging, they_left_you_hanging
+    return you_ghosted, ghosted_you
 
 
-def _classify_gap(
-    *,
-    candidate_time: datetime,
-    next_response: datetime | None,
-    fallback: datetime,
-    timeline: timedelta,
+@dataclass
+class _Run:
+    actor: str  # "me" or "them"
+    length: int
+    end_index: int
+    end_timestamp: datetime
+
+
+def _generate_runs(messages: list[Message]) -> list[_Run]:
+    runs: list[_Run] = []
+    current_actor: str | None = None
+    run_length = 0
+    for idx, message in enumerate(messages):
+        actor = "me" if message.is_from_me else "them"
+        if actor != current_actor:
+            if current_actor is not None:
+                runs.append(
+                    _Run(
+                        actor=current_actor,
+                        length=run_length,
+                        end_index=idx - 1,
+                        end_timestamp=messages[idx - 1].timestamp,
+                    )
+                )
+            current_actor = actor
+            run_length = 1
+        else:
+            run_length += 1
+
+    if current_actor is not None and run_length > 0:
+        runs.append(
+            _Run(
+                actor=current_actor,
+                length=run_length,
+                end_index=len(messages) - 1,
+                end_timestamp=messages[-1].timestamp,
+            )
+        )
+
+    return runs
+
+
+def _next_response_time(
+    messages: list[Message],
+    run_end_index: int,
+    reference_time: datetime,
 ) -> datetime | None:
-    """
-    Decide whether the silence window for the candidate exceeds the threshold.
-
-    Args:
-        candidate_time: Timestamp of the message being evaluated.
-        next_response: Timestamp of the next message from the *other* party.
-        fallback: Timestamp to use if no future response exists.
-        timeline: Maximum acceptable silent period.
-    """
-
-    response_time = next_response or fallback
-    if response_time - candidate_time > timeline:
-        return candidate_time
-    return None
+    if run_end_index == len(messages) - 1:
+        return reference_time
+    return messages[run_end_index + 1].timestamp

@@ -1,4 +1,7 @@
 import StatCard from "./StatCard";
+import SentimentTrend from "./SentimentTrend";
+import SentimentScatter from "./SentimentScatter";
+import PhraseHighlights from "./PhraseHighlights";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 
 export default function ContentSection({ content }) {
@@ -56,6 +59,13 @@ export default function ContentSection({ content }) {
       <DoubleTextSection content={content} />
 
       <EmojiSection content={content} />
+
+      <SentimentTrend sentiment={content.sentiment} />
+      <SentimentScatter scatter={content.sentiment?.scatter} />
+      <PhraseHighlights
+        overall={content.phrases?.overall}
+        signature={content._phrases_by_contact}
+      />
     </div>
   );
 }

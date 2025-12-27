@@ -92,6 +92,13 @@ body {
   gap: 0.5rem;
 }
 
+.section-subtitle {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: -1rem;
+  margin-bottom: 1.5rem;
+}
+
 .loading {
   display: flex;
   align-items: center;
@@ -176,5 +183,5 @@ footer {
   .section {
     padding: 1.5rem;
   }
-}
 
+}

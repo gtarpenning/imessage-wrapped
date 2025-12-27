@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from rich.columns import Columns
@@ -200,6 +200,20 @@ class TerminalDisplay(Display):
         self.console.print()
         self.console.print(table)
 
+        distribution = contacts.get("message_distribution") or []
+        if distribution:
+            self.console.print("\n[bold]Chat Concentration[/]")
+            max_rows = min(10, len(distribution))
+            for entry in distribution[:max_rows]:
+                name = (
+                    entry.get("contact_name")
+                    or entry.get("contact_id")
+                    or f"Chat #{entry.get('rank')}"
+                )
+                share = entry.get("share", 0.0)
+                bar = self._share_bar(share)
+                self.console.print(f"{entry.get('rank', 0):>2}. {name:<24} {bar}")
+
     def _render_content_section(self, content: dict[str, Any]) -> None:
         self.console.print("\n[bold cyan]💬 Message Content[/]")
 
@@ -251,9 +265,10 @@ class TerminalDisplay(Display):
             table.add_column("Count", style="green", justify="right")
 
             for idx, phrase in enumerate(overall[:5], start=1):
-                table.add_row(f"{idx}.", phrase["text"], f"{phrase['occurrences']:,}")
+                label = phrase.get("phrase") or phrase.get("text") or "—"
+                table.add_row(f"{idx}.", label, f"{phrase.get('occurrences', 0):,}")
 
-            self.console.print(table)
+        self.console.print(table)
 
         filtered = [entry for entry in by_contact if entry.get("top_phrases")]
         if filtered:
@@ -265,8 +280,9 @@ class TerminalDisplay(Display):
 
             for entry in filtered[:3]:
                 top = entry["top_phrases"][0]
+                label = top.get("phrase") or top.get("text") or "—"
                 contact_name = entry.get("contact_name") or entry.get("contact_id")
-                table.add_row(contact_name, top["text"], f"{top['occurrences']:,}")
+                table.add_row(contact_name, label, f"{top.get('occurrences', 0):,}")
 
             self.console.print(table)
 
@@ -333,6 +349,33 @@ class TerminalDisplay(Display):
             )
 
         self.console.print(table)
+
+        overall = periods.get("overall") or []
+        if overall:
+            self._render_sentiment_bar_chart(overall, interval)
+
+    def _share_bar(self, share: float) -> str:
+        total_width = 30
+        filled = max(1, min(total_width, int(round(share * total_width))))
+        empty = total_width - filled
+        return f"[magenta]{'█' * filled}[/][dim]{'·' * empty}[/]"
+
+    def _render_sentiment_bar_chart(self, rows: list[dict[str, Any]], interval: str) -> None:
+        if not rows:
+            return
+
+        self.console.print("\n[bold cyan]🌈 Mood Flow[/]")
+        axis_label = "Month" if interval == "month" else interval.title()
+        self.console.print(f"[dim]{axis_label} vs sentiment intensity[/]")
+
+        for row in rows:
+            score = row.get("avg_score", 0.0)
+            label = self._format_period_label(row["period"], interval)
+            magnitude = min(1.0, abs(score))
+            width = max(1, int(magnitude * 20))
+            color = "green" if score >= 0 else "red"
+            bar = "█" * width
+            self.console.print(f"{label:>7} [bold {color}]{bar}[/]")
 
     def _render_conversations_section(self, conversations: dict[str, Any]) -> None:
         self.console.print("\n[bold cyan]💭 Conversations[/]")
@@ -427,8 +470,8 @@ class TerminalDisplay(Display):
         if not ghosts:
             return
 
-        total_you = ghosts.get("people_you_ghosted", 0)
-        total_them = ghosts.get("people_who_ghosted_you", 0)
+        total_you = ghosts.get("people_you_left_hanging", 0)
+        total_them = ghosts.get("people_who_left_you_hanging", 0)
         if total_you == 0 and total_them == 0:
             return
 
@@ -439,73 +482,24 @@ class TerminalDisplay(Display):
         table.add_column("Value", style="magenta")
 
         timeline = ghosts.get("timeline_days")
+        min_consecutive = ghosts.get("min_consecutive_messages")
+        min_conversation = ghosts.get("min_conversation_messages")
+
         if timeline:
-            table.add_row("Ghost Timeline", f"{timeline} days without a reply")
-        table.add_row("People You Ghosted", f"{total_you:,}")
-        table.add_row("People Who Ghosted You", f"{total_them:,}")
+            table.add_row("Silence Threshold", f"{timeline} days without a reply")
+        if min_consecutive:
+            table.add_row("Minimum Texts in a Row", f"{min_consecutive} messages")
+        if min_conversation:
+            table.add_row("Minimum Messages per Chat", f"{min_conversation}")
+
+        table.add_row("People You Left Hanging", f"{total_you:,}")
+        table.add_row("People Who Left You Hanging", f"{total_them:,}")
 
         ratio = ghosts.get("ghost_ratio")
         if ratio is not None:
             table.add_row("Ghost Ratio (You/Them)", f"{ratio:.2f}")
 
         self.console.print(table)
-
-        def _render_examples(entries: list[dict[str, Any]], title: str) -> None:
-            if not entries:
-                return
-            self.console.print(f"\n[bold]{title} (latest first):[/]")
-            table = Table(show_header=True, header_style="bold cyan")
-            table.add_column("Contact", style="cyan")
-            table.add_column("Days Waiting", style="red", justify="right")
-            table.add_column("Last Message", style="yellow")
-
-            for entry in entries[:5]:
-                timestamp = self._parse_iso_timestamp(entry.get("last_message"))
-                table.add_row(
-                    entry.get("contact_name") or entry.get("contact_id") or "Unknown",
-                    self._format_wait_duration(timestamp),
-                    self._format_timestamp(timestamp),
-                )
-
-            self.console.print(table)
-
-        _render_examples(ghosts.get("you_ghosted") or [], "You left them hanging")
-        _render_examples(ghosts.get("ghosted_you") or [], "They never replied to you")
-
-    def _parse_iso_timestamp(self, value: str | None) -> datetime | None:
-        if not value:
-            return None
-        try:
-            return datetime.fromisoformat(value)
-        except ValueError:
-            return None
-
-    def _format_wait_duration(self, timestamp: datetime | None) -> str:
-        if timestamp is None:
-            return "—"
-        now = datetime.now(timestamp.tzinfo or timezone.utc)
-        delta = now - timestamp
-        days = int(delta.total_seconds() // 86400)
-        if days <= 0:
-            return "<1 day"
-        if days == 1:
-            return "1 day"
-        return f"{days} days"
-
-    def _format_timestamp(self, timestamp: datetime | None) -> str:
-        if not timestamp:
-            return "Unknown"
-        month = timestamp.strftime("%b")
-        day = timestamp.day
-        year = timestamp.year
-        time_part = timestamp.strftime("%I:%M %p").lstrip("0")
-        tz = ""
-        if timestamp.tzinfo:
-            tz = timestamp.tzname() or ""
-        formatted = f"{month} {day}, {year} · {time_part}"
-        if tz:
-            formatted = f"{formatted} {tz}"
-        return formatted
 
     def _render_stub_section(self, title: str, stub_data: dict[str, Any]) -> None:
         self.console.print(f"\n[bold cyan]{title}[/]")

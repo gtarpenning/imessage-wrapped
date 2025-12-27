@@ -46,7 +46,7 @@ class PhraseExtractionResult:
 
 @dataclass(frozen=True)
 class PhraseExtractionConfig:
-    ngram_range: tuple[int, int] = (2, 3)
+    ngram_range: tuple[int, int] = (3, 6)
     min_occurrences: int = 3
     min_characters: int = 4
     min_text_messages: int = 50
@@ -56,7 +56,7 @@ class PhraseExtractionConfig:
     scoring: str = "frequency"  # or "tfidf"
     dedupe_overlap: bool = True
     overlap_tolerance: float = 0.1
-    length_bias: float = 0.25
+    length_bias: float = 0.45
 
     def __post_init__(self) -> None:
         if self.ngram_range[0] <= 0 or self.ngram_range[0] > self.ngram_range[1]:

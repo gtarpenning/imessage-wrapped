@@ -160,20 +160,10 @@ def parse_args():
     )
 
     analyze_parser.add_argument(
-        "--sentiment-backend",
-        type=str,
-        choices=["lexical", "distilbert", "tinybert"],
-        help=(
-            "Sentiment analyzer backend (default: lexical, use 'distilbert' for the bundled "
-            "ONNX model; 'tinybert' remains as an alias)"
-        ),
-    )
-
-    analyze_parser.add_argument(
         "--ghost-timeline",
         type=int,
-        default=30,
-        help="Days without a reply before someone counts as a ghost (default: 30)",
+        default=7,
+        help="Days without a reply before someone counts as a ghost (default: 7)",
     )
 
     args = parser.parse_args()
@@ -366,7 +356,6 @@ def analyze_command(args):
         if "raw" in analyzer_names:
             analyzers.append(
                 RawStatisticsAnalyzer(
-                    sentiment_backend=args.sentiment_backend,
                     sentiment_progress=sentiment_progress,
                     ghost_timeline_days=args.ghost_timeline,
                 )

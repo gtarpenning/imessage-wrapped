@@ -153,6 +153,11 @@ def sanitize_statistics_for_export(statistics: dict[str, Any]) -> dict[str, Any]
         if isinstance(node, dict):
             if "_phrases_by_contact" in node:
                 node.pop("_phrases_by_contact", None)
+            if "message_distribution" in node and isinstance(node["message_distribution"], list):
+                for entry in node["message_distribution"]:
+                    if isinstance(entry, dict):
+                        entry.pop("contact_name", None)
+                        entry.pop("contact_id", None)
             for value in node.values():
                 _strip_private_fields(value)
         elif isinstance(node, list):

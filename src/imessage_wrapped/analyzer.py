@@ -1,6 +1,5 @@
 import hashlib
 import logging
-import os
 import re
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
@@ -12,6 +11,7 @@ from .ghost import (
     apply_conversation_filters,
     compute_ghost_stats,
     minimum_responses_filter,
+    minimum_total_messages_filter,
     received_to_sent_ratio_filter,
 )
 from .models import Conversation, ExportData, Message
@@ -36,23 +36,28 @@ class StatisticsAnalyzer(ABC):
 
 logger = logging.getLogger(__name__)
 
+EMBEDDING_LIMIT_STAGE = "sent"
+EMBEDDING_LIMIT_INTERVAL = "week"
+EMBEDDING_LIMIT_PER_INTERVAL = 20
+
 
 class RawStatisticsAnalyzer(StatisticsAnalyzer):
     def __init__(
         self,
-        sentiment_backend: str | None = None,
         sentiment_progress: Optional[Callable[[str, int, int], None]] = None,
         phrase_config: PhraseExtractionConfig | None = None,
-        ghost_timeline_days: int = 30,
+        ghost_timeline_days: int = 7,
+        ghost_min_consecutive_messages: int = 3,
+        ghost_min_conversation_messages: int = 10,
         conversation_filters: Sequence[ConversationFilter] | None = None,
         include_group_chats_in_ghosts: bool = False,
     ) -> None:
-        backend = sentiment_backend or os.getenv("IMESSAGE_WRAPPED_SENTIMENT_BACKEND", "lexical")
-        self._sentiment_backend = backend.lower()
-        self._sentiment_analyzer = self._build_sentiment_analyzer(self._sentiment_backend)
+        self._sentiment_backend = "lexical"
+        self._sentiment_analyzer = self._build_sentiment_analyzer()
+        self._embedding_provider = self._build_embedding_provider()
         self._sentiment_interval = "month"
         self._sentiment_progress = sentiment_progress
-        self._sentiment_model_info = getattr(self._sentiment_analyzer, "model_info", None)
+        self._sentiment_model_info = self._compose_model_info()
         raw_rate = getattr(self._sentiment_analyzer, "sample_rate", None)
         if raw_rate is None:
             raw_rate = getattr(self._sentiment_analyzer, "embedding_sample_rate", 1.0)
@@ -60,16 +65,20 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         self._embedding_sample_rate = getattr(
             self._sentiment_analyzer, "embedding_sample_rate", self._sentiment_sample_rate
         )
+        self._embedding_usage_counts: defaultdict[tuple[str, str], int] = defaultdict(int)
         self._sentiment_axes_cache: list[dict[str, Any]] | None = None
         self._phrase_extractor = PhraseExtractor(config=phrase_config)
 
         if ghost_timeline_days <= 0:
             raise ValueError("ghost_timeline_days must be a positive integer")
         self._ghost_timeline = timedelta(days=ghost_timeline_days)
+        self._ghost_min_consecutive = ghost_min_consecutive_messages
+        self._ghost_min_conversation_messages = ghost_min_conversation_messages
         self._include_group_chats_in_ghosts = include_group_chats_in_ghosts
 
         if conversation_filters is None:
             conversation_filters = (
+                minimum_total_messages_filter(min_total_messages=ghost_min_conversation_messages),
                 received_to_sent_ratio_filter(max_ratio=9.0, min_messages_required=2),
                 minimum_responses_filter(min_user_responses=2),
             )
@@ -295,6 +304,19 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             contacts_by_date_received.items(), key=lambda x: len(x[1]), default=(None, set())
         )
 
+        total_messages_by_contact = {
+            cid: sent_by_contact.get(cid, 0) + received_by_contact.get(cid, 0)
+            for cid in contact_names.keys()
+        }
+        total_messages_considered = sum(total_messages_by_contact.values())
+
+        distribution = self._build_chat_concentration(
+            total_messages=total_messages_considered,
+            totals_by_contact=total_messages_by_contact,
+            contact_names=contact_names,
+            top_n=100,
+        )
+
         return {
             "top_sent_to": [{"name": name, "count": count} for name, count in top_sent],
             "top_received_from": [{"name": name, "count": count} for name, count in top_received],
@@ -308,7 +330,44 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 "date": fan_club_day[0].isoformat() if fan_club_day[0] else None,
                 "unique_contacts": len(fan_club_day[1]),
             },
+            "message_distribution": distribution,
         }
+
+    def _build_chat_concentration(
+        self,
+        *,
+        total_messages: int,
+        totals_by_contact: dict[str, int],
+        contact_names: dict[str, str],
+        top_n: int,
+    ) -> list[dict[str, Any]]:
+        if not totals_by_contact:
+            return []
+
+        sorted_contacts = sorted(
+            totals_by_contact.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )[:top_n]
+
+        denominator = max(total_messages, 1)
+        cumulative = 0.0
+        distribution = []
+
+        for rank, (contact_id, count) in enumerate(sorted_contacts, start=1):
+            share = round(count / denominator, 4)
+            cumulative = round(cumulative + share, 4)
+            distribution.append(
+                {
+                    "rank": rank,
+                    "contact_id": contact_id,
+                    "contact_name": contact_names.get(contact_id),
+                    "share": share,
+                    "cumulative_share": min(cumulative, 1.0),
+                }
+            )
+
+        return distribution
 
     def _analyze_content(
         self,
@@ -496,8 +555,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             return {}, []
 
         def serialize_phrase(stat) -> dict[str, Any]:
+            value = stat.text
             return {
-                "text": stat.text,
+                "phrase": value,
+                "text": value,
                 "occurrences": stat.occurrences,
                 "share": stat.share,
             }
@@ -541,6 +602,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         received_messages: list[Message],
         interval: str = "month",
     ) -> dict[str, Any]:
+        self._embedding_usage_counts.clear()
         sent_bucket = self._score_sentiment_messages(sent_messages, interval, stage="sent")
         received_bucket = self._score_sentiment_messages(received_messages, interval, stage="received")
         overall_bucket = self._combine_sentiment_buckets(sent_bucket, received_bucket)
@@ -576,10 +638,11 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         period_totals: dict[str, dict[str, Any]] = {}
         embeddings: list[dict[str, Any]] = []
         axis_ids = self._sentiment_axis_ids()
+        embedding_source = self._embedding_provider or self._sentiment_analyzer
         can_project = (
-            hasattr(self._sentiment_analyzer, "project_embedding")
+            embedding_source is not None
+            and hasattr(embedding_source, "project_embedding")
             and len(axis_ids) >= 2
-            and self._embedding_sample_rate > 0
         )
         sample_rate = self._sentiment_sample_rate
         use_sampling = 0 < sample_rate < 1
@@ -611,7 +674,12 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 continue
 
             text = (msg.text or "").strip()
-            result, embedding = self._run_sentiment(text)
+            include_embedding = (
+                can_project
+                and self._embedding_provider is not None
+                and self._should_sample_embedding(msg, stage, period_key)
+            )
+            result, embedding = self._run_sentiment(text, include_embedding)
             if use_sampling:
                 selected_in_period = selected_counts.get((stage, period_key), 0) or 1
                 total_in_period = period_message_counts.get((stage, period_key), 0) or 1
@@ -633,11 +701,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             period_bucket["sum"] += result.score * weight
             period_bucket["count"] += weight
             period_bucket["distribution"][result.label] += weight
-            if (
-                can_project
-                and embedding is not None
-                and self._should_sample_embedding(msg, stage, period_key)
-            ):
+            if can_project and include_embedding and embedding is not None:
                 coords = self._project_embedding(embedding)
                 if coords:
                     embeddings.append(
@@ -677,16 +741,32 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         rate = max(0.0, min(1.0, rate))
         return rate if rate > 0 else 1.0
 
-    def _run_sentiment(self, text: str) -> tuple[SentimentResult, Sequence[float] | None]:
+    def _run_sentiment(
+        self,
+        text: str,
+        include_embedding: bool = False,
+    ) -> tuple[SentimentResult, Sequence[float] | None]:
         analyzer = self._sentiment_analyzer
-        if hasattr(analyzer, "analyze_with_embedding"):
+        if include_embedding and hasattr(analyzer, "analyze_with_embedding"):
             return analyzer.analyze_with_embedding(text)
-        return analyzer.analyze(text), None
+        result = analyzer.analyze(text)
+        embedding = self._compute_embedding(text) if include_embedding else None
+        return result, embedding
+
+    def _compute_embedding(self, text: str) -> Sequence[float] | None:
+        provider = self._embedding_provider
+        if not provider:
+            return None
+        if hasattr(provider, "analyze_with_embedding"):
+            _, embedding = provider.analyze_with_embedding(text)
+            return embedding
+        return None
 
     def _sentiment_axis_metadata(self) -> list[dict[str, Any]]:
         if self._sentiment_axes_cache is not None:
             return self._sentiment_axes_cache
-        info = getattr(self._sentiment_analyzer, "model_info", {}) or {}
+        provider = self._embedding_provider or self._sentiment_analyzer
+        info = getattr(provider, "model_info", {}) or {}
         seeds = info.get("axis_seeds") or []
         axes = [
             {"id": axis_id, "label": axis_id, "seed": phrase} for axis_id, phrase in seeds
@@ -698,9 +778,9 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         return [axis["id"] for axis in self._sentiment_axis_metadata()]
 
     def _project_embedding(self, embedding: Sequence[float]) -> dict[str, float]:
-        analyzer = self._sentiment_analyzer
-        if hasattr(analyzer, "project_embedding"):
-            return analyzer.project_embedding(embedding)
+        provider = self._embedding_provider or self._sentiment_analyzer
+        if hasattr(provider, "project_embedding"):
+            return provider.project_embedding(embedding)
         return {}
 
     def _should_sample_sentiment(self, message: Message, stage: str, period_key: str) -> bool:
@@ -709,9 +789,20 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         )
 
     def _should_sample_embedding(self, message: Message, stage: str, period_key: str) -> bool:
-        return self._deterministic_sample(
-            self._embedding_sample_rate, message, stage, period_key, "embedding"
-        )
+        if not self._embedding_provider:
+            return False
+        if self._embedding_provider is self._sentiment_analyzer:
+            return self._deterministic_sample(
+                self._embedding_sample_rate, message, stage, period_key, "embedding"
+            )
+        if stage != EMBEDDING_LIMIT_STAGE:
+            return False
+        week_key = self._week_key(message.timestamp)
+        limit_key = (stage, week_key)
+        if self._embedding_usage_counts[limit_key] >= EMBEDDING_LIMIT_PER_INTERVAL:
+            return False
+        self._embedding_usage_counts[limit_key] += 1
+        return True
 
     def _deterministic_sample(
         self,
@@ -747,6 +838,12 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         }
         if self._sentiment_sample_rate:
             scatter["sample_rate"] = self._sentiment_sample_rate
+        if self._embedding_provider and self._embedding_provider is not self._sentiment_analyzer:
+            scatter["limit"] = {
+                "stage": EMBEDDING_LIMIT_STAGE,
+                "interval": EMBEDDING_LIMIT_INTERVAL,
+                "max_messages": EMBEDDING_LIMIT_PER_INTERVAL,
+            }
         return scatter
 
     def _combine_sentiment_buckets(self, *buckets: dict[str, Any]) -> dict[str, Any]:
@@ -840,23 +937,36 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             return timestamp.strftime("%Y-%m-%d")
         raise ValueError(f"Unsupported sentiment interval: {interval}")
 
-    def _build_sentiment_analyzer(self, backend: str):
-        backend = backend.lower()
-        neural_aliases = {"distilbert", "tinybert", "onnx", "bert"}
-        if backend in neural_aliases:
-            if backend == "tinybert":
-                logger.info(
-                    "The TinyBERT backend has been replaced by DistilBERT but remains as an alias."
-                )
-            try:
-                return DistilBertOnnxSentimentAnalyzer()
-            except Exception as exc:
-                logger.warning(
-                    "DistilBERT sentiment backend unavailable (%s); falling back to lexicon-based analyzer",
-                    exc,
-                )
-        self._sentiment_backend = "lexical"
+    def _week_key(self, timestamp: datetime) -> str:
+        iso = timestamp.isocalendar()
+        return f"{iso.year}-W{iso.week:02d}"
+
+    def _build_sentiment_analyzer(self):
         return LexicalSentimentAnalyzer()
+
+    def _build_embedding_provider(self):
+        analyzer = self._sentiment_analyzer
+        if hasattr(analyzer, "project_embedding"):
+            return analyzer
+        try:
+            return DistilBertOnnxSentimentAnalyzer()
+        except Exception as exc:
+            logger.info(
+                "DistilBERT embeddings unavailable (%s); scatter projections disabled", exc
+            )
+            return None
+
+    def _compose_model_info(self) -> dict[str, Any] | None:
+        base_info = getattr(self._sentiment_analyzer, "model_info", None)
+        info: dict[str, Any] = dict(base_info or {})
+        if self._embedding_provider and self._embedding_provider is not self._sentiment_analyzer:
+            embedding_info = getattr(self._embedding_provider, "model_info", None) or {}
+            name = embedding_info.get("name") or embedding_info.get("model", "DistilBERT")
+            info["embedding_backend"] = name
+            info["embedding_limit"] = (
+                f"≤{EMBEDDING_LIMIT_PER_INTERVAL} {EMBEDDING_LIMIT_STAGE} msgs/{EMBEDDING_LIMIT_INTERVAL}"
+            )
+        return info or None
 
     def _should_include_message(
         self,
@@ -936,40 +1046,24 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             conversations.values(),
             year=data.year,
             timeline=self._ghost_timeline,
+            min_consecutive_messages=self._ghost_min_consecutive,
+            min_conversation_messages=self._ghost_min_conversation_messages,
             reference_time=data.export_date,
             include_group_chats=self._include_group_chats_in_ghosts,
         )
-
-        contact_names = {
-            conv.chat_identifier: conv.display_name or conv.chat_identifier
-            for conv in conversations.values()
-        }
-
-        def _serialize(entries: dict[str, datetime]) -> list[dict[str, Any]]:
-            return [
-                {
-                    "contact_id": contact_id,
-                    "contact_name": contact_names.get(contact_id) or contact_id,
-                    "last_message": timestamp.isoformat(),
-                }
-                for contact_id, timestamp in sorted(entries.items(), key=lambda item: item[1], reverse=True)
-            ]
-
-        you_ghosted = _serialize(stats.you_ghosted)
-        ghosted_you = _serialize(stats.ghosted_you)
         ratio = None
-        if stats.ghostees:
-            ratio = round(stats.ghosts / stats.ghostees, 2)
+        if stats.ghosted_you_count:
+            ratio = round(stats.you_ghosted_count / stats.ghosted_you_count, 2)
 
         timeline_days = max(int(self._ghost_timeline.total_seconds() // 86400), 1)
 
         return {
             "timeline_days": timeline_days,
-            "people_you_ghosted": stats.ghosts,
-            "people_who_ghosted_you": stats.ghostees,
+            "min_consecutive_messages": self._ghost_min_consecutive,
+            "min_conversation_messages": self._ghost_min_conversation_messages,
+            "people_you_left_hanging": stats.you_ghosted_count,
+            "people_who_left_you_hanging": stats.ghosted_you_count,
             "ghost_ratio": ratio,
-            "you_ghosted": you_ghosted,
-            "ghosted_you": ghosted_you,
         }
 
     def _analyze_response_times(

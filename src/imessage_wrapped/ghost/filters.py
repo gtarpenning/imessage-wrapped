@@ -61,6 +61,9 @@ class _BaseFilter:
                 received += 1
         return sent, received
 
+    def _total_messages(self, conversation: Conversation, year: int) -> int:
+        return sum(1 for _ in _messages_in_year(conversation, year))
+
 
 @dataclass
 class _ReceivedToSentRatioFilter(_BaseFilter):
@@ -96,6 +99,18 @@ class _MinimumResponsesFilter(_BaseFilter):
         return sent >= self.min_user_responses
 
 
+@dataclass
+class _MinimumTotalMessagesFilter(_BaseFilter):
+    min_total_messages: int = 10
+
+    @property
+    def name(self) -> str:
+        return "minimum_total_messages"
+
+    def __call__(self, conversation: Conversation, *, year: int) -> bool:
+        return self._total_messages(conversation, year) >= self.min_total_messages
+
+
 def received_to_sent_ratio_filter(
     *,
     max_ratio: float = 9.0,
@@ -118,4 +133,16 @@ def minimum_responses_filter(
     return _MinimumResponsesFilter(
         min_user_responses=min_user_responses,
         min_messages_required=min_user_responses,
+    )
+
+
+def minimum_total_messages_filter(
+    *,
+    min_total_messages: int = 10,
+) -> ConversationFilter:
+    """Filter out lightweight chats with too little context."""
+
+    return _MinimumTotalMessagesFilter(
+        min_total_messages=min_total_messages,
+        min_messages_required=min_total_messages,
     )

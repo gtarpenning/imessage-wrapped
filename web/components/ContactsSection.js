@@ -1,4 +1,5 @@
 import StatCard from "./StatCard";
+import ContactDistributionChart from "./ContactDistributionChart";
 
 export default function ContactsSection({ contacts }) {
   if (!contacts) return null;
@@ -90,6 +91,8 @@ export default function ContactsSection({ contacts }) {
           </p>
         </div>
       )}
+
+      <ContactDistributionChart distribution={contacts.message_distribution} />
     </div>
   );
 }

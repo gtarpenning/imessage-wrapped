@@ -13,8 +13,8 @@ from typing import Iterable, Sequence
 from .lexica import SentimentResult
 
 DISTILBERT_RESOURCE_PACKAGE = "imessage_wrapped.sentiment.resources.distilbert.onnx"
-AX1_SEED_PHRASE = "Can't wait to see you later!"
-AX2_SEED_PHRASE = "We need to talk about this later."
+AX1_SEED_PHRASE = "I love you so much and can't wait to hug you."
+AX2_SEED_PHRASE = "George washington was the first president of the United States."
 SCATTER_AXIS_SEEDS = (
     ("AX1", AX1_SEED_PHRASE),
     ("AX2", AX2_SEED_PHRASE),

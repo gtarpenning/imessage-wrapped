@@ -158,25 +158,19 @@ Requires **Full Disk Access** to read the iMessage database:
 3. Add Terminal (for CLI) or the Desktop App
 4. Restart the application
 
-## Advanced: DistilBERT Sentiment Backend
+## Advanced: DistilBERT Embeddings
 
-The package now bundles the `optimum/distilbert-base-uncased-finetuned-sst-2-english` ONNX model
-(via `onnxruntime` + `numpy<2`) so you don’t need extra installs. Toggle the backend per-run:
+Lexicon scoring remains the default (and only) sentiment analyzer, ensuring every message is scored
+quickly and locally. On top of that, the app now bundles the
+`optimum/distilbert-base-uncased-finetuned-sst-2-english` ONNX model (via `onnxruntime` + `numpy<2`)
+strictly for *visualization* purposes:
 
-```bash
-# Use ONNX DistilBERT instead of the default lexicon model
-imexport analyze --sentiment-backend distilbert --no-share
-
-# or via environment variable (still defaults to lexical if unset)
-IMESSAGE_WRAPPED_SENTIMENT_BACKEND=distilbert imexport analyze --no-share
-```
-
-By default the DistilBERT backend processes a 25% deterministic sample of your messages to
-keep analysis fast. Adjust this via `IMESSAGE_WRAPPED_SENTIMENT_SUBSAMPLE` (between `0` and `1`) if
-you need higher fidelity or want to speed it up further.
-
-`tinybert` remains a supported alias for backwards compatibility. If ONNX runtime fails to load for
-any reason, the CLI/Desktop automatically falls back to the lexicon-based analyzer.
+- DistilBERT runs automatically in the background to generate embeddings for up to **20 of your sent
+  messages per ISO week** (received texts are never processed by the neural model).
+- Those embeddings are projected onto the two seeded axes and rendered in the scatter plot inside the
+  web dashboard.
+- No CLI flag or environment variable is required; if the ONNX runtime isn’t available, the scatter
+  quietly disappears while the lexical sentiment stats continue to work normally.
 
 ## Deployment
 
