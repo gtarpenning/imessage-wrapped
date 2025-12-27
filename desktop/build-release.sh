@@ -113,11 +113,5 @@ echo "  2. Sign (optional): codesign --deep --force --sign 'Developer ID' 'dist/
 echo "  3. Distribute: Upload ${DMG_NAME} to GitHub Releases"
 echo ""
 
-# Optional: Open dist folder when running interactively
-if [ -t 0 ]; then
-    read -p "Open dist folder? (y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        open dist
-    fi
-fi
+# Open dist folder automatically
+open dist

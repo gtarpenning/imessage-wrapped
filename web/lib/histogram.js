@@ -57,7 +57,7 @@ export function HistogramTooltip({ bucket, position, formatLabel, formatValue })
   return (
     <div
       style={{
-        position: "absolute",
+        position: "fixed",
         left: `${position.x}px`,
         top: `${position.y}px`,
         transform: "translateX(-50%)",
@@ -67,7 +67,7 @@ export function HistogramTooltip({ bucket, position, formatLabel, formatValue })
         borderRadius: "8px",
         fontSize: "0.875rem",
         whiteSpace: "nowrap",
-        zIndex: 1000,
+        zIndex: 10000,
         pointerEvents: "none",
         border: "1px solid rgba(255, 255, 255, 0.2)",
         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
@@ -148,14 +148,10 @@ export function HistogramBar({ bucket, maxCount, isHovered, onMouseEnter, onMous
 export function HistogramBars({ buckets, maxCount, onBucketHover, hoveredBucket, getBarStyle, getBucketKey, largestBucket, highlightLargest }) {
   const handleMouseEnter = (e, bucket) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const container = e.currentTarget.closest('[style*="position: relative"]');
-    if (container) {
-      const containerRect = container.getBoundingClientRect();
-      onBucketHover(bucket, {
-        x: rect.left + rect.width / 2 - containerRect.left,
-        y: rect.top - containerRect.top - 10,
-      });
-    }
+    onBucketHover(bucket, {
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10,
+    });
   };
 
   const handleMouseLeave = () => {
@@ -331,12 +327,6 @@ export function Histogram({
           >
             {config.renderYAxis &&
               config.renderYAxis(histogramData.buckets, histogramData.maxCount)}
-            <HistogramTooltip 
-              bucket={hoveredBucket} 
-              position={tooltipPosition}
-              formatLabel={config.formatLabel}
-              formatValue={config.formatValue}
-            />
             <HistogramBars
               buckets={histogramData.buckets}
               maxCount={histogramData.maxCount}
@@ -359,6 +349,12 @@ export function Histogram({
           </div>
         </div>
       </div>
+      <HistogramTooltip 
+        bucket={hoveredBucket} 
+        position={tooltipPosition}
+        formatLabel={config.formatLabel}
+        formatValue={config.formatValue}
+      />
     </div>
   );
 }

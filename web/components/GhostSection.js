@@ -17,9 +17,8 @@ export default function GhostSection({ ghosts }) {
     <div className="section">
       <h2 className="section-title">👻 Ghost Mode</h2>
       <p className="section-subtitle">
-        A contact only counts if the chat has at least {minConversation} total
-        messages, they send {minConsecutive}+ texts in a row, and the other
-        person stays silent for {timeline}+ days.
+        Counting chats with at least {minConversation} total
+        messages, and {minConsecutive}+ texts in a row.
       </p>
 
       <div className="stats-grid">
@@ -31,16 +30,6 @@ export default function GhostSection({ ghosts }) {
         <StatCard
           label="People Who Left You Hanging"
           value={totalThem.toLocaleString()}
-          valueStyle={{ fontSize: "2rem" }}
-        />
-        <StatCard
-          label="Silence Threshold"
-          value={`${timeline} days`}
-          valueStyle={{ fontSize: "2rem" }}
-        />
-        <StatCard
-          label="Texts in a Row"
-          value={`${minConsecutive}+`}
           valueStyle={{ fontSize: "2rem" }}
         />
         {typeof ratio === "number" && (
