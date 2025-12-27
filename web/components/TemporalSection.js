@@ -68,14 +68,35 @@ export default function TemporalSection({ temporal }) {
 }
 
 const DAY_AXIS_CONFIG = [
-  { label: "Sun", color: "#fb7185", sourceIndex: 6 },
-  { label: "Mon", color: "#f472b6", sourceIndex: 0 },
-  { label: "Tue", color: "#c084fc", sourceIndex: 1 },
-  { label: "Wed", color: "#a78bfa", sourceIndex: 2 },
-  { label: "Thu", color: "#60a5fa", sourceIndex: 3 },
-  { label: "Fri", color: "#22d3ee", sourceIndex: 4 },
-  { label: "Sat", color: "#14b8a6", sourceIndex: 5 },
+  { label: "Sun", sourceIndex: 6 },
+  { label: "Mon", sourceIndex: 0 },
+  { label: "Tue", sourceIndex: 1 },
+  { label: "Wed", sourceIndex: 2 },
+  { label: "Thu", sourceIndex: 3 },
+  { label: "Fri", sourceIndex: 4 },
+  { label: "Sat", sourceIndex: 5 },
 ];
+
+function interpolateColor(value, min, max) {
+  if (max === min) return "#60a5fa";
+  const normalized = (value - min) / (max - min);
+  const colors = [
+    { r: 96, g: 165, b: 250 },
+    { r: 34, g: 211, b: 238 },
+    { r: 20, g: 184, b: 166 },
+    { r: 192, g: 132, b: 252 },
+    { r: 251, g: 113, b: 133 },
+  ];
+  const colorIndex = Math.floor(normalized * (colors.length - 1));
+  const nextIndex = Math.min(colorIndex + 1, colors.length - 1);
+  const t = normalized * (colors.length - 1) - colorIndex;
+  const c1 = colors[colorIndex];
+  const c2 = colors[nextIndex];
+  const r = Math.round(c1.r + (c2.r - c1.r) * t);
+  const g = Math.round(c1.g + (c2.g - c1.g) * t);
+  const b = Math.round(c1.b + (c2.b - c1.b) * t);
+  return `rgb(${r}, ${g}, ${b})`;
+}
 
 const DAY_AXIS_DIRECTIONS = DAY_AXIS_CONFIG.map((_, idx) => {
   const angle = (idx / DAY_AXIS_CONFIG.length) * Math.PI * 2 - Math.PI / 2;
@@ -97,13 +118,26 @@ function WeekdayRadialPlot({ temporal }) {
     () => temporal.day_of_week_distribution || {},
     [temporal.day_of_week_distribution],
   );
-  const { segments, polygonPoints, gridLayers } = useMemo(() => {
+  const { segments, polygonPoints, gridLayers, normalizedStats } = useMemo(() => {
     const counts = DAY_AXIS_CONFIG.map(({ sourceIndex }) => {
       const rawValue =
         distribution[sourceIndex] ?? distribution?.[String(sourceIndex)] ?? 0;
       const parsed = typeof rawValue === "number" ? rawValue : Number(rawValue);
       return Number.isFinite(parsed) ? parsed : 0;
     });
+    
+    const weekdayIndices = [1, 2, 3, 4, 5];
+    const weekendIndices = [0, 6];
+    
+    const weekdayTotal = weekdayIndices.reduce((sum, idx) => sum + counts[idx], 0);
+    const weekendTotal = weekendIndices.reduce((sum, idx) => sum + counts[idx], 0);
+    
+    const weekdayAvg = Math.round(weekdayTotal / (52 * 5));
+    const weekendAvg = Math.round(weekendTotal / (52 * 2));
+    
+    const minNormalized = Math.min(...counts);
+    const maxNormalized = Math.max(...counts);
+    
     const totalCount = counts.reduce((sum, value) => sum + value, 0);
     const maxValue = counts.reduce((max, value) => Math.max(max, value), 0) || 1;
     const computedSegments = DAY_AXIS_CONFIG.map((config, idx) => {
@@ -111,9 +145,10 @@ function WeekdayRadialPlot({ temporal }) {
       const direction = DAY_AXIS_DIRECTIONS[idx];
       const ratio = maxValue > 0 ? count / maxValue : 0;
       const radius = ratio * SPIDER_MAX_RADIUS;
+      const color = interpolateColor(count, minNormalized, maxNormalized);
       return {
         label: config.label,
-        color: config.color,
+        color,
         count,
         percentOfTotal: totalCount > 0 ? (count / totalCount) * 100 : 0,
         ratio,
@@ -135,13 +170,43 @@ function WeekdayRadialPlot({ temporal }) {
           `${direction.unitX * SPIDER_MAX_RADIUS * level},${direction.unitY * SPIDER_MAX_RADIUS * level}`,
       ).join(" "),
     }));
-    return { segments: computedSegments, polygonPoints, gridLayers };
+    return { 
+      segments: computedSegments, 
+      polygonPoints, 
+      gridLayers,
+      normalizedStats: {
+        weekdayAvg,
+        weekendAvg,
+        weekdayTotal,
+        weekendTotal,
+      }
+    };
   }, [distribution]);
 
-  const weekdayPercent = temporal.weekday_percentage ?? 0;
-  const weekendPercent = temporal.weekend_percentage ?? 0;
   const weekdayMvp = temporal.weekday_mvp;
   const weekendMvp = temporal.weekend_mvp;
+  
+  const weekdayAvg = normalizedStats?.weekdayAvg ?? 0;
+  const weekendAvg = normalizedStats?.weekendAvg ?? 0;
+  
+  const comparisonText = useMemo(() => {
+    if (weekdayAvg === 0 && weekendAvg === 0) return null;
+    if (weekdayAvg === 0) return "You text infinitely more per day on the weekend";
+    if (weekendAvg === 0) return "You text infinitely more per day on weekdays";
+    
+    const diff = ((weekendAvg - weekdayAvg) / weekdayAvg) * 100;
+    const absDiff = Math.abs(diff);
+    
+    if (absDiff < 1) {
+      return "You text about the same amount per day on weekdays and weekends";
+    }
+    
+    if (diff > 0) {
+      return `You text ${absDiff.toFixed(0)}% more per day on the weekend`;
+    } else {
+      return `You text ${absDiff.toFixed(0)}% more per day on weekdays`;
+    }
+  }, [weekdayAvg, weekendAvg]);
 
   return (
     <div className="temporal-polar-card">
@@ -190,11 +255,8 @@ function WeekdayRadialPlot({ temporal }) {
                   className="temporal-spider-point-wrapper"
                   tabIndex={0}
                   aria-label={`${segment.label}: ${segment.count.toLocaleString()} messages (${segment.percentOfTotal.toFixed(1)}%)`}
-                  onMouseEnter={showTooltip}
                   onFocus={showTooltip}
                   onBlur={() => setTooltip(null)}
-                  onTouchStart={showTooltip}
-                  onTouchEnd={() => setTooltip(null)}
                 >
                   <title>
                     {segment.label}: {segment.count.toLocaleString()} messages (
@@ -204,9 +266,21 @@ function WeekdayRadialPlot({ temporal }) {
                   <circle
                     cx={segment.x}
                     cy={segment.y}
+                    r="12"
+                    fill="transparent"
+                    onMouseEnter={showTooltip}
+                    onMouseLeave={() => setTooltip(null)}
+                    onTouchStart={showTooltip}
+                    onTouchEnd={() => setTooltip(null)}
+                    style={{ cursor: "pointer" }}
+                  />
+                  <circle
+                    cx={segment.x}
+                    cy={segment.y}
                     r="6"
                     fill={segment.color}
                     className="temporal-spider-point"
+                    pointerEvents="none"
                   />
                 </g>
               </Fragment>
@@ -217,7 +291,9 @@ function WeekdayRadialPlot({ temporal }) {
             {tooltip ? tooltip.label : "Weekday"}
           </text>
           <text x="0" y="14" textAnchor="middle" className="temporal-polar-percent">
-            {(tooltip?.percent ?? weekdayPercent).toFixed(1)}%
+            {tooltip 
+              ? `${tooltip.count.toLocaleString()} msgs`
+              : `${weekdayAvg}/day`}
           </text>
         </svg>
         <div className="temporal-polar-tooltip-container">
@@ -232,11 +308,16 @@ function WeekdayRadialPlot({ temporal }) {
         </div>
       </div>
       <div className="temporal-polar-blurb">
+        {comparisonText && (
+          <p style={{ fontSize: "1.1rem", fontWeight: "500", marginBottom: "1rem", textAlign: "center" }}>
+            {comparisonText}
+          </p>
+        )}
         <p>
-          <span>Weekday:</span> {weekdayPercent.toFixed(1)}%
+          <span>Weekday avg:</span> {weekdayAvg} messages/day
         </p>
         <p>
-          <span>Weekend:</span> {weekendPercent.toFixed(1)}%
+          <span>Weekend avg:</span> {weekendAvg} messages/day
         </p>
         {weekdayMvp?.contact && (
           <p>

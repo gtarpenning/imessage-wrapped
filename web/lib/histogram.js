@@ -314,36 +314,50 @@ export function Histogram({
       <HistogramHeader title={title} enhancement={enhancement} />
 
       <div style={{ ...defaultContainerStyle, ...containerStyle }}>
-        <div style={{ position: "relative" }}>
-          {config.renderYAxis &&
-            config.renderYAxis(histogramData.buckets, histogramData.maxCount)}
-          <HistogramTooltip 
-            bucket={hoveredBucket} 
-            position={tooltipPosition}
-            formatLabel={config.formatLabel}
-            formatValue={config.formatValue}
-          />
-          <HistogramBars
-            buckets={histogramData.buckets}
-            maxCount={histogramData.maxCount}
-            onBucketHover={handleBucketHover}
-            hoveredBucket={hoveredBucket}
-            getBarStyle={config.getBarStyle}
-            getBucketKey={config.getBucketKey}
-            largestBucket={effectiveHighlightLargest ? largestBucket : null}
-            highlightLargest={effectiveHighlightLargest}
-          />
+        <div
+          style={{
+            overflowX: "auto",
+            paddingBottom: "1rem",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+          className="heatmap-scroll"
+        >
+          <div
+            style={{
+              position: "relative",
+              minWidth: "fit-content",
+            }}
+          >
+            {config.renderYAxis &&
+              config.renderYAxis(histogramData.buckets, histogramData.maxCount)}
+            <HistogramTooltip 
+              bucket={hoveredBucket} 
+              position={tooltipPosition}
+              formatLabel={config.formatLabel}
+              formatValue={config.formatValue}
+            />
+            <HistogramBars
+              buckets={histogramData.buckets}
+              maxCount={histogramData.maxCount}
+              onBucketHover={handleBucketHover}
+              hoveredBucket={hoveredBucket}
+              getBarStyle={config.getBarStyle}
+              getBucketKey={config.getBucketKey}
+              largestBucket={effectiveHighlightLargest ? largestBucket : null}
+              highlightLargest={effectiveHighlightLargest}
+            />
+            <HistogramAxis
+              buckets={histogramData.buckets}
+              ticks={histogramData.ticks}
+              formatTick={config.formatTick}
+              renderExtra={config.renderExtra}
+              largestBucket={effectiveHighlightLargest ? largestBucket : null}
+              formatLargestLabel={config.formatLargestLabel}
+              highlightLargest={effectiveHighlightLargest}
+            />
+          </div>
         </div>
-
-        <HistogramAxis
-          buckets={histogramData.buckets}
-          ticks={histogramData.ticks}
-          formatTick={config.formatTick}
-          renderExtra={config.renderExtra}
-          largestBucket={effectiveHighlightLargest ? largestBucket : null}
-          formatLargestLabel={config.formatLargestLabel}
-          highlightLargest={effectiveHighlightLargest}
-        />
       </div>
     </div>
   );

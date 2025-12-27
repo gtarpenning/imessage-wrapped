@@ -263,7 +263,31 @@ class PhraseExtractor:
                         break
             if not skip:
                 filtered.append(candidate)
-        return filtered
+
+        result: list[ScoredPhrase] = []
+        for phrase in filtered:
+            is_subset = False
+            for other in filtered:
+                if phrase != other and phrase.text != other.text:
+                    if self._is_phrase_subset(phrase.text, other.text):
+                        is_subset = True
+                        break
+            if not is_subset:
+                result.append(phrase)
+        return result
+
+    @staticmethod
+    def _is_phrase_subset(shorter: str, longer: str) -> bool:
+        if len(shorter) >= len(longer):
+            return False
+        shorter_words = shorter.split()
+        longer_words = longer.split()
+        if len(shorter_words) > len(longer_words):
+            return False
+        for i in range(len(longer_words) - len(shorter_words) + 1):
+            if longer_words[i : i + len(shorter_words)] == shorter_words:
+                return True
+        return False
 
     @staticmethod
     def _phrases_overlap(left: str, right: str) -> bool:

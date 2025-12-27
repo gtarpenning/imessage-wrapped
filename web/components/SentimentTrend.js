@@ -57,6 +57,43 @@ export default function SentimentTrend({ sentiment }) {
   );
 }
 
+function getDominantMood(entry) {
+  const dist = entry.distribution;
+  if (!dist) return null;
+  
+  const { positive = 0, neutral = 0, negative = 0 } = dist;
+  const max = Math.max(positive, neutral, negative);
+  
+  if (max === positive) return "positive";
+  if (max === negative) return "negative";
+  return "neutral";
+}
+
+function getMoodColors(mood) {
+  switch (mood) {
+    case "positive":
+      return {
+        bg: "radial-gradient(circle at 35% 35%, #fbcfe8, #ec4899)",
+        shadow: "0 0 18px rgba(236,72,153,0.35)",
+      };
+    case "negative":
+      return {
+        bg: "radial-gradient(circle at 35% 35%, #bfdbfe, #22d3ee)",
+        shadow: "0 0 18px rgba(34,211,238,0.3)",
+      };
+    case "neutral":
+      return {
+        bg: "radial-gradient(circle at 35% 35%, #fde68a, #f59e0b)",
+        shadow: "0 0 18px rgba(245,158,11,0.3)",
+      };
+    default:
+      return {
+        bg: "radial-gradient(circle at 35% 35%, #e5e7eb, #9ca3af)",
+        shadow: "0 0 18px rgba(156,163,175,0.3)",
+      };
+  }
+}
+
 function MoodTimeline({ data, average, scale }) {
   const best = [...data].sort((a, b) => b.avg_score - a.avg_score)[0];
   const worst = [...data].sort((a, b) => a.avg_score - b.avg_score)[0];
@@ -131,13 +168,8 @@ function MoodTimeline({ data, average, scale }) {
           const score = entry.avg_score ?? 0;
           const deviation = (score - average) * scale;
           const size = 16 + Math.min(26, Math.abs(deviation) * 25);
-          const isPositive = score >= 0;
-          const bg = isPositive
-            ? "radial-gradient(circle at 35% 35%, #fbcfe8, #ec4899)"
-            : "radial-gradient(circle at 35% 35%, #bfdbfe, #22d3ee)";
-          const shadow = isPositive
-            ? "0 0 18px rgba(236,72,153,0.35)"
-            : "0 0 18px rgba(34,211,238,0.3)";
+          const mood = getDominantMood(entry) || (score >= 0 ? "positive" : "negative");
+          const { bg, shadow } = getMoodColors(mood);
           return (
             <div
               key={entry.period}

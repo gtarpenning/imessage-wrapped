@@ -39,14 +39,7 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    subparsers = parser.add_subparsers(dest="command", help="Command to run")
-
-    export_parser = subparsers.add_parser(
-        "export",
-        help="Export iMessage conversations to JSON",
-    )
-
-    export_parser.add_argument(
+    parser.add_argument(
         "-y",
         "--year",
         type=int,
@@ -54,21 +47,21 @@ def parse_args():
         help="Year to export (default: current year)",
     )
 
-    export_parser.add_argument(
+    parser.add_argument(
         "-o",
         "--output",
         type=str,
         help="Output file path (default: exports/imessage_export_YEAR.jsonl)",
     )
 
-    export_parser.add_argument(
+    parser.add_argument(
         "-d",
         "--database",
         type=str,
         help="Path to chat.db (default: ~/Library/Messages/chat.db)",
     )
 
-    export_parser.add_argument(
+    parser.add_argument(
         "--format",
         type=str,
         choices=["jsonl", "json"],
@@ -76,64 +69,66 @@ def parse_args():
         help="Export format (default: jsonl)",
     )
 
-    export_parser.add_argument(
+    parser.add_argument(
         "--indent",
         type=int,
         default=2,
         help="JSON indentation spaces for json format (default: 2, use 0 for compact)",
     )
 
-    export_parser.add_argument(
+    parser.add_argument(
         "--skip-permission-check",
         action="store_true",
         help="Skip permission check (use with caution)",
     )
 
-    export_parser.add_argument(
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable debug logging",
     )
 
-    export_parser.add_argument(
+    parser.add_argument(
         "--replace-cache",
         action="store_true",
         help="Replace existing cached export file if it exists",
     )
 
-    analyze_parser = subparsers.add_parser(
-        "analyze",
-        help="Analyze exported iMessage data",
+    parser.add_argument(
+        "--no-analyze",
+        action="store_true",
+        help="Skip analysis after export",
     )
 
-    analyze_parser.add_argument(
+    parser.add_argument(
         "input",
         type=str,
         nargs="?",
-        help="Path to exported JSON/JSONL file",
+        help="Path to exported JSON/JSONL file (for analyze-only mode)",
     )
 
-    analyze_parser.add_argument(
+    parser.add_argument(
         "--analyzers",
         type=str,
         default="raw",
         help="Comma-separated list of analyzers to run (raw,nlp) (default: raw)",
     )
 
-    analyze_parser.add_argument(
-        "--output",
+    parser.add_argument(
+        "--stats-output",
         type=str,
+        dest="stats_output",
         help="Output file path for statistics JSON (optional)",
     )
 
-    analyze_parser.add_argument(
+    parser.add_argument(
         "--no-share",
         action="store_false",
         dest="share",
         help="Don't upload statistics (show full terminal output instead)",
     )
 
-    analyze_parser.add_argument(
+    parser.add_argument(
         "--share",
         action="store_true",
         dest="share",
@@ -141,25 +136,20 @@ def parse_args():
         help="Upload statistics to web and get shareable link (default)",
     )
 
-    analyze_parser.add_argument(
+    parser.add_argument(
         "--server-url",
         type=str,
         default="https://imessage-wrapped.fly.dev",
         help="Web server URL for sharing (default: https://imessage-wrapped.fly.dev)",
     )
-    analyze_parser.add_argument(
+
+    parser.add_argument(
         "--dev",
         action="store_true",
         help="Use local development server (http://localhost:3000)",
     )
 
-    analyze_parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Enable debug logging",
-    )
-
-    analyze_parser.add_argument(
+    parser.add_argument(
         "--ghost-timeline",
         type=int,
         default=7,
@@ -168,16 +158,8 @@ def parse_args():
 
     args = parser.parse_args()
 
-    if args.command is None:
-        args.command = "export"
-        args.year = datetime.now().year
-        args.output = None
-        args.database = None
-        args.format = "jsonl"
-        args.indent = 2
-        args.skip_permission_check = False
-        args.debug = False
-        args.replace_cache = False
+    if args.dev:
+        args.replace_cache = True
 
     return args
 
@@ -202,7 +184,7 @@ def export_command(args):
     if output_file.exists() and not args.replace_cache:
         console.print(f"\n[yellow]ℹ[/] Export file already exists: [cyan]{output_path}[/]")
         console.print("[dim]Use --replace-cache to regenerate[/]")
-        return
+        return output_path
 
     with Progress(
         SpinnerColumn(),
@@ -230,15 +212,27 @@ def export_command(args):
     )
     console.print(f"[dim]Conversations: {len(data.conversations)}[/]")
 
+    return output_path
 
-def analyze_command(args):
+
+def analyze_command(args, input_path=None):
     console = Console()
 
     if args.ghost_timeline <= 0:
         console.print("[red]✗[/] --ghost-timeline must be greater than zero")
         sys.exit(1)
 
-    if not args.input:
+    if input_path:
+        input_path = Path(input_path)
+        if not input_path.exists():
+            console.print(f"[red]✗[/] Input file not found: {input_path}")
+            sys.exit(1)
+    elif args.input:
+        input_path = Path(args.input)
+        if not input_path.exists():
+            console.print(f"[red]✗[/] Input file not found: {args.input}")
+            sys.exit(1)
+    else:
         exports_dir = Path("exports")
         export_files = []
 
@@ -253,14 +247,14 @@ def analyze_command(args):
             console.print("[yellow]ℹ[/] No export found. Exporting messages first...\n")
 
             export_args = argparse.Namespace(
-                year=datetime.now().year,
+                year=args.year,
                 output=None,
-                database=None,
+                database=args.database,
                 format="jsonl",
                 indent=2,
-                skip_permission_check=False,
+                skip_permission_check=args.skip_permission_check,
                 debug=args.debug,
-                replace_cache=False,
+                replace_cache=args.replace_cache,
             )
             export_command(export_args)
 
@@ -294,11 +288,6 @@ def analyze_command(args):
                 sys.exit(0)
 
             input_path = selected
-    else:
-        input_path = Path(args.input)
-        if not input_path.exists():
-            console.print(f"[red]✗[/] Input file not found: {args.input}")
-            sys.exit(1)
 
     analyzer_names = [name.strip() for name in args.analyzers.split(",")]
 
@@ -369,14 +358,14 @@ def analyze_command(args):
 
     sanitized_statistics = sanitize_statistics_for_export(statistics)
 
-    if args.output:
+    if args.stats_output:
         import json
 
-        output_path = Path(args.output)
+        output_path = Path(args.stats_output)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(sanitized_statistics, f, indent=2, ensure_ascii=False)
-        console.print(f"\n[green]✓[/] Statistics saved to [cyan]{args.output}[/]")
+        console.print(f"\n[green]✓[/] Statistics saved to [cyan]{args.stats_output}[/]")
 
     display = TerminalDisplay()
     display.render(statistics, brief=args.share)
@@ -404,14 +393,12 @@ def main():
         )
         logger.debug("Debug logging enabled")
 
-    if args.command == "export":
-        export_command(args)
-    elif args.command == "analyze":
+    if args.input:
         analyze_command(args)
     else:
-        console = Console()
-        console.print("[red]Unknown command. Use 'export' or 'analyze'.[/]")
-        sys.exit(1)
+        export_path = export_command(args)
+        if export_path and not args.no_analyze:
+            analyze_command(args, input_path=export_path)
 
 
 if __name__ == "__main__":
