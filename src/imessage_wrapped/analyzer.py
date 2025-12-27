@@ -32,6 +32,18 @@ class StatisticsAnalyzer(ABC):
 
 logger = logging.getLogger(__name__)
 
+CLIFFHANGER_PATTERNS = [
+    "i'll tell you later",
+    "ill tell you later",
+    "tell you later",
+    "wait till you hear",
+    "more on that later",
+    "remind me to tell you",
+    "i'll explain later",
+    "ill explain later",
+]
+CLIFFHANGER_TIMEOUT = timedelta(hours=12)
+
 
 class RawStatisticsAnalyzer(StatisticsAnalyzer):
     def __init__(
@@ -93,7 +105,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         return {
             "volume": self._analyze_volume(all_messages, sent_messages, received_messages),
-            "temporal": self._analyze_temporal_patterns(all_messages, sent_messages),
+            "temporal": self._analyze_temporal_patterns(data, sent_messages, conversations),
             "contacts": self._analyze_contacts(
                 data, sent_messages, received_messages, conversations=conversations
             ),
@@ -107,6 +119,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             ),
             "streaks": self._analyze_streaks(data, conversations=conversations),
             "ghosts": self._analyze_ghosts(conversations, data),
+            "cliffhangers": self._analyze_cliffhangers(data, conversations),
         }
 
     def _filtered_conversations(self, data: ExportData) -> dict[str, Conversation]:
@@ -197,7 +210,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         }
 
     def _analyze_temporal_patterns(
-        self, all_messages: list[Message], sent_messages: list[Message]
+        self,
+        data: ExportData,
+        sent_messages: list[Message],
+        conversations: dict[str, Conversation],
     ) -> dict[str, Any]:
         hour_distribution = Counter(
             self._to_local_time(msg.timestamp).hour for msg in sent_messages
@@ -209,14 +225,50 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             self._to_local_time(msg.timestamp).month for msg in sent_messages
         )
 
+        sorted_hour = dict(sorted(hour_distribution.items()))
+        sorted_day = dict(sorted(day_of_week_distribution.items()))
+
+        weekday_counts = sum(count for day, count in sorted_day.items() if day < 5)
+        weekend_counts = sum(count for day, count in sorted_day.items() if day >= 5)
+        total_sent = sum(sorted_day.values()) or 1
+
+        weekday_contact_counts: dict[str, int] = defaultdict(int)
+        weekend_contact_counts: dict[str, int] = defaultdict(int)
+        for conv in conversations.values():
+            contact_name = conv.display_name or conv.chat_identifier
+            messages = self._filter_conversation_messages(conv, data.year)
+            for msg in messages:
+                if not msg.is_from_me:
+                    continue
+                local_time = self._to_local_time(msg.timestamp)
+                if local_time.weekday() < 5:
+                    weekday_contact_counts[contact_name] += 1
+                else:
+                    weekend_contact_counts[contact_name] += 1
+
+        weekday_mvp = max(
+            weekday_contact_counts.items(), key=lambda item: item[1], default=(None, 0)
+        )
+        weekend_mvp = max(
+            weekend_contact_counts.items(), key=lambda item: item[1], default=(None, 0)
+        )
+
+        weekday_info = (
+            {"contact": weekday_mvp[0], "count": weekday_mvp[1]} if weekday_mvp[0] else None
+        )
+        weekend_info = (
+            {"contact": weekend_mvp[0], "count": weekend_mvp[1]} if weekend_mvp[0] else None
+        )
+
         return {
-            "hour_distribution": dict(sorted(hour_distribution.items())),
-            "day_of_week_distribution": dict(sorted(day_of_week_distribution.items())),
+            "hour_distribution": sorted_hour,
+            "day_of_week_distribution": sorted_day,
             "month_distribution": dict(sorted(month_distribution.items())),
             "busiest_hour": hour_distribution.most_common(1)[0] if hour_distribution else (None, 0),
-            "busiest_day_of_week": day_of_week_distribution.most_common(1)[0]
-            if day_of_week_distribution
-            else (None, 0),
+            "weekday_percentage": round(weekday_counts / total_sent * 100, 2),
+            "weekend_percentage": round(weekend_counts / total_sent * 100, 2),
+            "weekday_mvp": weekday_info,
+            "weekend_mvp": weekend_info,
         }
 
     def _analyze_streaks(
@@ -252,6 +304,120 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "longest_streak_days": max_streak,
             "longest_streak_contact": max_streak_contact,
             "longest_streak_contact_id": max_streak_contact_id,
+        }
+
+    def _analyze_cliffhangers(
+        self,
+        data: ExportData,
+        conversations: dict[str, Conversation],
+    ) -> dict[str, Any]:
+        threshold_hours = int(CLIFFHANGER_TIMEOUT.total_seconds() // 3600)
+
+        def _longest_gap_for_sender(
+            ordered_messages: list[Message], *, target_is_from_me: bool, contact_name: str
+        ) -> dict[str, Any] | None:
+            relevant = [
+                msg
+                for msg in ordered_messages
+                if msg.is_from_me == target_is_from_me and (msg.text or "").strip()
+            ]
+            if len(relevant) < 2:
+                return None
+
+            winner: dict[str, Any] | None = None
+            for idx in range(len(relevant) - 1):
+                current = relevant[idx]
+                next_message = relevant[idx + 1]
+                gap = next_message.timestamp - current.timestamp
+                if gap <= CLIFFHANGER_TIMEOUT:
+                    continue
+
+                snippet = (current.text or "").strip()
+                lower_text = snippet.lower()
+                matches_pattern = any(pattern in lower_text for pattern in CLIFFHANGER_PATTERNS)
+                gap_seconds = gap.total_seconds()
+                record = {
+                    "contact": contact_name,
+                    "timestamp": current.timestamp.isoformat(),
+                    "snippet": snippet[:160],
+                    "hours_waited": gap_seconds / 3600,
+                    "gap_seconds": gap_seconds,
+                    "matched_pattern": matches_pattern,
+                }
+
+                if winner is None:
+                    winner = record
+                    continue
+
+                if gap_seconds > winner["gap_seconds"]:
+                    winner = record
+                    continue
+
+                if (
+                    gap_seconds == winner["gap_seconds"]
+                    and matches_pattern
+                    and not winner["matched_pattern"]
+                ):
+                    winner = record
+
+            return winner
+
+        example_candidates_you: list[dict[str, Any]] = []
+        example_candidates_them: list[dict[str, Any]] = []
+        total_you = 0
+        total_them = 0
+
+        for conv in conversations.values():
+            messages = self._filter_conversation_messages(conv, data.year)
+            if not messages:
+                continue
+
+            ordered = sorted(messages, key=lambda m: m.timestamp)
+            contact_name = conv.display_name or conv.chat_identifier
+
+            longest_you = _longest_gap_for_sender(
+                ordered, target_is_from_me=True, contact_name=contact_name
+            )
+            if longest_you:
+                total_you += 1
+                example_candidates_you.append(longest_you)
+
+            longest_them = _longest_gap_for_sender(
+                ordered, target_is_from_me=False, contact_name=contact_name
+            )
+            if longest_them:
+                total_them += 1
+                example_candidates_them.append(longest_them)
+
+        example_candidates_you.sort(key=lambda item: item["gap_seconds"], reverse=True)
+        example_candidates_them.sort(key=lambda item: item["gap_seconds"], reverse=True)
+
+        def _build_examples(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
+            return [
+                {
+                    "contact": example["contact"],
+                    "timestamp": example["timestamp"],
+                    "snippet": example["snippet"],
+                    "hours_waited": round(example["hours_waited"], 1),
+                }
+                for example in candidates[:3]
+            ]
+
+        longest_wait_you = (
+            round(example_candidates_you[0]["hours_waited"], 1) if example_candidates_you else 0.0
+        )
+        longest_wait_them = (
+            round(example_candidates_them[0]["hours_waited"], 1) if example_candidates_them else 0.0
+        )
+
+        return {
+            "count": total_you,
+            "count_them": total_them,
+            "threshold_hours": threshold_hours,
+            "examples": _build_examples(example_candidates_you),
+            "examples_them": _build_examples(example_candidates_them),
+            "longest_wait_hours": longest_wait_you,
+            "longest_wait_hours_them": longest_wait_them,
         }
 
     def _analyze_contacts(

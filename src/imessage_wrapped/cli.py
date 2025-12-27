@@ -11,6 +11,7 @@ from rich.progress import (
     MofNCompleteColumn,
     Progress,
     SpinnerColumn,
+    TaskID,
     TextColumn,
     TimeElapsedColumn,
     TimeRemainingColumn,
@@ -321,7 +322,7 @@ def analyze_command(args):
 
         progress.update(load_task, advance=1, description="Export loaded")
 
-        sentiment_tasks: dict[str, int] = {}
+        sentiment_tasks: dict[str, TaskID] = {}
 
         def sentiment_progress(stage: str, completed: int, total: int) -> None:
             if total == 0:
@@ -331,9 +332,7 @@ def analyze_command(args):
             if task_id is None:
                 task_id = progress.add_task(label, total=total)
                 sentiment_tasks[stage] = task_id
-            existing_task_id = sentiment_tasks.get(stage)
-            if existing_task_id is not None:
-                progress.update(existing_task_id, completed=completed, total=total)
+            progress.update(task_id, completed=completed, total=total)
 
         analyzers = []
 

@@ -11,6 +11,7 @@ import MessageAnalysisSection from "@/components/MessageAnalysisSection";
 import MessageLengthSection from "@/components/MessageLengthSection";
 import ConversationsSection from "@/components/ConversationsSection";
 import GhostSection from "@/components/GhostSection";
+import CliffhangerSection from "@/components/CliffhangerSection";
 import ResponseTimesSection from "@/components/ResponseTimesSection";
 import TapbacksSection from "@/components/TapbacksSection";
 import StreaksSection from "@/components/StreaksSection";
@@ -77,6 +78,7 @@ export default function WrappedPage() {
       <MessageLengthSection content={stats.content} />
       <ConversationsSection conversations={stats.conversations} />
       <GhostSection ghosts={stats.ghosts} />
+      <CliffhangerSection cliffhangers={stats.cliffhangers} />
       <ResponseTimesSection response_times={stats.response_times} />
       <TapbacksSection tapbacks={stats.tapbacks} />
       <StreaksSection streaks={stats.streaks} />

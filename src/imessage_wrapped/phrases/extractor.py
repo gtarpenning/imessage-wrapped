@@ -46,17 +46,19 @@ class PhraseExtractionResult:
 
 @dataclass(frozen=True)
 class PhraseExtractionConfig:
-    ngram_range: tuple[int, int] = (3, 6)
+    ngram_range: tuple[int, int] = (2, 5)
     min_occurrences: int = 3
     min_characters: int = 4
     min_text_messages: int = 50
     per_contact_min_text_messages: int | None = 20
-    max_phrases: int = 10
-    per_contact_limit: int = 5
-    scoring: str = "frequency"  # or "tfidf"
+    max_phrases: int = 10  # number of phrases to return
+    per_contact_limit: int = 500
+    scoring: str = "tfidf"  # or "tfidf" / "frequency"
     dedupe_overlap: bool = True
     overlap_tolerance: float = 0.1
-    length_bias: float = 0.45
+    contains_letters: bool = True
+    length_bias: float = 2.1
+    phrase_filter_bank: list[str] = field(default_factory=lambda: ["http", "https"])
 
     def __post_init__(self) -> None:
         if self.ngram_range[0] <= 0 or self.ngram_range[0] > self.ngram_range[1]:
@@ -80,6 +82,14 @@ class PhraseExtractionConfig:
             raise ValueError("per_contact_limit must be >= 0")
         if self.length_bias < 0:
             raise ValueError("length_bias must be >= 0")
+        if not isinstance(self.contains_letters, bool):
+            raise ValueError("contains_letters must be a boolean")
+        if self.length_bias < 0:
+            raise ValueError("length_bias must be >= 0")
+        if not isinstance(self.phrase_filter_bank, list):
+            raise ValueError("phrase_filter_bank must be a list of strings")
+        if not all(isinstance(item, str) for item in self.phrase_filter_bank):
+            raise ValueError("phrase_filter_bank must be a list of strings")
 
 
 class PhraseExtractor:
@@ -228,6 +238,14 @@ class PhraseExtractor:
         characters = sum(len(token) for token in tokens)
         if characters < self._config.min_characters:
             return False
+        if self._config.contains_letters:
+            has_letter = any(any(char.isalpha() for char in token) for token in tokens)
+            if not has_letter:
+                return False
+        if self._config.phrase_filter_bank:
+            has_filter = any(token in self._config.phrase_filter_bank for token in tokens)
+            if has_filter:
+                return False
         if all(token in self._stopwords for token in tokens):
             return False
         return True
@@ -264,7 +282,8 @@ class PhraseExtractor:
     def _length_multiplier(self, phrase: str) -> float:
         token_count = max(1, phrase.count(" ") + 1)
         extra_tokens = max(0, token_count - 1)
-        return 1.0 + (self._config.length_bias * extra_tokens)
+        factor = max(1.0, self._config.length_bias)
+        return float(factor**extra_tokens)
 
 
 @dataclass

@@ -158,6 +158,13 @@ def sanitize_statistics_for_export(statistics: dict[str, Any]) -> dict[str, Any]
                     if isinstance(entry, dict):
                         entry.pop("contact_name", None)
                         entry.pop("contact_id", None)
+            cliff = node.get("cliffhangers")
+            if isinstance(cliff, dict):
+                cliff.pop("examples", None)
+                cliff.pop("examples_them", None)
+            if "temporal" in node and isinstance(node["temporal"], dict):
+                node["temporal"].pop("weekday_mvp", None)
+                node["temporal"].pop("weekend_mvp", None)
             for value in node.values():
                 _strip_private_fields(value)
         elif isinstance(node, list):

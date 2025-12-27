@@ -85,6 +85,7 @@ class TerminalDisplay(Display):
         self._render_response_times_section(stats.get("response_times", {}))
         self._render_tapbacks_section(stats.get("tapbacks", {}))
         self._render_ghosts_section(stats.get("ghosts", {}))
+        self._render_cliffhangers_section(stats.get("cliffhangers"))
 
     def _render_volume_section(self, volume: dict[str, Any]) -> None:
         self.console.print("\n[bold cyan]📊 Volume & Activity[/]")
@@ -120,14 +121,51 @@ class TerminalDisplay(Display):
             am_pm = "AM" if busiest_hour[0] < 12 else "PM"
             table.add_row("Busiest Hour", f"{hour_12}:00 {am_pm} ({busiest_hour[1]:,} messages)")
 
-        day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        busiest_day = temporal.get("busiest_day_of_week", (None, 0))
-        if busiest_day[0] is not None:
-            table.add_row(
-                "Busiest Day of Week", f"{day_names[busiest_day[0]]} ({busiest_day[1]:,} messages)"
-            )
-
         self.console.print(table)
+
+        self._render_weekday_weekend_breakdown(temporal)
+
+    def _render_weekday_weekend_breakdown(self, temporal: dict[str, Any]) -> None:
+        weekday_pct = temporal.get("weekday_percentage")
+        weekend_pct = temporal.get("weekend_percentage")
+        if weekday_pct is None or weekend_pct is None:
+            return
+
+        segments = 12
+        filled_segments = int(round(segments * (weekday_pct / 100)))
+        filled_segments = max(0, min(segments, filled_segments))
+        characters = ["●" if i < filled_segments else "○" for i in range(segments)]
+        characters = [
+            f"[magenta]{char}[/]" if char == "●" else f"[dim]{char}[/]" for char in characters
+        ]
+        layout = [
+            f"    {characters[0]} {characters[1]} {characters[2]} {characters[3]}    ",
+            f"  {characters[11]}           {characters[4]}  ",
+            f"  {characters[10]}           {characters[5]}  ",
+            f"    {characters[9]} {characters[8]} {characters[7]} {characters[6]}    ",
+        ]
+
+        self.console.print("\n[bold]Weekday vs Weekend[/]")
+        for line in layout:
+            self.console.print(line)
+
+        weekday_info = temporal.get("weekday_mvp") or {}
+        weekend_info = temporal.get("weekend_mvp") or {}
+
+        weekday_contact = weekday_info.get("contact") or "—"
+        weekend_contact = weekend_info.get("contact") or "—"
+        weekday_count = weekday_info.get("count")
+        weekend_count = weekend_info.get("count")
+
+        weekday_suffix = f" ({(weekday_count or 0):,} msgs)" if weekday_count is not None else ""
+        weekend_suffix = f" ({(weekend_count or 0):,} msgs)" if weekend_count is not None else ""
+
+        self.console.print(
+            f"[bold magenta]Weekday Warrior:[/] {weekday_contact} — {weekday_pct:.1f}%{weekday_suffix}"
+        )
+        self.console.print(
+            f"[bold cyan]Weekend MVP:[/] {weekend_contact} — {weekend_pct:.1f}%{weekend_suffix}"
+        )
 
     def _render_streaks_section(self, streaks: dict[str, Any]) -> None:
         if streaks.get("longest_streak_days", 0) == 0:
@@ -261,7 +299,7 @@ class TerminalDisplay(Display):
             table.add_column("Phrase", style="white")
             table.add_column("Count", style="green", justify="right")
 
-            for idx, phrase in enumerate(overall[:5], start=1):
+            for idx, phrase in enumerate(overall, start=1):
                 label = phrase.get("phrase") or phrase.get("text") or "—"
                 table.add_row(f"{idx}.", label, f"{phrase.get('occurrences', 0):,}")
 
@@ -497,6 +535,68 @@ class TerminalDisplay(Display):
             table.add_row("Ghost Ratio (You/Them)", f"{ratio:.2f}")
 
         self.console.print(table)
+
+    def _render_cliffhangers_section(self, cliffhangers: dict[str, Any] | None) -> None:
+        if not cliffhangers:
+            return
+
+        count_you = cliffhangers.get("count", 0)
+        count_them = cliffhangers.get("count_them", 0)
+        if count_you <= 0 and count_them <= 0:
+            return
+
+        threshold = cliffhangers.get("threshold_hours", 12)
+        longest_wait_you = cliffhangers.get("longest_wait_hours")
+        longest_wait_them = cliffhangers.get("longest_wait_hours_them")
+        self.console.print("\n[bold cyan]🧵 Cliffhangers[/]")
+        if count_you > 0:
+            self.console.print(
+                f"You dangled future gossip [bold]{count_you}[/] times (took ≥{threshold}h to follow up)."
+            )
+            if isinstance(longest_wait_you, (int, float)) and longest_wait_you > 0:
+                self.console.print(
+                    f"[dim]Longest you made someone wait: {longest_wait_you:.1f}h[/]"
+                )
+        if count_them > 0:
+            self.console.print(
+                f"Your friends dangled it back [bold]{count_them}[/] times (you waited ≥{threshold}h)."
+            )
+            if isinstance(longest_wait_them, (int, float)) and longest_wait_them > 0:
+                self.console.print(f"[dim]Longest they made you wait: {longest_wait_them:.1f}h[/]")
+
+        examples_you = cliffhangers.get("examples") or []
+        if examples_you:
+            self.console.print("[dim]Your slowest follow-ups:[/]")
+            for example in examples_you:
+                contact = example.get("contact") or "Unknown"
+                snippet = (example.get("snippet") or "").strip()
+                when = example.get("timestamp") or "unknown date"
+                wait_hours = example.get("hours_waited")
+                preview = snippet if len(snippet) <= 60 else f"{snippet[:57]}..."
+                details: list[str] = []
+                if isinstance(wait_hours, (int, float)):
+                    details.append(f"{wait_hours:.1f}h wait")
+                if when and when != "unknown date":
+                    details.append(when)
+                meta = " • ".join(details) if details else "unknown date"
+                self.console.print(f" • {contact}: “{preview}” ({meta})")
+
+        examples_them = cliffhangers.get("examples_them") or []
+        if examples_them:
+            self.console.print("[dim]Times they left you hanging:[/]")
+            for example in examples_them:
+                contact = example.get("contact") or "Unknown"
+                snippet = (example.get("snippet") or "").strip()
+                when = example.get("timestamp") or "unknown date"
+                wait_hours = example.get("hours_waited")
+                preview = snippet if len(snippet) <= 60 else f"{snippet[:57]}..."
+                details: list[str] = []
+                if isinstance(wait_hours, (int, float)):
+                    details.append(f"{wait_hours:.1f}h wait")
+                if when and when != "unknown date":
+                    details.append(when)
+                meta = " • ".join(details) if details else "unknown date"
+                self.console.print(f" • {contact}: “{preview}” ({meta})")
 
     def _render_stub_section(self, title: str, stub_data: dict[str, Any]) -> None:
         self.console.print(f"\n[bold cyan]{title}[/]")
