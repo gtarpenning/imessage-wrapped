@@ -36,6 +36,7 @@ OPTIONS = {
         "rumps",
         "urllib3",
         "certifi",
+        "emoji",
     ],
     "excludes": [
         "tkinter",
