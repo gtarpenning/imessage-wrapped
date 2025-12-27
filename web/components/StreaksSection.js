@@ -3,7 +3,7 @@ import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 export default function StreaksSection({ streaks }) {
   const hasStreak = !!streaks?.longest_streak_days;
   const prompt = hasStreak
-    ? `Your friend had a ${streaks.longest_streak_days} day messaging streak. ${PLAYFUL_INSTRUCTION}`
+    ? `The user had a ${streaks.longest_streak_days} day messaging streak. ${PLAYFUL_INSTRUCTION}`
     : null;
   const { enhancement } = useEnhancement(prompt, hasStreak);
 
