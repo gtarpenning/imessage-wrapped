@@ -13,7 +13,8 @@ export default function HeatmapSection({ volume, year }) {
 
     const filteredActivity = {};
     Object.keys(dailyActivity).forEach((dateStr) => {
-      const dateYear = new Date(dateStr).getFullYear();
+      const date = new Date(dateStr + "T00:00:00");
+      const dateYear = date.getFullYear();
       if (dateYear === parseInt(year)) {
         filteredActivity[dateStr] = dailyActivity[dateStr];
       }
@@ -23,8 +24,8 @@ export default function HeatmapSection({ volume, year }) {
 
     if (dates.length === 0) return null;
 
-    const startDate = new Date(dates[0]);
-    const endDate = new Date(dates[dates.length - 1]);
+    const startDate = new Date(dates[0] + "T00:00:00");
+    const endDate = new Date(dates[dates.length - 1] + "T00:00:00");
 
     const monthsData = [];
     let currentDate = new Date(startDate);
@@ -129,7 +130,7 @@ export default function HeatmapSection({ volume, year }) {
               color: "#ec4899",
             }}
           >
-            {new Date(hoveredDay.date).toLocaleDateString("en-US", {
+            {new Date(hoveredDay.date + "T00:00:00").toLocaleDateString("en-US", {
               weekday: "short",
               month: "short",
               day: "numeric",

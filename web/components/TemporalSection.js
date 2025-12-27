@@ -18,6 +18,7 @@ function formatHour(hour) {
 }
 
 function HourHistogram({ histogram }) {
+  // Note: histogram contains hours (0-23) in local timezone, already converted from UTC by analyzer
   const { enhancement } = useEnhancement(null, false);
 
   const hourHistogramConfig = {
@@ -64,6 +65,7 @@ function HourHistogram({ histogram }) {
 export default function TemporalSection({ temporal }) {
   if (!temporal) return null;
 
+  // Note: temporal data (hours, day of week) is in local timezone, already converted from UTC by analyzer
   return (
     <div className="section">
       <h2 className="section-title">⏰ When You Text</h2>

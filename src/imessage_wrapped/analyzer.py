@@ -1,7 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
-from datetime import timedelta
+from datetime import timedelta, timezone
 from typing import Any
 
 from .models import ExportData, Message
@@ -23,6 +23,15 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
     @property
     def name(self) -> str:
         return "raw"
+
+    @staticmethod
+    def _to_local_time(dt):
+        """Convert UTC datetime to local timezone for temporal analysis."""
+        if dt.tzinfo is None:
+            return dt
+        if dt.tzinfo == timezone.utc:
+            return dt.astimezone()
+        return dt
 
     def analyze(self, data: ExportData) -> dict[str, Any]:
         all_messages = self._flatten_messages(data)
@@ -56,10 +65,12 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         received_by_date = defaultdict(int)
 
         for msg in sent_messages:
-            sent_by_date[msg.timestamp.date()] += 1
+            local_time = self._to_local_time(msg.timestamp)
+            sent_by_date[local_time.date()] += 1
 
         for msg in received_messages:
-            received_by_date[msg.timestamp.date()] += 1
+            local_time = self._to_local_time(msg.timestamp)
+            received_by_date[local_time.date()] += 1
 
         busiest_day_total = max(
             (
@@ -102,9 +113,15 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
     def _analyze_temporal_patterns(
         self, all_messages: list[Message], sent_messages: list[Message]
     ) -> dict[str, Any]:
-        hour_distribution = Counter(msg.timestamp.hour for msg in sent_messages)
-        day_of_week_distribution = Counter(msg.timestamp.weekday() for msg in sent_messages)
-        month_distribution = Counter(msg.timestamp.month for msg in sent_messages)
+        hour_distribution = Counter(
+            self._to_local_time(msg.timestamp).hour for msg in sent_messages
+        )
+        day_of_week_distribution = Counter(
+            self._to_local_time(msg.timestamp).weekday() for msg in sent_messages
+        )
+        month_distribution = Counter(
+            self._to_local_time(msg.timestamp).month for msg in sent_messages
+        )
 
         return {
             "hour_distribution": dict(sorted(hour_distribution.items())),
@@ -126,7 +143,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             if not messages:
                 continue
 
-            dates = sorted(set(msg.timestamp.date() for msg in messages))
+            dates = sorted(set(self._to_local_time(msg.timestamp).date() for msg in messages))
 
             current_streak = 1
             for i in range(1, len(dates)):
@@ -184,10 +201,11 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         for conv in data.conversations.values():
             contact_id = conv.chat_identifier
             for msg in conv.messages:
+                local_time = self._to_local_time(msg.timestamp)
                 if msg.is_from_me:
-                    contacts_by_date_sent[msg.timestamp.date()].add(contact_id)
+                    contacts_by_date_sent[local_time.date()].add(contact_id)
                 else:
-                    contacts_by_date_received[msg.timestamp.date()].add(contact_id)
+                    contacts_by_date_received[local_time.date()].add(contact_id)
 
         social_butterfly_day = max(
             contacts_by_date_sent.items(), key=lambda x: len(x[1]), default=(None, set())
