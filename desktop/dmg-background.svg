@@ -55,26 +55,6 @@
   <circle cx="450" cy="235" r="58" fill="#ffffff" opacity="0.7" 
           stroke="#d2d2d7" stroke-width="1.5"/>
   
-  <!-- App placeholder text (the actual icon will be shown) -->
-  <text x="150" y="320" 
-        font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif" 
-        font-size="13" 
-        fill="#1d1d1f" 
-        text-anchor="middle"
-        font-weight="500">
-    iMessage Wrapped
-  </text>
-  
-  <!-- Applications folder label -->
-  <text x="450" y="320" 
-        font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif" 
-        font-size="13" 
-        fill="#1d1d1f" 
-        text-anchor="middle"
-        font-weight="500">
-    Applications
-  </text>
-  
   <!-- Bottom instruction -->
   <text x="300" y="420" 
         font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif" 
