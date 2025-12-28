@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(request) {
   // GitHub automatically redirects /releases/latest/download/<asset-name> to the actual latest release
   // We use a pattern that matches any version number
@@ -14,7 +17,7 @@ export async function GET(request) {
           Accept: "application/vnd.github.v3+json",
           "User-Agent": "iMessage-Wrapped-Download",
         },
-        next: { revalidate: 60 }, // Cache for 1 minute
+        cache: "no-store", // Always fetch fresh data
       },
     );
 
@@ -31,7 +34,11 @@ export async function GET(request) {
 
     if (dmgAsset) {
       // Redirect to the browser download URL
-      return NextResponse.redirect(dmgAsset.browser_download_url, 307);
+      const redirectResponse = NextResponse.redirect(dmgAsset.browser_download_url, 307);
+      redirectResponse.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      redirectResponse.headers.set("Pragma", "no-cache");
+      redirectResponse.headers.set("Expires", "0");
+      return redirectResponse;
     }
 
     // Fallback: try the generic latest pattern
