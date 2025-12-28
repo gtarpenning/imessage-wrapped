@@ -14,7 +14,7 @@ export async function GET(request) {
           Accept: "application/vnd.github.v3+json",
           "User-Agent": "iMessage-Wrapped-Download",
         },
-        next: { revalidate: 3600 }, // Cache for 1 hour
+        next: { revalidate: 60 }, // Cache for 1 minute
       },
     );
 

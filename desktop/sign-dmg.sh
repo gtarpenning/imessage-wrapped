@@ -5,6 +5,26 @@ set -e
 
 REPO="gtarpenning/imessage-wrapped"
 
+# Check for required environment variables
+MISSING_VARS=()
+[ -z "$SIGNING_IDENTITY" ] && MISSING_VARS+=("SIGNING_IDENTITY")
+[ -z "$APPLE_ID" ] && MISSING_VARS+=("APPLE_ID")
+[ -z "$TEAM_ID" ] && MISSING_VARS+=("TEAM_ID")
+
+if [ ${#MISSING_VARS[@]} -ne 0 ]; then
+    echo "❌ Missing required environment variables:"
+    for var in "${MISSING_VARS[@]}"; do
+        echo "   - $var"
+    done
+    echo ""
+    echo "These are required for code signing and notarization."
+    echo "Make sure they are set in your shell environment (e.g., ~/.zshrc)"
+    exit 1
+fi
+
+echo "✓ All required environment variables present"
+echo ""
+
 # Check for DMG argument
 if [ -z "$1" ]; then
     echo "Usage: ./sign-dmg.sh <path-to-dmg>"

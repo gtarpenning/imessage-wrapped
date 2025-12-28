@@ -5,8 +5,25 @@ import subprocess
 import sys
 
 
+def check_environment():
+    required_vars = ["SIGNING_IDENTITY", "APPLE_ID", "TEAM_ID"]
+    missing_vars = [var for var in required_vars if not os.environ.get(var)]
+
+    if missing_vars:
+        print("❌ Missing required environment variables:")
+        for var in missing_vars:
+            print(f"   - {var}")
+        print("\nThese are required for code signing and notarization.")
+        print("Make sure they are set in your shell environment (e.g., ~/.zshrc)")
+        sys.exit(1)
+
+    print("✓ All required environment variables present")
+
+
 def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+    check_environment()
 
     print("🧹 Cleaning up previous DMG files and mounts...")
 
@@ -58,21 +75,30 @@ def main():
     subprocess.run(["git", "commit", "-m", f"Bump desktop version to {new_version}"], check=True)
 
     print("\n🏗️  Building DMG...")
-    result = subprocess.run(["./build-release.sh"], cwd="desktop", shell=True, executable="/bin/zsh")
+    result = subprocess.run(
+        ["./build-release.sh"], cwd="desktop", shell=True, executable="/bin/zsh"
+    )
     if result.returncode != 0:
         sys.exit(1)
 
     dmg_name = f"iMessage-Wrapped-{new_version}.dmg"
 
     print("\n🔐 Signing and notarizing...")
-    result = subprocess.run(f"./sign-dmg.sh {dmg_name}", cwd="desktop", shell=True, executable="/bin/zsh")
+    result = subprocess.run(
+        f"./sign-dmg.sh {dmg_name}", cwd="desktop", shell=True, executable="/bin/zsh"
+    )
     if result.returncode != 0:
         sys.exit(1)
 
     signed_dmg = dmg_name
 
     print("\n📤 Publishing to GitHub...")
-    result = subprocess.run(f"./publish-release.sh {new_version} {signed_dmg}", cwd="desktop", shell=True, executable="/bin/zsh")
+    result = subprocess.run(
+        f"./publish-release.sh {new_version} {signed_dmg}",
+        cwd="desktop",
+        shell=True,
+        executable="/bin/zsh",
+    )
     if result.returncode != 0:
         sys.exit(1)
 
