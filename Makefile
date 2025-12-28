@@ -1,4 +1,4 @@
-.PHONY: help clean build upload bump-patch bump-minor bump-major build-upgrade-deploy release-desktop lint format typecheck check
+.PHONY: help clean build upload bump-patch bump-minor bump-major build-upgrade-deploy release-desktop lint format typecheck check test-install
 
 help:
 	@echo "Available commands:"
@@ -22,6 +22,7 @@ help:
 	@echo "    make format                 - Format code with ruff"
 	@echo "    make typecheck              - Run ty type checker"
 	@echo "    make check                  - Run all checks (lint + typecheck)"
+	@echo "    make test-install           - Test package installation in clean env"
 	@echo ""
 	@echo "See RELEASE-GUIDE.md for deployment instructions"
 
@@ -70,7 +71,7 @@ upload:
 	@echo "Uploading to PyPI..."
 	python -m twine upload dist/*
 
-build-upgrade-deploy: bump-patch build upload
+build-upgrade-deploy: bump-patch test-install upload
 	@echo "✓ Package upgraded and deployed successfully!"
 
 release-desktop:
@@ -93,3 +94,6 @@ typecheck:
 
 check: lint typecheck
 	@echo "✓ All checks passed!"
+
+test-install:
+	@python scripts/smoke-test.py

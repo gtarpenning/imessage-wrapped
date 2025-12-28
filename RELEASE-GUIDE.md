@@ -4,6 +4,13 @@ Quick commands to deploy each component of iMessage Wrapped.
 
 ## Python CLI → PyPI
 
+**Test first:**
+```bash
+make test-install
+```
+Builds package in clean venv, verifies resource files and imports work.
+
+**Deploy:**
 ```bash
 make build-upgrade-deploy
 ```

@@ -57,7 +57,9 @@ cp -R "/Volumes/iMessageWrapped/iMessage Wrapped.app" ./
 # Preserve the background and DS_Store from original DMG
 echo "  Preserving DMG appearance settings..."
 if [ -d "/Volumes/iMessageWrapped/.background" ]; then
-    cp -R "/Volumes/iMessageWrapped/.background" ./dmg-background-temp/ 2>/dev/null || true
+    rm -rf ./dmg-background-temp 2>/dev/null || true
+    mkdir -p ./dmg-background-temp
+    cp -R "/Volumes/iMessageWrapped/.background/." ./dmg-background-temp/ 2>/dev/null || true
 fi
 if [ -f "/Volumes/iMessageWrapped/.DS_Store" ]; then
     cp "/Volumes/iMessageWrapped/.DS_Store" ./DS_Store.temp 2>/dev/null || true
@@ -167,15 +169,25 @@ MOUNT_DIR="/Volumes/${VOLUME_NAME}"
 # Cleanup any previous runs
 echo "Cleaning up any previous runs..."
 rm -f "${TEMP_DMG}" "${SIGNED_DMG}"
-hdiutil detach "${MOUNT_DIR}" 2>/dev/null || true
+
+# Detach any existing mounts for this volume name (handles suffixes like "iMessage Wrapped 1")
+EXISTING_MOUNTS=$(mount | grep "/Volumes/${VOLUME_NAME}" | awk '{print $1}' || true)
+if [ -n "$EXISTING_MOUNTS" ]; then
+    while IFS= read -r device; do
+        if [ -n "$device" ]; then
+            hdiutil detach "$device" -force 2>/dev/null || true
+        fi
+    done <<< "$EXISTING_MOUNTS"
+    sleep 1
+fi
 
 echo "Creating temporary DMG..."
 hdiutil create -size 300m -fs HFS+ -volname "${VOLUME_NAME}" "${TEMP_DMG}"
 
 echo "Attaching temporary DMG..."
-# Unmount if already mounted
-hdiutil detach "${MOUNT_DIR}" 2>/dev/null || true
-hdiutil attach "${TEMP_DMG}" -mountpoint "${MOUNT_DIR}" -nobrowse
+# Mount and capture the device identifier
+ATTACH_OUTPUT=$(hdiutil attach "${TEMP_DMG}" -mountpoint "${MOUNT_DIR}" -nobrowse)
+MOUNTED_DEVICE=$(echo "$ATTACH_OUTPUT" | grep "/dev/disk" | awk '{print $1}' | head -n 1)
 
 echo "Copying app bundle to temporary DMG..."
 cp -R "$APP_PATH" "${MOUNT_DIR}/" || { echo "❌ Copy failed"; exit 1; }
@@ -197,7 +209,8 @@ echo "✅ Applications symlink verified"
 # Restore background folder from original DMG, or create new one
 if [ -d "dmg-background-temp" ]; then
     echo "Restoring background from original DMG..."
-    cp -R dmg-background-temp "${MOUNT_DIR}/.background"
+    mkdir -p "${MOUNT_DIR}/.background"
+    cp -R dmg-background-temp/. "${MOUNT_DIR}/.background/"
 else
     # Create background image if it doesn't exist
     if [ ! -f "dmg-background.png" ]; then
@@ -214,11 +227,17 @@ fi
 # Prioritize .DS_Store template (never opens windows!)
 DS_STORE_APPLIED=false
 
-if [ -f "dmg-template/DS_Store_template" ]; then
-    echo "Using .DS_Store template (no windows will open)..."
-    cp "dmg-template/DS_Store_template" "${MOUNT_DIR}/.DS_Store"
-    DS_STORE_APPLIED=true
-    echo "✅ Window appearance configured from template"
+DS_STORE_TEMPLATE="dmg-template/DS_Store_template"
+if [ -f "$DS_STORE_TEMPLATE" ]; then
+    if strings "$DS_STORE_TEMPLATE" | grep -q "iMessage Wrapped Template"; then
+        echo "⚠️  .DS_Store template appears invalid (references 'iMessage Wrapped Template')"
+        echo "   Skipping template; will configure window appearance automatically."
+    else
+        echo "Using .DS_Store template (no windows will open)..."
+        cp "$DS_STORE_TEMPLATE" "${MOUNT_DIR}/.DS_Store"
+        DS_STORE_APPLIED=true
+        echo "✅ Window appearance configured from template"
+    fi
 elif [ -f "DS_Store.temp" ]; then
     echo "Restoring window settings from original DMG..."
     cp DS_Store.temp "${MOUNT_DIR}/.DS_Store"
@@ -292,7 +311,7 @@ sync
 
 echo "Detaching volume..."
 for i in {1..5}; do
-    if hdiutil detach "${MOUNT_DIR}" -quiet 2>/dev/null; then
+    if hdiutil detach "${MOUNTED_DEVICE}" -quiet 2>/dev/null; then
         echo "✅ Volume unmounted cleanly"
         break
     fi
@@ -300,7 +319,7 @@ for i in {1..5}; do
     sleep 2
     if [ $i -eq 5 ]; then
         echo "  Using force unmount..."
-        hdiutil detach "${MOUNT_DIR}" -force || true
+        hdiutil detach "${MOUNTED_DEVICE}" -force || true
     fi
 done
 echo "Converting to compressed DMG..."
@@ -348,7 +367,11 @@ if [ $NOTARIZE_STATUS -eq 0 ]; then
     # Verify
     echo ""
     echo "🔍 Final verification..."
+    echo "  Checking signature..."
+    codesign --verify --verbose=4 "${SIGNED_DMG}" 2>&1 || true
     spctl --assess --type open --context context:primary-signature --verbose "${SIGNED_DMG}"
+    echo "  Checking notarization ticket..."
+    xcrun stapler validate "${SIGNED_DMG}" 2>&1 || true
     
     # Cleanup
     rm -rf "$APP_PATH"

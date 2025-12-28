@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "imessage-wrapped"
-version = "0.1.12"
+version = "0.1.14"
 description = "Export and analyze iMessage conversations from macOS SQLite database"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -50,6 +50,10 @@ Repository = "https://github.com/yourusername/imessage-wrapped"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"imessage_wrapped.phrases.resources" = ["*.txt"]
+"imessage_wrapped.sentiment.resources" = ["*.txt", "*.json"]
 
 [tool.black]
 line-length = 100

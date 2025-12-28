@@ -49,23 +49,25 @@ if [ -n "$PYTHON_FILES" ]; then
   if ! command -v ruff > /dev/null 2>&1; then
     echo "${YELLOW}⚠ ruff not found. Install with: pip install -e '.[dev]'${NC}"
   else
+    # Format first (auto-fix formatting issues)
+    echo "${YELLOW}⚙️  Formatting code with ruff...${NC}"
+    ruff format $PYTHON_FILES
+    if [ $? -eq 0 ]; then
+      # Stage any formatted files
+      echo "$PYTHON_FILES" | xargs git add 2>/dev/null || true
+      echo "${GREEN}✓ Code formatted${NC}"
+    fi
+
+    # Then lint (with auto-fix)
     echo "${YELLOW}⚙️  Running ruff linter...${NC}"
-    ruff check $PYTHON_FILES
+    ruff check $PYTHON_FILES --fix --unsafe-fixes
     if [ $? -ne 0 ]; then
       echo "${RED}✗ Ruff linting failed!${NC}"
       EXIT_CODE=1
     else
+      # Stage any auto-fixed files
+      echo "$PYTHON_FILES" | xargs git add 2>/dev/null || true
       echo "${GREEN}✓ Ruff linting passed${NC}"
-    fi
-
-    echo "${YELLOW}⚙️  Checking code formatting...${NC}"
-    ruff format --check $PYTHON_FILES
-    if [ $? -ne 0 ]; then
-      echo "${RED}✗ Code formatting check failed!${NC}"
-      echo "${YELLOW}Run 'make format' to fix formatting${NC}"
-      EXIT_CODE=1
-    else
-      echo "${GREEN}✓ Code formatting passed${NC}"
     fi
   fi
 

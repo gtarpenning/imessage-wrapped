@@ -80,14 +80,22 @@ echo "Adding background image..."
 mkdir -p "${MOUNT_DIR}/.background"
 cp dmg-background.png "${MOUNT_DIR}/.background/"
 
-# Use pre-made .DS_Store template if available (avoids opening windows!)
-if [ -f "dmg-template/DS_Store_template" ]; then
-    echo "Using .DS_Store template (no windows will open)..."
-    cp "dmg-template/DS_Store_template" "${MOUNT_DIR}/.DS_Store"
-    echo "✅ Window appearance configured from template"
+# Use pre-made .DS_Store template if available AND valid (avoids opening windows!)
+# NOTE: .DS_Store templates can embed absolute volume aliases. If the template was created
+# on a different volume name (e.g. "iMessage Wrapped Template"), Finder will not resolve
+# the background image on end-user machines.
+DS_STORE_TEMPLATE="dmg-template/DS_Store_template"
+if [ -f "$DS_STORE_TEMPLATE" ]; then
+    if strings "$DS_STORE_TEMPLATE" | grep -q "iMessage Wrapped Template"; then
+        echo "⚠️  .DS_Store template appears invalid (references 'iMessage Wrapped Template')"
+        echo "   Skipping template; sign-dmg.sh will configure the window appearance."
+    else
+        echo "Using .DS_Store template (no windows will open)..."
+        cp "$DS_STORE_TEMPLATE" "${MOUNT_DIR}/.DS_Store"
+        echo "✅ Window appearance configured from template"
+    fi
 else
     echo "⚠️  No .DS_Store template found"
-    echo "   Run ./create-dmg-template-manual.sh once to create it (takes 30 seconds)"
     echo "   For now, window appearance will be configured by sign-dmg.sh"
 fi
 
