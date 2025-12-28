@@ -1,4 +1,5 @@
 import StatCard from "./StatCard";
+import EnhancedText from "./EnhancedText";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 
 export default function ResponseTimesSection({ response_times }) {
@@ -24,20 +25,9 @@ export default function ResponseTimesSection({ response_times }) {
     <div className="section">
       <h2 className="section-title">⚡ Response Times</h2>
       {enhancement && (
-        <p
-          style={{
-            marginTop: "0.5rem",
-            marginBottom: "1rem",
-            fontSize: "1.5rem",
-            fontWeight: "500",
-            opacity: 0.85,
-            fontStyle: "italic",
-            textAlign: "center",
-            lineHeight: "1.4",
-          }}
-        >
+        <EnhancedText style={{ marginTop: "0.5rem" }}>
           {enhancement}
-        </p>
+        </EnhancedText>
       )}
       <div className="stats-grid">
         {response_times.total_responses_you > 0 &&

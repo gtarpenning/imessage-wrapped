@@ -1,4 +1,5 @@
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
+import EnhancedText from "./EnhancedText";
 
 export default function StreaksSection({ streaks }) {
   const hasStreak = !!streaks?.longest_streak_days;
@@ -13,20 +14,9 @@ export default function StreaksSection({ streaks }) {
     <div className="section">
       <h2 className="section-title">🔥 Your Longest Streak</h2>
       {enhancement && (
-        <p
-          style={{
-            marginTop: "0.5rem",
-            marginBottom: "1rem",
-            fontSize: "1.5rem",
-            fontWeight: "500",
-            opacity: 0.85,
-            fontStyle: "italic",
-            textAlign: "center",
-            lineHeight: "1.4",
-          }}
-        >
+        <EnhancedText style={{ marginTop: "0.5rem" }}>
           {enhancement}
-        </p>
+        </EnhancedText>
       )}
       <div style={{ textAlign: "center" }}>
         <p style={{ fontSize: "3rem", fontWeight: "bold", color: "#f59e0b" }}>

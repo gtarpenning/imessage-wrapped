@@ -1,5 +1,6 @@
 import StatCard from "./StatCard";
 import PhraseHighlights from "./PhraseHighlights";
+import EnhancedText from "./EnhancedText";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 
 export default function ContentSection({ content }) {
@@ -90,22 +91,7 @@ function DoubleTextSection({ content }) {
       >
         Double Text Count
       </p>
-      {enhancement && (
-        <p
-          style={{
-            marginTop: "0",
-            marginBottom: "1rem",
-            fontSize: "1.5rem",
-            fontWeight: "500",
-            opacity: 0.85,
-            fontStyle: "italic",
-            textAlign: "center",
-            lineHeight: "1.4",
-          }}
-        >
-          {enhancement}
-        </p>
-      )}
+      {enhancement && <EnhancedText>{enhancement}</EnhancedText>}
       <p style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#06b6d4" }}>
         {content.double_text_count.toLocaleString()}
       </p>
@@ -141,22 +127,7 @@ function EmojiSection({ content }) {
       >
         Most Used Emojis
       </h3>
-      {enhancement && (
-        <p
-          style={{
-            marginTop: "0",
-            marginBottom: "1rem",
-            fontSize: "1.5rem",
-            fontWeight: "500",
-            opacity: 0.85,
-            fontStyle: "italic",
-            textAlign: "center",
-            lineHeight: "1.4",
-          }}
-        >
-          {enhancement}
-        </p>
-      )}
+      {enhancement && <EnhancedText>{enhancement}</EnhancedText>}
       <div className="emoji-grid">
         {content.most_used_emojis.slice(0, 10).map((emoji, index) => (
           <div key={index} className="emoji-item">

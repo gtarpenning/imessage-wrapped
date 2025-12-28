@@ -1,5 +1,31 @@
 import { useMemo, useState } from "react";
 
+export function getWarmColorGradient(value, maxValue) {
+  const normalized = maxValue > 0 ? Math.max(0, Math.min(1, value / maxValue)) : 0;
+  
+  const warmColors = [
+    { r: 139, g: 92, b: 246 },
+    { r: 168, g: 85, b: 247 },
+    { r: 192, g: 38, b: 211 },
+    { r: 236, g: 72, b: 153 },
+    { r: 251, g: 113, b: 133 },
+    { r: 251, g: 146, b: 60 },
+    { r: 251, g: 191, b: 36 },
+    { r: 255, g: 215, b: 0 },
+  ];
+  
+  const colorIndex = Math.floor(normalized * (warmColors.length - 1));
+  const nextIndex = Math.min(colorIndex + 1, warmColors.length - 1);
+  const t = normalized * (warmColors.length - 1) - colorIndex;
+  const c1 = warmColors[colorIndex];
+  const c2 = warmColors[nextIndex];
+  const r = Math.round(c1.r + (c2.r - c1.r) * t);
+  const g = Math.round(c1.g + (c2.g - c1.g) * t);
+  const b = Math.round(c1.b + (c2.b - c1.b) * t);
+  
+  return `linear-gradient(180deg, rgba(${r},${g},${b},1.0) 0%, rgba(${r},${g},${b},0.55) 100%)`;
+}
+
 export function useHistogramData(histogram, config) {
   const { processData, generateTicks } = config;
 
@@ -15,6 +41,8 @@ export function useHistogramData(histogram, config) {
   }, [histogram, processData, generateTicks]);
 }
 
+import EnhancedText from "@/components/EnhancedText";
+
 export function HistogramHeader({ title, enhancement }) {
   return (
     <div style={{ marginTop: "2rem" }}>
@@ -29,20 +57,9 @@ export function HistogramHeader({ title, enhancement }) {
         {title}
       </h3>
       {enhancement && (
-        <p
-          style={{
-            marginTop: "0",
-            marginBottom: "1.5rem",
-            fontSize: "1.5rem",
-            fontWeight: "500",
-            opacity: 0.85,
-            fontStyle: "italic",
-            textAlign: "center",
-            lineHeight: "1.4",
-          }}
-        >
+        <EnhancedText style={{ marginBottom: "1.5rem" }}>
           {enhancement}
-        </p>
+        </EnhancedText>
       )}
     </div>
   );
@@ -89,31 +106,10 @@ export function HistogramBar({ bucket, maxCount, isHovered, onMouseEnter, onMous
   const containerHeight = 300;
   const heightPercent = maxCount > 0 ? bucket.count / maxCount : 0;
   const heightPx = Math.max(heightPercent * containerHeight, 2);
-
-  const defaultBackground = "linear-gradient(180deg, rgba(139, 92, 246, 0.6) 0%, rgba(139, 92, 246, 0.3) 100%)";
-  const highlightedBackground = "linear-gradient(180deg, #ec4899 0%, #8b5cf6 100%)";
   
-  let background = defaultBackground;
-  
-  if (getBarStyle) {
-    background = getBarStyle(bucket, allBuckets);
-  } else if (highlightLargest && largestBucket) {
-    let isLargest = false;
-    if (largestBucket === bucket) {
-      isLargest = true;
-    } else if (getBucketKey) {
-      isLargest = getBucketKey(bucket) === getBucketKey(largestBucket);
-    } else {
-      isLargest = (
-        bucket.hour !== undefined && largestBucket.hour !== undefined && bucket.hour === largestBucket.hour
-      ) || (
-        bucket.start !== undefined && bucket.end !== undefined &&
-        largestBucket.start !== undefined && largestBucket.end !== undefined &&
-        bucket.start === largestBucket.start && bucket.end === largestBucket.end
-      );
-    }
-    background = isLargest ? highlightedBackground : defaultBackground;
-  }
+  const background = getBarStyle 
+    ? getBarStyle(bucket, allBuckets)
+    : getWarmColorGradient(bucket.count, maxCount);
 
   return (
     <div
@@ -211,20 +207,24 @@ export function HistogramBars({ buckets, maxCount, onBucketHover, hoveredBucket,
   );
 }
 
-export function HistogramAxis({ buckets, ticks, formatTick, renderExtra, largestBucket, formatLargestLabel, highlightLargest }) {
+export function HistogramAxis({ buckets, ticks, formatTick, renderExtra, largestBucket, formatLargestLabel, highlightLargest, xAxisLabel }) {
   if (buckets.length === 0 || !ticks) return null;
+
+  const axisHeight = renderExtra ? "60px" : "40px";
+  const totalHeight = xAxisLabel ? "80px" : axisHeight;
 
   return (
     <div
       style={{
         position: "relative",
-        height: "40px",
+        height: totalHeight,
         marginTop: "0.5rem",
       }}
     >
       {ticks.map((tick) => {
         const bucketIndex = buckets.findIndex((b) => {
           if (b.hour !== undefined) return b.hour === tick;
+          if (b.rank !== undefined) return b.rank === tick;
           if (b.start !== undefined && b.end !== undefined) {
             return tick >= b.start && tick <= b.end;
           }
@@ -266,6 +266,22 @@ export function HistogramAxis({ buckets, ticks, formatTick, renderExtra, largest
           {formatLargestLabel ? formatLargestLabel(largestBucket) : `Busiest: ${largestBucket.range} (${largestBucket.count.toLocaleString()} messages)`}
         </div>
       )}
+      {xAxisLabel && (
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            transform: "translateX(-50%)",
+            fontSize: "0.875rem",
+            opacity: 0.7,
+            fontWeight: "500",
+            bottom: "0",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {xAxisLabel}
+        </div>
+      )}
     </div>
   );
 }
@@ -277,6 +293,7 @@ export function Histogram({
   enhancement,
   containerStyle,
   highlightLargest = true,
+  xAxisLabel,
 }) {
   const [hoveredBucket, setHoveredBucket] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
@@ -345,6 +362,7 @@ export function Histogram({
               largestBucket={effectiveHighlightLargest ? largestBucket : null}
               formatLargestLabel={config.formatLargestLabel}
               highlightLargest={effectiveHighlightLargest}
+              xAxisLabel={xAxisLabel}
             />
           </div>
         </div>

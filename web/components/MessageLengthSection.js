@@ -1,6 +1,6 @@
 import StatCard from "./StatCard";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
-import { Histogram } from "@/lib/histogram";
+import { Histogram, getWarmColorGradient } from "@/lib/histogram";
 
 export default function MessageLengthSection({ content }) {
   if (!content) return null;
@@ -136,14 +136,9 @@ function WordCountHistogram({ histogram, modeWordCount }) {
     formatLabel: (bucket) => `${bucket.range} words`,
     formatValue: (bucket) => `${bucket.count.toLocaleString()} messages`,
     formatTick: (tick) => tick,
-    getBarStyle: (bucket) => {
-      if (!modeWordCount) {
-        return "linear-gradient(180deg, rgba(139, 92, 246, 0.6) 0%, rgba(139, 92, 246, 0.3) 100%)";
-      }
-      const isModeBucket = modeWordCount >= bucket.start && modeWordCount <= bucket.end;
-      return isModeBucket
-        ? "linear-gradient(180deg, #ec4899 0%, #8b5cf6 100%)"
-        : "linear-gradient(180deg, rgba(139, 92, 246, 0.6) 0%, rgba(139, 92, 246, 0.3) 100%)";
+    getBarStyle: (bucket, allBuckets) => {
+      const maxCount = allBuckets.reduce((max, b) => Math.max(max, b.count), 0);
+      return getWarmColorGradient(bucket.count, maxCount);
     },
     getBucketKey: (bucket) => bucket.start,
     renderExtra: (buckets) => {
@@ -169,20 +164,6 @@ function WordCountHistogram({ histogram, modeWordCount }) {
               60+
             </div>
           )}
-          {modeWordCount && (
-            <div
-              style={{
-                ...labelStyle,
-                left: "50%",
-                transform: "translateX(-50%)",
-                opacity: 0.8,
-                fontWeight: "500",
-                top: "20px",
-              }}
-            >
-              Mode: {modeWordCount} words
-            </div>
-          )}
         </>
       );
     },
@@ -195,6 +176,7 @@ function WordCountHistogram({ histogram, modeWordCount }) {
       title="Message Length Distribution"
       enhancement={enhancement}
       highlightLargest={false}
+      xAxisLabel="Words per message"
     />
   );
 }

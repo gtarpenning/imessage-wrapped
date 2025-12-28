@@ -1,4 +1,5 @@
 import { useEnhancement } from "@/hooks/useEnhancement";
+import EnhancedText from "./EnhancedText";
 
 export default function WrappedFooter({ views, volume }) {
   const totalMessages = volume
@@ -29,17 +30,16 @@ export default function WrappedFooter({ views, volume }) {
       }}
     >
       {enhancement && (
-        <p
+        <EnhancedText
           style={{
             fontSize: "1.5rem",
             fontWeight: "600",
             marginBottom: "2rem",
             color: "#fff",
-            lineHeight: "1.4",
           }}
         >
           {enhancement}
-        </p>
+        </EnhancedText>
       )}
       {loading && (
         <p

@@ -1,4 +1,5 @@
 import StatCard from "./StatCard";
+import EnhancedText from "./EnhancedText";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 
 const TAPBACK_EMOJIS = {
@@ -84,20 +85,9 @@ function TapbackReactionsSection({ orderedTapbacks, tapbackDistribution }) {
         Your Reactions
       </h3>
       {enhancement && (
-        <p
-          style={{
-            marginTop: "0",
-            marginBottom: "1.5rem",
-            fontSize: "1.5rem",
-            fontWeight: "500",
-            opacity: 0.85,
-            fontStyle: "italic",
-            textAlign: "center",
-            lineHeight: "1.4",
-          }}
-        >
+        <EnhancedText style={{ marginBottom: "1.5rem" }}>
           {enhancement}
-        </p>
+        </EnhancedText>
       )}
       <div
         style={{

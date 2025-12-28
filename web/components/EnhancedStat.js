@@ -1,4 +1,5 @@
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
+import EnhancedText from "./EnhancedText";
 
 export default function EnhancedStat({ prompt, children, className = "" }) {
   const fullPrompt = prompt ? `${prompt} ${PLAYFUL_INSTRUCTION}` : null;
@@ -8,20 +9,9 @@ export default function EnhancedStat({ prompt, children, className = "" }) {
     <div className={className}>
       {children}
       {enhancement && (
-        <p
-          style={{
-            marginTop: "1.5rem",
-            marginBottom: "1rem",
-            fontSize: "1.5rem",
-            fontWeight: "500",
-            opacity: 0.85,
-            fontStyle: "italic",
-            textAlign: "center",
-            lineHeight: "1.4",
-          }}
-        >
+        <EnhancedText style={{ marginTop: "1.5rem" }}>
           {enhancement}
-        </p>
+        </EnhancedText>
       )}
       {loading && (
         <p

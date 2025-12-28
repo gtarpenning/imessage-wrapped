@@ -409,6 +409,34 @@ footer {
   display: none;
 }
 
+.enhanced-text {
+  position: relative;
+}
+
+.sparkle {
+  display: inline-block;
+  animation: sparkle-shake 3s ease-in-out infinite;
+  margin: 0 0.5rem;
+  font-size: 1.2rem;
+  opacity: 0.8;
+  vertical-align: middle;
+}
+
+@keyframes sparkle-shake {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(-1px) translateY(-1px);
+  }
+  50% {
+    transform: translateX(1px) translateY(1px);
+  }
+  75% {
+    transform: translateX(-1px) translateY(1px);
+  }
+}
+
 @media (max-width: 768px) {
   .hero h1 {
     font-size: 2.5rem;
