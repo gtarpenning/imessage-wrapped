@@ -175,13 +175,24 @@ hdiutil create -size 300m -fs HFS+ -volname "${VOLUME_NAME}" "${TEMP_DMG}"
 echo "Attaching temporary DMG..."
 # Unmount if already mounted
 hdiutil detach "${MOUNT_DIR}" 2>/dev/null || true
-hdiutil attach "${TEMP_DMG}" -mountpoint "${MOUNT_DIR}"
+hdiutil attach "${TEMP_DMG}" -mountpoint "${MOUNT_DIR}" -nobrowse
 
 echo "Copying app bundle to temporary DMG..."
 cp -R "$APP_PATH" "${MOUNT_DIR}/" || { echo "❌ Copy failed"; exit 1; }
 
 echo "Creating Applications symlink..."
 ln -s /Applications "${MOUNT_DIR}/Applications" || { echo "❌ Symlink failed"; exit 1; }
+
+# Verify symlink was created correctly
+if [ ! -L "${MOUNT_DIR}/Applications" ]; then
+    echo "❌ Applications symlink was not created"
+    exit 1
+fi
+if [ ! -e "${MOUNT_DIR}/Applications" ]; then
+    echo "❌ Applications symlink is broken (doesn't point to valid target)"
+    exit 1
+fi
+echo "✅ Applications symlink verified"
 
 # Restore background folder from original DMG, or create new one
 if [ -d "dmg-background-temp" ]; then
@@ -200,22 +211,39 @@ else
     cp dmg-background.png "${MOUNT_DIR}/.background/"
 fi
 
-# Restore .DS_Store from original DMG if it exists
-if [ -f "DS_Store.temp" ]; then
+# Prioritize .DS_Store template (never opens windows!)
+DS_STORE_APPLIED=false
+
+if [ -f "dmg-template/DS_Store_template" ]; then
+    echo "Using .DS_Store template (no windows will open)..."
+    cp "dmg-template/DS_Store_template" "${MOUNT_DIR}/.DS_Store"
+    DS_STORE_APPLIED=true
+    echo "✅ Window appearance configured from template"
+elif [ -f "DS_Store.temp" ]; then
     echo "Restoring window settings from original DMG..."
     cp DS_Store.temp "${MOUNT_DIR}/.DS_Store"
-    # Clean up temp files
-    rm -rf dmg-background-temp DS_Store.temp
+    DS_STORE_APPLIED=true
+    echo "✅ Window appearance restored from original"
 fi
+
+# Clean up temp files
+rm -rf dmg-background-temp DS_Store.temp 2>/dev/null || true
 
 echo "Syncing..."
 sync
 
-# Only configure appearance if we don't have a .DS_Store from original
-if [ ! -f "${MOUNT_DIR}/.DS_Store" ]; then
-    # Configure DMG appearance with AppleScript
-    echo "Configuring DMG window appearance..."
-    echo "  (This may take a few seconds...)"
+# Only use AppleScript as a last resort (this WILL open windows on your desktop!)
+if [ "$DS_STORE_APPLIED" = false ]; then
+    echo ""
+    echo "⚠️  WARNING: No .DS_Store template found!"
+    echo "   This will open Finder windows on your screen."
+    echo "   To avoid this in the future, run: ./create-dmg-template-manual.sh"
+    echo "   (It takes 30 seconds and only needs to be done once)"
+    echo ""
+    echo "Configuring DMG window appearance with AppleScript..."
+    echo "  (A Finder window will open briefly - sorry!)"
+    echo ""
+    sleep 2
     
     # Run AppleScript with better error handling
     if osascript <<EOF
@@ -229,32 +257,38 @@ tell application "Finder"
         set viewOptions to the icon view options of container window
         set arrangement of viewOptions to not arranged
         set icon size of viewOptions to 100
-        set background picture of viewOptions to file ".background:dmg-background.png"
-        set position of item "iMessage Wrapped.app" of container window to {150, 235}
-        set position of item "Applications" of container window to {450, 235}
+        -- Set background picture (must use POSIX file path)
+        set background picture of viewOptions to POSIX file "${MOUNT_DIR}/.background/dmg-background.png"
+        -- Wait for Finder to refresh and show all items
+        delay 1
         update without registering applications
         delay 1
+        -- Position items (use try/catch in case items aren't ready yet)
+        try
+            set position of item "iMessage Wrapped.app" of container window to {150, 235}
+        end try
+        try
+            set position of item "Applications" of container window to {450, 235}
+        end try
+        update without registering applications
+        delay 2
+        close
     end tell
 end tell
 EOF
     then
-        echo "✅ DMG appearance configured"
+        echo "✅ DMG appearance configured with AppleScript"
     else
         echo "⚠️  AppleScript configuration had issues, but continuing..."
     fi
     
-    # Keep window open briefly to ensure settings are saved
-    sleep 2
-else
-    echo "✅ Using appearance settings from original DMG"
+    # Close any Finder windows and wait for .DS_Store to be written
+    echo "Finalizing DMG settings..."
+    osascript -e "tell application \"Finder\" to close every window" 2>/dev/null || true
+    sleep 3
 fi
 
 sync
-
-echo "Finalizing DMG settings..."
-# Close any Finder windows to ensure settings are saved
-osascript -e "tell application \"Finder\" to close every window" 2>/dev/null || true
-sleep 2
 
 echo "Detaching volume..."
 for i in {1..5}; do

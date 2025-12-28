@@ -20,10 +20,33 @@ def check_environment():
     print("✓ All required environment variables present")
 
 
+def check_git_clean():
+    """Check if git working directory is clean."""
+    result = subprocess.run(
+        ["git", "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    if result.stdout.strip():
+        print("❌ Git working directory is not clean!")
+        print("\nPlease commit or stash your changes before releasing.")
+        print("\nCurrent changes:")
+        print(result.stdout)
+        sys.exit(1)
+
+    print("✓ Git working directory is clean")
+
+
 def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     check_environment()
+
+    os.chdir("..")
+    check_git_clean()
+    os.chdir("desktop")
 
     print("🧹 Cleaning up previous DMG files and mounts...")
 
@@ -69,10 +92,6 @@ def main():
     open("setup.py", "w").write(setup_content)
 
     print(f"✓ Bumped version to {new_version}")
-
-    os.chdir("..")
-    subprocess.run(["git", "add", "desktop/build-release.sh", "desktop/setup.py"], check=True)
-    subprocess.run(["git", "commit", "-m", f"Bump desktop version to {new_version}"], check=True)
 
     print("\n🏗️  Building DMG...")
     result = subprocess.run(

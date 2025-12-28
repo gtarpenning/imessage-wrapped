@@ -17,10 +17,15 @@ elif command -v rsvg-convert &> /dev/null; then
 else
     # Fallback: use macOS built-in qlmanage to render
     # qlmanage creates larger images, so we'll need to resize with sips
-    qlmanage -t -s 600 -o . dmg-background.svg
-    mv dmg-background.svg.png dmg-background.png 2>/dev/null || true
-    # Resize to exact dimensions with sips (built into macOS)
-    sips -z 450 600 dmg-background.png --out dmg-background.png &>/dev/null
+    # Generate at larger size to maintain quality (qlmanage makes square images)
+    qlmanage -t -s 1200 -o . dmg-background.svg
+    mv dmg-background.svg.png dmg-background-temp.png 2>/dev/null || true
+    # qlmanage creates square images (1200x1200), we need 4:3 ratio (1200x900)
+    # Crop with minimal offset to maximize visible content
+    sips --cropOffset 15 0 --cropToHeightWidth 900 1200 dmg-background-temp.png --out dmg-background-temp.png
+    # Now resize to final dimensions
+    sips -z 450 600 dmg-background-temp.png --out dmg-background.png
+    rm -f dmg-background-temp.png
     echo "✅ Created dmg-background.png with qlmanage + sips"
 fi
 
