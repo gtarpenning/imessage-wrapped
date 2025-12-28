@@ -58,21 +58,21 @@ def main():
     subprocess.run(["git", "commit", "-m", f"Bump desktop version to {new_version}"], check=True)
 
     print("\n🏗️  Building DMG...")
-    result = subprocess.run(["./build-release.sh"], cwd="desktop")
+    result = subprocess.run(["./build-release.sh"], cwd="desktop", shell=True, executable="/bin/zsh")
     if result.returncode != 0:
         sys.exit(1)
 
     dmg_name = f"iMessage-Wrapped-{new_version}.dmg"
 
     print("\n🔐 Signing and notarizing...")
-    result = subprocess.run(["./sign-dmg.sh", dmg_name], cwd="desktop")
+    result = subprocess.run(f"./sign-dmg.sh {dmg_name}", cwd="desktop", shell=True, executable="/bin/zsh")
     if result.returncode != 0:
         sys.exit(1)
 
     signed_dmg = dmg_name
 
     print("\n📤 Publishing to GitHub...")
-    result = subprocess.run(["./publish-release.sh", new_version, signed_dmg], cwd="desktop")
+    result = subprocess.run(f"./publish-release.sh {new_version} {signed_dmg}", cwd="desktop", shell=True, executable="/bin/zsh")
     if result.returncode != 0:
         sys.exit(1)
 
