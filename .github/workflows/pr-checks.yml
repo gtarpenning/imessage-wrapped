@@ -1,0 +1,79 @@
+name: PR Build & Test Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  python-checks:
+    name: Python Lint & Build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install -e ".[dev]"
+          pip install build
+      
+      - name: Run ruff linter
+        run: ruff check src/
+      
+      - name: Run ruff formatter check
+        run: ruff format --check src/
+      
+      - name: Run type checker
+        run: ty check src/
+      
+      - name: Build Python package
+        run: python -m build
+        
+      - name: Verify package was built
+        run: |
+          ls -lh dist/
+          echo "✓ Package built successfully (not publishing)"
+
+  web-checks:
+    name: Web Lint & Build
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint
+        run: npm run lint
+      
+      - name: Build Next.js
+        run: npm run build
+        env:
+          SKIP_ENV_VALIDATION: true
+      
+      - name: Verify build artifacts
+        run: |
+          ls -lh .next/
+          echo "✓ Web app built successfully (not deploying)"
+
