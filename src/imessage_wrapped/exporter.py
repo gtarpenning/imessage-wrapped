@@ -10,8 +10,9 @@ class Serializer(Protocol):
 
 
 class JSONSerializer:
-    def __init__(self, indent: int | None = 2):
+    def __init__(self, indent: int | None = 2, include_text: bool = False):
         self.indent = indent
+        self.include_text = include_text
 
     def serialize(self, data: ExportData) -> str:
         payload = {
@@ -22,6 +23,10 @@ class JSONSerializer:
                 key: self._serialize_conversation(conv) for key, conv in data.conversations.items()
             },
         }
+        if data.phrases is not None:
+            payload["phrases"] = data.phrases
+        if data.sentiment is not None:
+            payload["sentiment"] = data.sentiment
         return json.dumps(payload, indent=self.indent, ensure_ascii=False)
 
     def _serialize_conversation(self, conv: Conversation) -> dict:
@@ -41,10 +46,19 @@ class JSONSerializer:
             "timestamp_unix": msg.timestamp_unix,
             "is_from_me": msg.is_from_me,
             "sender": msg.sender,
-            "text": msg.text,
             "service": msg.service,
             "has_attachment": msg.has_attachment,
+            "text_length": msg.text_length,
+            "word_count": msg.word_count,
+            "punctuation_count": msg.punctuation_count,
+            "has_question": msg.has_question,
+            "has_exclamation": msg.has_exclamation,
+            "has_link": msg.has_link,
+            "emoji_counts": msg.emoji_counts,
         }
+
+        if self.include_text:
+            data["text"] = msg.text
 
         if msg.date_read_after_seconds is not None:
             data["date_read_after_seconds"] = msg.date_read_after_seconds
@@ -59,6 +73,9 @@ class JSONSerializer:
 
 
 class JSONLSerializer:
+    def __init__(self, include_text: bool = False):
+        self.include_text = include_text
+
     def serialize(self, data: ExportData) -> str:
         lines = []
         for conv_key, conv in data.conversations.items():
@@ -73,6 +90,10 @@ class JSONLSerializer:
                     "participants": conv.participants,
                     "message": self._serialize_message(msg),
                 }
+                if data.phrases is not None:
+                    line_data["phrases"] = data.phrases
+                if data.sentiment is not None:
+                    line_data["sentiment"] = data.sentiment
                 lines.append(json.dumps(line_data, ensure_ascii=False))
         return "\n".join(lines)
 
@@ -84,10 +105,19 @@ class JSONLSerializer:
             "timestamp_unix": msg.timestamp_unix,
             "is_from_me": msg.is_from_me,
             "sender": msg.sender,
-            "text": msg.text,
             "service": msg.service,
             "has_attachment": msg.has_attachment,
+            "text_length": msg.text_length,
+            "word_count": msg.word_count,
+            "punctuation_count": msg.punctuation_count,
+            "has_question": msg.has_question,
+            "has_exclamation": msg.has_exclamation,
+            "has_link": msg.has_link,
+            "emoji_counts": msg.emoji_counts,
         }
+
+        if self.include_text:
+            data["text"] = msg.text
 
         if msg.date_read_after_seconds is not None:
             data["date_read_after_seconds"] = msg.date_read_after_seconds

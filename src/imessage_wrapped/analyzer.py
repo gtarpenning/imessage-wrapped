@@ -102,12 +102,15 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         )
         sent_messages = [m for m in all_messages if m.is_from_me]
         received_messages = [m for m in all_messages if not m.is_from_me]
+        # Contacts should reflect everyone you messaged or heard from, even if a
+        # conversation was filtered out of other analyses. Use the full set.
+        contact_conversations = data.conversations
 
         return {
             "volume": self._analyze_volume(all_messages, sent_messages, received_messages),
             "temporal": self._analyze_temporal_patterns(data, sent_messages, conversations),
             "contacts": self._analyze_contacts(
-                data, sent_messages, received_messages, conversations=conversations
+                data, sent_messages, received_messages, conversations=contact_conversations
             ),
             "content": self._analyze_content(
                 data, sent_messages, received_messages, conversations=conversations
@@ -282,7 +285,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         convs = conversations or data.conversations
         for conv in convs.values():
-            messages = self._filter_conversation_messages(conv, data.year)
+            messages = sorted(
+                self._filter_conversation_messages(conv, data.year),
+                key=lambda msg: msg.timestamp,
+            )
             if not messages:
                 continue
             messages = sorted(messages, key=lambda m: m.timestamp)
@@ -492,6 +498,8 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             total_messages=total_messages_considered,
             totals_by_contact=total_messages_by_contact,
             contact_names=contact_names,
+            sent_by_contact=sent_by_contact,
+            received_by_contact=received_by_contact,
             top_n=100,
         )
 
@@ -517,6 +525,8 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         total_messages: int,
         totals_by_contact: dict[str, int],
         contact_names: dict[str, str],
+        sent_by_contact: dict[str, int] | None,
+        received_by_contact: dict[str, int] | None,
         top_n: int,
     ) -> list[dict[str, Any]]:
         if not totals_by_contact:
@@ -535,6 +545,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         for rank, (contact_id, count) in enumerate(sorted_contacts, start=1):
             share = round(count / denominator, 4)
             cumulative = round(cumulative + share, 4)
+            sent_count = (sent_by_contact or {}).get(contact_id, 0)
+            received_count = (received_by_contact or {}).get(contact_id, 0)
+            sent_ratio = round(sent_count / max(count, 1), 4)
+            received_ratio = round(received_count / max(count, 1), 4)
             distribution.append(
                 {
                     "rank": rank,
@@ -542,6 +556,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                     "contact_name": contact_names.get(contact_id),
                     "share": share,
                     "count": count,
+                    "sent_count": sent_count,
+                    "received_count": received_count,
+                    "sent_ratio": sent_ratio,
+                    "received_ratio": received_ratio,
                     "cumulative_share": min(cumulative, 1.0),
                 }
             )
@@ -555,10 +573,45 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         received_messages: list[Message],
         conversations: dict[str, Conversation] | None = None,
     ) -> dict[str, Any]:
-        sent_with_text = [m for m in sent_messages if m.text]
-        received_with_text = [m for m in received_messages if m.text]
+        def msg_length(message: Message) -> int:
+            if hasattr(message, "text_length"):
+                return getattr(message, "text_length") or 0
+            return len(message.text or "")
 
-        punctuation_pattern = re.compile(r'[.!?,;:\-\'"()]')
+        def msg_word_count(message: Message) -> int:
+            if hasattr(message, "word_count"):
+                return getattr(message, "word_count") or 0
+            text = message.text or ""
+            return len(text.split()) if text.strip() else 0
+
+        def msg_punctuation_count(message: Message) -> int:
+            if hasattr(message, "punctuation_count"):
+                return getattr(message, "punctuation_count") or 0
+            return len(re.findall(r'[.!?,;:\-\'"()]', message.text or ""))
+
+        def msg_has_question(message: Message) -> bool:
+            if hasattr(message, "has_question"):
+                return bool(getattr(message, "has_question"))
+            return "?" in (message.text or "")
+
+        def msg_has_exclamation(message: Message) -> bool:
+            if hasattr(message, "has_exclamation"):
+                return bool(getattr(message, "has_exclamation"))
+            return "!" in (message.text or "")
+
+        def msg_has_link(message: Message) -> bool:
+            if hasattr(message, "has_link"):
+                return bool(getattr(message, "has_link"))
+            return bool(re.search(r"https?://", message.text or ""))
+
+        def msg_emoji_counts(message: Message) -> Counter[str]:
+            counts = getattr(message, "emoji_counts", None)
+            if counts:
+                return Counter(counts)
+            return count_emojis(message.text or "")
+
+        sent_with_text = [m for m in sent_messages if msg_length(m) > 0]
+        received_with_text = [m for m in received_messages if msg_length(m) > 0]
 
         emoji_counter: Counter[str] = Counter()
         sent_lengths: list[int] = []
@@ -570,26 +623,24 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         link_count = 0
 
         for msg in sent_with_text:
-            text = msg.text or ""
-            sent_lengths.append(len(text))
-            word_count = len(text.split()) if text.strip() else 0
+            sent_lengths.append(msg_length(msg))
+            word_count = msg_word_count(msg)
             sent_word_counts.append(word_count)
-            emoji_counter.update(count_emojis(text))
-            sent_punctuation_counts.append(len(punctuation_pattern.findall(text)))
-            if "?" in text:
+            emoji_counter.update(msg_emoji_counts(msg))
+            sent_punctuation_counts.append(msg_punctuation_count(msg))
+            if msg_has_question(msg):
                 question_count += 1
-            if "!" in text:
+            if msg_has_exclamation(msg):
                 exclamation_count += 1
-            if re.search(r"https?://", text):
+            if msg_has_link(msg):
                 link_count += 1
 
         for msg in received_with_text:
-            text = msg.text or ""
-            received_punctuation_counts.append(len(punctuation_pattern.findall(text)))
+            received_punctuation_counts.append(msg_punctuation_count(msg))
 
         avg_length_sent = sum(sent_lengths) / len(sent_lengths) if sent_lengths else 0
         avg_length_received = (
-            sum(len(m.text or "") for m in received_with_text) / len(received_with_text)
+            sum(msg_length(m) for m in received_with_text) / len(received_with_text)
             if received_with_text
             else 0
         )
@@ -605,12 +656,15 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             else 0
         )
 
-        double_texts = self._count_double_texts(sent_messages)
-        sentiment_stats = self._analyze_sentiment(
-            sent_messages,
-            received_messages,
-            interval=self._sentiment_interval,
-        )
+        double_texts = self._count_double_texts(data, conversations)
+        if getattr(data, "sentiment", None):
+            sentiment_stats = data.sentiment
+        else:
+            sentiment_stats = self._analyze_sentiment(
+                sent_messages,
+                received_messages,
+                interval=self._sentiment_interval,
+            )
 
         word_count_histogram = self._create_word_count_histogram(sent_word_counts)
         mode_word_count = Counter(sent_word_counts).most_common(1)[0][0] if sent_word_counts else 0
@@ -646,7 +700,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         if sentiment_stats:
             result["sentiment"] = sentiment_stats
-        phrase_public, phrase_contacts = self._analyze_phrases(
+        phrase_public, phrase_contacts = self._get_phrases(
             data, sent_with_text, conversations=data.conversations
         )
         if phrase_public:
@@ -656,35 +710,49 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         return result
 
-    def _count_double_texts(self, sent_messages: list[Message]) -> dict[str, Any]:
-        if not sent_messages:
-            return {"count": 0, "percentage": 0.0}
-
-        sorted_msgs = sorted(sent_messages, key=lambda m: m.timestamp)
-
+    def _count_double_texts(
+        self, data: ExportData, conversations: dict[str, Conversation] | None = None
+    ) -> dict[str, Any]:
+        total_sent = 0
         double_text_count = 0
-        i = 0
-        while i < len(sorted_msgs) - 1:
-            current = sorted_msgs[i]
-            next_msg = sorted_msgs[i + 1]
 
-            time_diff = (next_msg.timestamp - current.timestamp).total_seconds()
+        convs = conversations or data.conversations
 
-            if time_diff < 300:
-                double_text_count += 1
-                while (
-                    i < len(sorted_msgs) - 1
-                    and (sorted_msgs[i + 1].timestamp - current.timestamp).total_seconds() < 300
-                ):
+        for conv in convs.values():
+            messages = self._filter_conversation_messages(conv, data.year)
+            if not messages:
+                continue
+
+            total_sent += sum(1 for msg in messages if msg.is_from_me)
+
+            i = 0
+            while i < len(messages):
+                current = messages[i]
+
+                if not current.is_from_me:
                     i += 1
-            i += 1
+                    continue
 
-        percentage = round(double_text_count / len(sorted_msgs) * 100, 2) if sorted_msgs else 0
+                run_start_time = current.timestamp
+                run_length = 1
+                j = i + 1
 
-        return {
-            "count": double_text_count,
-            "percentage": percentage,
-        }
+                while (
+                    j < len(messages)
+                    and messages[j].is_from_me
+                    and (messages[j].timestamp - run_start_time).total_seconds() < 300
+                ):
+                    run_length += 1
+                    j += 1
+
+                if run_length > 1:
+                    double_text_count += 1
+
+                i = j
+
+        percentage = round(double_text_count / total_sent * 100, 2) if total_sent else 0.0
+
+        return {"count": double_text_count, "percentage": percentage}
 
     def _analyze_phrases(
         self,
@@ -765,6 +833,23 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "config": config_info,
         }
         return public_payload, by_contact
+
+    def _get_phrases(
+        self,
+        data: ExportData,
+        sent_messages: list[Message],
+        conversations: dict[str, Conversation] | None = None,
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+        # Prefer phrases precomputed at export time (no raw text needed).
+        if getattr(data, "phrases", None) is not None:
+            return data.phrases or {}, []
+
+        # Fall back to live extraction only if text is available.
+        has_text = any((msg.text or "").strip() for msg in sent_messages)
+        if not has_text:
+            return {}, []
+
+        return self._analyze_phrases(data, sent_messages, conversations=conversations)
 
     def _analyze_sentiment(
         self,
@@ -1123,6 +1208,12 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         tapback_counter_given = Counter(tapbacks_given)
         tapback_counter_received = Counter(tapbacks_received)
 
+        all_tapback_types = ["love", "like", "dislike", "laugh", "emphasize", "question"]
+        tapback_distribution_given = {t: tapback_counter_given.get(t, 0) for t in all_tapback_types}
+        tapback_distribution_received = {
+            t: tapback_counter_received.get(t, 0) for t in all_tapback_types
+        }
+
         return {
             "total_tapbacks_given": len(tapbacks_given),
             "total_tapbacks_received": len(tapbacks_received),
@@ -1132,8 +1223,8 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "most_received_tapback": tapback_counter_received.most_common(1)[0]
             if tapback_counter_received
             else (None, 0),
-            "tapback_distribution_given": dict(tapback_counter_given.most_common()),
-            "tapback_distribution_received": dict(tapback_counter_received.most_common()),
+            "tapback_distribution_given": tapback_distribution_given,
+            "tapback_distribution_received": tapback_distribution_received,
         }
 
 

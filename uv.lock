@@ -345,13 +345,14 @@ wheels = [
 
 [[package]]
 name = "imessage-wrapped"
-version = "0.1.11"
+version = "0.1.14"
 source = { editable = "." }
 dependencies = [
     { name = "emoji" },
     { name = "questionary" },
     { name = "requests" },
     { name = "rich" },
+    { name = "ruff" },
 ]
 
 [package.optional-dependencies]
@@ -373,6 +374,7 @@ requires-dist = [
     { name = "questionary", specifier = ">=2.0.0" },
     { name = "requests", specifier = ">=2.31.0" },
     { name = "rich", specifier = ">=13.0.0" },
+    { name = "ruff", specifier = ">=0.14.10" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "twine", marker = "extra == 'dev'", specifier = ">=4.0.0" },
     { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.7" },

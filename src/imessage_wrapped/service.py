@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime, timezone
 
 from .db_reader import DatabaseReader
@@ -6,6 +7,7 @@ from .models import Conversation, ExportData, Message, Tapback
 from .utils import (
     apple_timestamp_to_datetime,
     calculate_read_duration,
+    count_emojis,
     extract_text_from_attributed_body,
     get_tapback_type,
     is_tapback,
@@ -14,6 +16,8 @@ from .utils import (
 
 ME = "Me"
 logger = logging.getLogger(__name__)
+PUNCTUATION_RE = re.compile(r'[.!?,;:\-\'"()]')
+LINK_RE = re.compile(r"https?://", re.IGNORECASE)
 
 
 class MessageProcessor:
@@ -135,6 +139,15 @@ class MessageProcessor:
         sender = ME if row["is_from_me"] else (row["sender_id"] or "Unknown")
         service = row["service"] or "iMessage"
 
+        text_value = text or ""
+        text_length = len(text_value)
+        word_count = len(text_value.split()) if text_value.strip() else 0
+        punctuation_count = len(PUNCTUATION_RE.findall(text_value)) if text_value else 0
+        has_question = "?" in text_value
+        has_exclamation = "!" in text_value
+        has_link = bool(LINK_RE.search(text_value))
+        emojis = count_emojis(text_value)
+
         return Message(
             id=row["message_id"],
             guid=row["message_guid"],
@@ -145,6 +158,13 @@ class MessageProcessor:
             service=service,
             has_attachment=bool(row["cache_has_attachments"]),
             date_read_after_seconds=read_duration,
+            text_length=text_length,
+            word_count=word_count,
+            punctuation_count=punctuation_count,
+            has_question=has_question,
+            has_exclamation=has_exclamation,
+            has_link=has_link,
+            emoji_counts=dict(emojis),
         )
 
     def _apply_tapbacks(self, tapback_queue: list[dict], message_index: dict[str, Message]) -> None:

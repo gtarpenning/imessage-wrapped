@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export function getWarmColorGradient(value, maxValue) {
   const normalized = maxValue > 0 ? Math.max(0, Math.min(1, value / maxValue)) : 0;
@@ -286,6 +286,56 @@ export function HistogramAxis({ buckets, ticks, formatTick, renderExtra, largest
   );
 }
 
+function CompactHistogramAxis({ ticks, formatTick, xAxisLabel }) {
+  const hasTicks = ticks && ticks.length > 0;
+
+  if (!hasTicks && !xAxisLabel) return null;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.5rem",
+        minWidth: "96px",
+        padding: "0.75rem",
+        background: "rgba(255, 255, 255, 0.04)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
+        borderRadius: "12px",
+        alignSelf: "flex-start",
+      }}
+    >
+      {xAxisLabel && (
+        <div
+          style={{
+            fontSize: "0.9rem",
+            fontWeight: 600,
+            opacity: 0.85,
+          }}
+        >
+          {xAxisLabel}
+        </div>
+      )}
+      {hasTicks && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.25rem",
+            fontSize: "0.75rem",
+            opacity: 0.7,
+            lineHeight: 1.2,
+          }}
+        >
+          {ticks.map((tick) => (
+            <span key={tick}>{formatTick ? formatTick(tick) : tick}</span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Histogram({
   histogram,
   config,
@@ -298,6 +348,8 @@ export function Histogram({
   const [hoveredBucket, setHoveredBucket] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const histogramData = useHistogramData(histogram, config);
+  const scrollContainerRef = useRef(null);
+  const [isCompactAxis, setIsCompactAxis] = useState(false);
 
   const largestBucket = useMemo(() => {
     if (!histogramData.buckets || histogramData.buckets.length === 0) return null;
@@ -310,6 +362,37 @@ export function Histogram({
     setHoveredBucket(bucket);
     setTooltipPosition(position);
   };
+
+  useEffect(() => {
+    const threshold = 700;
+    const updateCompact = (width) => {
+      if (typeof width === "number") {
+        setIsCompactAxis(width < threshold);
+        return;
+      }
+      const measuredWidth =
+        scrollContainerRef.current?.clientWidth ??
+        (typeof window !== "undefined" ? window.innerWidth : threshold);
+      setIsCompactAxis(measuredWidth < threshold);
+    };
+
+    updateCompact();
+
+    if (typeof ResizeObserver !== "undefined" && scrollContainerRef.current) {
+      const observer = new ResizeObserver((entries) => {
+        const entryWidth = entries?.[0]?.contentRect?.width;
+        updateCompact(entryWidth);
+      });
+      observer.observe(scrollContainerRef.current);
+      return () => observer.disconnect();
+    }
+
+    if (typeof window !== "undefined") {
+      const handleResize = () => updateCompact(window.innerWidth);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, []);
 
   const defaultContainerStyle = {
     background: "rgba(255, 255, 255, 0.05)",
@@ -329,41 +412,58 @@ export function Histogram({
       <div style={{ ...defaultContainerStyle, ...containerStyle }}>
         <div
           style={{
-            overflowX: "auto",
-            paddingBottom: "1rem",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
+            display: isCompactAxis ? "grid" : undefined,
+            gridTemplateColumns: isCompactAxis ? "auto 1fr" : undefined,
+            gap: isCompactAxis ? "0.75rem" : undefined,
+            alignItems: isCompactAxis ? "start" : undefined,
           }}
-          className="heatmap-scroll"
         >
-          <div
-            style={{
-              position: "relative",
-              minWidth: "fit-content",
-            }}
-          >
-            {config.renderYAxis &&
-              config.renderYAxis(histogramData.buckets, histogramData.maxCount)}
-            <HistogramBars
-              buckets={histogramData.buckets}
-              maxCount={histogramData.maxCount}
-              onBucketHover={handleBucketHover}
-              hoveredBucket={hoveredBucket}
-              getBarStyle={config.getBarStyle}
-              getBucketKey={config.getBucketKey}
-              largestBucket={effectiveHighlightLargest ? largestBucket : null}
-              highlightLargest={effectiveHighlightLargest}
-            />
-            <HistogramAxis
-              buckets={histogramData.buckets}
+          {isCompactAxis && (
+            <CompactHistogramAxis
               ticks={histogramData.ticks}
               formatTick={config.formatTick}
-              renderExtra={config.renderExtra}
-              largestBucket={effectiveHighlightLargest ? largestBucket : null}
-              formatLargestLabel={config.formatLargestLabel}
-              highlightLargest={effectiveHighlightLargest}
               xAxisLabel={xAxisLabel}
             />
+          )}
+          <div
+            ref={scrollContainerRef}
+            style={{
+              overflowX: "auto",
+              paddingBottom: "1rem",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
+            className="heatmap-scroll"
+          >
+            <div
+              style={{
+                position: "relative",
+                minWidth: "fit-content",
+              }}
+            >
+              {config.renderYAxis &&
+                config.renderYAxis(histogramData.buckets, histogramData.maxCount)}
+              <HistogramBars
+                buckets={histogramData.buckets}
+                maxCount={histogramData.maxCount}
+                onBucketHover={handleBucketHover}
+                hoveredBucket={hoveredBucket}
+                getBarStyle={config.getBarStyle}
+                getBucketKey={config.getBucketKey}
+                largestBucket={effectiveHighlightLargest ? largestBucket : null}
+                highlightLargest={effectiveHighlightLargest}
+              />
+              <HistogramAxis
+                buckets={histogramData.buckets}
+                ticks={histogramData.ticks}
+                formatTick={config.formatTick}
+                renderExtra={config.renderExtra}
+                largestBucket={effectiveHighlightLargest ? largestBucket : null}
+                formatLargestLabel={config.formatLargestLabel}
+                highlightLargest={effectiveHighlightLargest}
+                xAxisLabel={xAxisLabel}
+              />
+            </div>
           </div>
         </div>
       </div>

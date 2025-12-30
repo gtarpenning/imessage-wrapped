@@ -70,7 +70,8 @@ export function PieChartTooltip({ segment, position, formatLabel, formatValue })
         padding: "0.5rem 0.75rem",
         borderRadius: "8px",
         fontSize: "0.875rem",
-        whiteSpace: "nowrap",
+        whiteSpace: "normal",
+        maxWidth: "340px",
         zIndex: 10000,
         pointerEvents: "none",
         border: "1px solid rgba(255, 255, 255, 0.2)",
@@ -351,4 +352,3 @@ export function PieChart({
     </div>
   );
 }
-

@@ -26,6 +26,9 @@ class ExportLoader:
 
         export_date = None
         year = None
+        phrases = None
+        phrases_by_contact = None
+        sentiment = None
 
         with open(file_path, "r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, 1):
@@ -42,6 +45,11 @@ class ExportLoader:
                     export_date = datetime.fromisoformat(data["export_date"])
                 if year is None:
                     year = data["year"]
+                if phrases is None:
+                    phrases = data.get("phrases")
+                # Per-contact phrases are intentionally not exported.
+                if sentiment is None:
+                    sentiment = data.get("sentiment")
 
                 conv_key = data["conversation_key"]
                 conv_data = conversations_dict[conv_key]
@@ -65,6 +73,13 @@ class ExportLoader:
                     tapbacks=[
                         Tapback(type=tb["type"], by=tb["by"]) for tb in msg_data.get("tapbacks", [])
                     ],
+                    text_length=msg_data.get("text_length", 0),
+                    word_count=msg_data.get("word_count", 0),
+                    punctuation_count=msg_data.get("punctuation_count", 0),
+                    has_question=msg_data.get("has_question", False),
+                    has_exclamation=msg_data.get("has_exclamation", False),
+                    has_link=msg_data.get("has_link", False),
+                    emoji_counts=msg_data.get("emoji_counts", {}) or {},
                 )
 
                 conv_data["messages"].append(message)
@@ -88,6 +103,9 @@ class ExportLoader:
             export_date=export_date,
             year=year,
             conversations=conversations,
+            phrases=phrases,
+            phrases_by_contact=phrases_by_contact,
+            sentiment=sentiment,
         )
 
     @staticmethod
@@ -102,6 +120,10 @@ class ExportLoader:
 
         export_date = datetime.fromisoformat(data["export_date"])
         year = data["year"]
+
+        phrases = data.get("phrases")
+        phrases_by_contact = data.get("phrases_by_contact")
+        sentiment = data.get("sentiment")
 
         conversations = {}
         for conv_key, conv_data in data["conversations"].items():
@@ -120,6 +142,13 @@ class ExportLoader:
                     tapbacks=[
                         Tapback(type=tb["type"], by=tb["by"]) for tb in msg_data.get("tapbacks", [])
                     ],
+                    text_length=msg_data.get("text_length", 0),
+                    word_count=msg_data.get("word_count", 0),
+                    punctuation_count=msg_data.get("punctuation_count", 0),
+                    has_question=msg_data.get("has_question", False),
+                    has_exclamation=msg_data.get("has_exclamation", False),
+                    has_link=msg_data.get("has_link", False),
+                    emoji_counts=msg_data.get("emoji_counts", {}) or {},
                 )
                 messages.append(message)
 
@@ -137,6 +166,9 @@ class ExportLoader:
             export_date=export_date,
             year=year,
             conversations=conversations,
+            phrases=phrases,
+            phrases_by_contact=phrases_by_contact,
+            sentiment=sentiment,
         )
 
     @staticmethod
