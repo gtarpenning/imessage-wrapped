@@ -10,8 +10,9 @@ class Serializer(Protocol):
 
 
 class JSONSerializer:
-    def __init__(self, indent: int | None = 2):
+    def __init__(self, indent: int | None = 2, include_text: bool = False):
         self.indent = indent
+        self.include_text = include_text
 
     def serialize(self, data: ExportData) -> str:
         payload = {
@@ -41,10 +42,12 @@ class JSONSerializer:
             "timestamp_unix": msg.timestamp_unix,
             "is_from_me": msg.is_from_me,
             "sender": msg.sender,
-            "text": msg.text,
             "service": msg.service,
             "has_attachment": msg.has_attachment,
         }
+
+        if self.include_text:
+            data["text"] = msg.text
 
         if msg.date_read_after_seconds is not None:
             data["date_read_after_seconds"] = msg.date_read_after_seconds
@@ -59,6 +62,9 @@ class JSONSerializer:
 
 
 class JSONLSerializer:
+    def __init__(self, include_text: bool = False):
+        self.include_text = include_text
+
     def serialize(self, data: ExportData) -> str:
         lines = []
         for conv_key, conv in data.conversations.items():
@@ -84,10 +90,12 @@ class JSONLSerializer:
             "timestamp_unix": msg.timestamp_unix,
             "is_from_me": msg.is_from_me,
             "sender": msg.sender,
-            "text": msg.text,
             "service": msg.service,
             "has_attachment": msg.has_attachment,
         }
+
+        if self.include_text:
+            data["text"] = msg.text
 
         if msg.date_read_after_seconds is not None:
             data["date_read_after_seconds"] = msg.date_read_after_seconds
