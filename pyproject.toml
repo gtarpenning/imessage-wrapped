@@ -29,6 +29,7 @@ dependencies = [
     "questionary>=2.0.0",
     "requests>=2.31.0",
     "emoji>=2.0.0",
+    "ruff>=0.14.10",
 ]
 
 [project.optional-dependencies]

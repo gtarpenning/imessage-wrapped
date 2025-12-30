@@ -7,11 +7,11 @@ from .models import Conversation, ExportData, Message, Tapback
 from .utils import (
     apple_timestamp_to_datetime,
     calculate_read_duration,
+    count_emojis,
     extract_text_from_attributed_body,
     get_tapback_type,
     is_tapback,
     strip_guid_prefix,
-    count_emojis,
 )
 
 ME = "Me"

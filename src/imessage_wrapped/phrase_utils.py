@@ -19,7 +19,6 @@ def compute_phrases_for_export(
 
     texts = []
     for conv in data.conversations.values():
-        contact_id = conv.chat_identifier
         conv_texts = []
         for msg in _filter_year_messages(conv, data.year):
             text = (msg.text or "").strip()
