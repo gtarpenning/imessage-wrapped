@@ -1,6 +1,6 @@
 import StatCard from "./StatCard";
 
-export default function ConversationsSection({ conversations }) {
+export default function ConversationsSection({ conversations, percentiles = {} }) {
   if (!conversations) return null;
 
   return (
@@ -11,6 +11,7 @@ export default function ConversationsSection({ conversations }) {
           <StatCard
             label="Total Conversations"
             value={conversations.total_conversations}
+            percentile={percentiles["conversations.total_conversations"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -18,6 +19,7 @@ export default function ConversationsSection({ conversations }) {
           <StatCard
             label="Group Chats"
             value={conversations.group_chats}
+            percentile={percentiles["conversations.group_chats"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -25,6 +27,7 @@ export default function ConversationsSection({ conversations }) {
           <StatCard
             label="1-on-1 Chats"
             value={conversations.one_on_one_chats}
+            percentile={percentiles["conversations.one_on_one_chats"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}

@@ -3,7 +3,7 @@ import PhraseHighlights from "./PhraseHighlights";
 import EnhancedText from "./EnhancedText";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 
-export default function ContentSection({ content }) {
+export default function ContentSection({ content, percentiles = {} }) {
   if (!content) return null;
 
   return (
@@ -15,6 +15,7 @@ export default function ContentSection({ content }) {
           <StatCard
             label="Avg Message Length (Sent)"
             value={`${Math.round(content.avg_message_length_sent)} chars`}
+            percentile={percentiles["content.avg_message_length_sent"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -22,6 +23,7 @@ export default function ContentSection({ content }) {
           <StatCard
             label="Avg Message Length (Received)"
             value={`${Math.round(content.avg_message_length_received)} chars`}
+            percentile={percentiles["content.avg_message_length_received"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -29,6 +31,7 @@ export default function ContentSection({ content }) {
           <StatCard
             label="❓ Questions Asked"
             value={`${content.questions_percentage}%`}
+            percentile={percentiles["content.questions_percentage"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -36,6 +39,7 @@ export default function ContentSection({ content }) {
           <StatCard
             label="❗ Enthusiasm Level"
             value={`${content.enthusiasm_percentage}%`}
+            percentile={percentiles["content.enthusiasm_percentage"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -43,6 +47,7 @@ export default function ContentSection({ content }) {
           <StatCard
             label="📎 Attachments Sent"
             value={content.attachments_sent.toLocaleString()}
+            percentile={percentiles["content.attachments_sent"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -50,6 +55,7 @@ export default function ContentSection({ content }) {
           <StatCard
             label="📎 Attachments Received"
             value={content.attachments_received.toLocaleString()}
+            percentile={percentiles["content.attachments_received"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}

@@ -20,6 +20,7 @@ import WrappedFooter from "@/components/WrappedFooter";
 export default function WrappedPage() {
   const params = useParams();
   const [data, setData] = useState(null);
+  const [percentiles, setPercentiles] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -39,6 +40,15 @@ export default function WrappedPage() {
 
         const json = await response.json();
         setData(json);
+
+        // Fetch percentiles
+        const percentileEndpoint = `${baseUrl}/api/percentiles/${params.year}/${params.id}`;
+        const percentileResponse = await fetch(percentileEndpoint);
+        
+        if (percentileResponse.ok) {
+          const percentileData = await percentileResponse.json();
+          setPercentiles(percentileData.percentiles || {});
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -69,19 +79,19 @@ export default function WrappedPage() {
 
   return (
     <main className="container">
-      <HeroSection year={data.year} volume={stats.volume} />
+      <HeroSection year={data.year} volume={stats.volume} percentiles={percentiles} />
       <HeatmapSection volume={stats.volume} year={data.year} />
       <TemporalSection temporal={stats.temporal} />
       <ContactsSection contacts={stats.contacts} />
-      <ContentSection content={stats.content} />
+      <ContentSection content={stats.content} percentiles={percentiles} />
       <MessageAnalysisSection sentiment={stats.content?.sentiment} />
-      <MessageLengthSection content={stats.content} />
-      <ConversationsSection conversations={stats.conversations} />
-      <GhostSection ghosts={stats.ghosts} />
+      <MessageLengthSection content={stats.content} percentiles={percentiles} />
+      <ConversationsSection conversations={stats.conversations} percentiles={percentiles} />
+      <GhostSection ghosts={stats.ghosts} percentiles={percentiles} />
       {/* <CliffhangerSection cliffhangers={stats.cliffhangers} /> */}
-      <ResponseTimesSection response_times={stats.response_times} />
-      <TapbacksSection tapbacks={stats.tapbacks} />
-      <StreaksSection streaks={stats.streaks} />
+      <ResponseTimesSection response_times={stats.response_times} percentiles={percentiles} />
+      <TapbacksSection tapbacks={stats.tapbacks} percentiles={percentiles} />
+      <StreaksSection streaks={stats.streaks} percentiles={percentiles} />
       <WrappedFooter views={data.views} volume={stats.volume} />
     </main>
   );

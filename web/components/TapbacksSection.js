@@ -20,7 +20,7 @@ const TAPBACK_LABELS = {
   question: "Question",
 };
 
-export default function TapbacksSection({ tapbacks }) {
+export default function TapbacksSection({ tapbacks, percentiles = {} }) {
   if (
     !tapbacks ||
     (tapbacks.total_tapbacks_given === 0 &&
@@ -43,6 +43,7 @@ export default function TapbacksSection({ tapbacks }) {
           <StatCard
             label="Tapbacks Given"
             value={tapbacks.total_tapbacks_given.toLocaleString()}
+            percentile={percentiles["tapbacks.total_tapbacks_given"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -50,6 +51,7 @@ export default function TapbacksSection({ tapbacks }) {
           <StatCard
             label="Tapbacks Received"
             value={tapbacks.total_tapbacks_received.toLocaleString()}
+            percentile={percentiles["tapbacks.total_tapbacks_received"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}

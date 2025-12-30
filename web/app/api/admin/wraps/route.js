@@ -367,33 +367,36 @@ function calculateAggregates(wraps) {
 
     // Conversations stats
     if (stats.conversations) {
-      aggregates.conversations.total_conversations.push(
-        safeGet(stats, 'conversations.total_conversations', 0)
-      );
+      const totalConvs = safeGet(stats, 'conversations.total_conversations', 0);
+      aggregates.conversations.total_conversations.push(totalConvs);
+      
+      // Use most_active_thread.message_count as the longest conversation
       aggregates.conversations.longest_conversation_lengths.push(
-        safeGet(stats, 'conversations.longest_conversation', 0)
+        safeGet(stats, 'conversations.most_active_thread.message_count', 0)
       );
-      aggregates.conversations.avg_messages_per_conversation.push(
-        safeGet(stats, 'conversations.avg_messages_per_conversation', 0)
-      );
+      
+      // Calculate avg messages per conversation from total messages and total conversations
+      const totalMessages = safeGet(stats, 'volume.total_messages', 0);
+      const avgMsgsPerConv = totalConvs > 0 ? totalMessages / totalConvs : 0;
+      aggregates.conversations.avg_messages_per_conversation.push(avgMsgsPerConv);
     }
 
     // Ghosts stats
     if (stats.ghosts) {
-      aggregates.ghosts.ghost_counts.push((stats.ghosts.top_ghosts || []).length);
-      aggregates.ghosts.ghosted_counts.push((stats.ghosts.top_ghosted || []).length);
+      aggregates.ghosts.ghost_counts.push(
+        safeGet(stats, 'ghosts.people_you_left_hanging', 0)
+      );
+      aggregates.ghosts.ghosted_counts.push(
+        safeGet(stats, 'ghosts.people_who_left_you_hanging', 0)
+      );
     }
 
     // Response times stats
     if (stats.response_times) {
-      aggregates.response_times.avg_response_seconds.push(
-        safeGet(stats, 'response_times.avg_response_time_you', 0) || 
-        safeGet(stats, 'response_times.avg_response_seconds', 0)
-      );
-      aggregates.response_times.median_response_seconds.push(
-        safeGet(stats, 'response_times.median_response_time_you', 0) ||
-        safeGet(stats, 'response_times.median_response_seconds', 0)
-      );
+      // Analyzer only tracks median, not average - use median for both
+      const medianYou = safeGet(stats, 'response_times.median_response_time_you_seconds', 0);
+      aggregates.response_times.avg_response_seconds.push(medianYou);
+      aggregates.response_times.median_response_seconds.push(medianYou);
     }
 
     // Tapbacks stats

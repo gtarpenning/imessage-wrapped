@@ -2,7 +2,7 @@ import StatCard from "./StatCard";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 import { Histogram, getWarmColorGradient } from "@/lib/histogram";
 
-export default function MessageLengthSection({ content }) {
+export default function MessageLengthSection({ content, percentiles = {} }) {
   if (!content) return null;
 
   const hasLengthData =

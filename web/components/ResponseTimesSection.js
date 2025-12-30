@@ -2,7 +2,7 @@ import StatCard from "./StatCard";
 import EnhancedText from "./EnhancedText";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 
-export default function ResponseTimesSection({ response_times }) {
+export default function ResponseTimesSection({ response_times, percentiles = {} }) {
   const hasData =
     response_times &&
     (response_times.total_responses_you > 0 ||

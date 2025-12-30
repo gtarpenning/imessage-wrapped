@@ -1,6 +1,6 @@
 import StatCard from "./StatCard";
 
-export default function GhostSection({ ghosts }) {
+export default function GhostSection({ ghosts, percentiles = {} }) {
   if (!ghosts) return null;
 
   const totalYou = ghosts.people_you_left_hanging || 0;

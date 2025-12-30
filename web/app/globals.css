@@ -57,6 +57,22 @@ body {
   border-radius: 1.5rem;
   padding: 2rem;
   text-align: center;
+  position: relative;
+}
+
+.percentile-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(139, 92, 246, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .stat-label {
