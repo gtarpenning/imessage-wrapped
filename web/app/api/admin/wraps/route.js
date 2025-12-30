@@ -192,12 +192,18 @@ function calculateAggregates(wraps) {
     // Volume stats
     if (stats.volume) {
       aggregates.volume.total_messages.push(safeGet(stats, 'volume.total_messages', 0));
-      aggregates.volume.sent.push(safeGet(stats, 'volume.sent', 0));
-      aggregates.volume.received.push(safeGet(stats, 'volume.received', 0));
-      aggregates.volume.total_imessages.push(safeGet(stats, 'volume.total_imessages', 0));
-      aggregates.volume.total_sms.push(safeGet(stats, 'volume.total_sms', 0));
-      aggregates.volume.total_words.push(safeGet(stats, 'volume.total_words', 0));
-      aggregates.volume.total_chars.push(safeGet(stats, 'volume.total_chars', 0));
+      aggregates.volume.sent.push(safeGet(stats, 'volume.total_sent', 0));
+      aggregates.volume.received.push(safeGet(stats, 'volume.total_received', 0));
+      
+      // Note: analyzer doesn't track iMessage vs SMS separately
+      aggregates.volume.total_imessages.push(safeGet(stats, 'volume.total_messages', 0));
+      aggregates.volume.total_sms.push(0);
+      
+      // Calculate words and chars from content stats
+      const totalWords = (safeGet(stats, 'content.avg_word_count_sent', 0) * safeGet(stats, 'volume.total_sent', 0));
+      const totalChars = (safeGet(stats, 'content.avg_message_length_sent', 0) * safeGet(stats, 'volume.total_sent', 0));
+      aggregates.volume.total_words.push(Math.round(totalWords));
+      aggregates.volume.total_chars.push(Math.round(totalChars));
 
       // Busiest day
       if (stats.volume.busiest_day) {
@@ -212,7 +218,7 @@ function calculateAggregates(wraps) {
     if (stats.temporal) {
       const hourly = stats.temporal.hour_distribution || stats.temporal.hourly_distribution || {};
       const daily = stats.temporal.day_of_week_distribution || stats.temporal.daily_distribution || {};
-      const monthly = stats.temporal.monthly_distribution || {};
+      const monthly = stats.temporal.month_distribution || stats.temporal.monthly_distribution || {};
       
       // Process hourly
       for (let i = 0; i < 24; i++) {
@@ -220,23 +226,26 @@ function calculateAggregates(wraps) {
         aggregates.temporal.hourly_distribution[i] += count;
       }
       
-      // Process daily
+      // Process daily (Python weekday: 0=Mon, 6=Sun; JS: 0=Sun, 6=Sat)
+      // Map Python's weekday to JS convention: (pythonDay + 1) % 7
       for (let i = 0; i < 7; i++) {
         const count = daily[i] || daily[String(i)] || 0;
-        aggregates.temporal.daily_distribution[i] += count;
+        const jsIndex = (i + 1) % 7; // Convert Mon=0 to Mon=1 (and Sun=6 to Sun=0)
+        aggregates.temporal.daily_distribution[jsIndex] += count;
       }
       
-      // Process monthly
-      for (let i = 0; i < 12; i++) {
+      // Process monthly (month values are 1-12 from Python, need to map to 0-11 for array)
+      for (let i = 1; i <= 12; i++) {
         const count = monthly[i] || monthly[String(i)] || 0;
-        aggregates.temporal.monthly_distribution[i] += count;
+        aggregates.temporal.monthly_distribution[i - 1] += count;
       }
 
-      // Weekday/weekend calculation
-      const weekdayTotal = [1, 2, 3, 4, 5].reduce((sum, day) => {
+      // Weekday/weekend calculation (Python weekday: 0=Mon, 6=Sun)
+      // Weekdays: Mon-Fri (0-4), Weekend: Sat-Sun (5-6)
+      const weekdayTotal = [0, 1, 2, 3, 4].reduce((sum, day) => {
         return sum + (daily[day] || daily[String(day)] || 0);
       }, 0);
-      const weekendTotal = [0, 6].reduce((sum, day) => {
+      const weekendTotal = [5, 6].reduce((sum, day) => {
         return sum + (daily[day] || daily[String(day)] || 0);
       }, 0);
       
@@ -246,18 +255,34 @@ function calculateAggregates(wraps) {
 
     // Contacts stats
     if (stats.contacts) {
-      if (stats.contacts.top_contacts?.length > 0) {
-        const topContact = stats.contacts.top_contacts[0];
-        aggregates.contacts.top_contact_message_counts.push(topContact.message_count || 0);
-        aggregates.contacts.total_contacts.push(stats.contacts.top_contacts.length);
+      // Use top_sent_to instead of top_contacts
+      const topSentTo = stats.contacts.top_sent_to || [];
+      const topReceivedFrom = stats.contacts.top_received_from || [];
+      
+      if (topSentTo.length > 0) {
+        const topContact = topSentTo[0];
+        aggregates.contacts.top_contact_message_counts.push(topContact.count || 0);
+      } else if (topReceivedFrom.length > 0) {
+        // Fallback to top received if no sent data
+        const topContact = topReceivedFrom[0];
+        aggregates.contacts.top_contact_message_counts.push(topContact.count || 0);
+      } else {
+        aggregates.contacts.top_contact_message_counts.push(0);
       }
       
-      aggregates.contacts.unique_contacts_messaged.push(
-        safeGet(stats, 'contacts.unique_contacts_messaged', 0)
+      // Calculate total contacts - use the unique count as it's more accurate
+      const uniqueMessaged = safeGet(stats, 'contacts.unique_contacts_messaged', 0);
+      const uniqueReceived = safeGet(stats, 'contacts.unique_contacts_received_from', 0);
+      const totalContacts = Math.max(
+        topSentTo.length,
+        topReceivedFrom.length,
+        uniqueMessaged,
+        uniqueReceived
       );
-      aggregates.contacts.unique_contacts_received_from.push(
-        safeGet(stats, 'contacts.unique_contacts_received_from', 0)
-      );
+      aggregates.contacts.total_contacts.push(totalContacts);
+      
+      aggregates.contacts.unique_contacts_messaged.push(uniqueMessaged);
+      aggregates.contacts.unique_contacts_received_from.push(uniqueReceived);
 
       // Store contact distributions for aggregation
       if (stats.contacts.message_distribution) {
@@ -267,12 +292,31 @@ function calculateAggregates(wraps) {
 
     // Content stats
     if (stats.content) {
-      aggregates.content.emoji_counts.push(safeGet(stats, 'content.total_emojis', 0));
-      aggregates.content.word_counts.push(safeGet(stats, 'content.total_words', 0));
-      aggregates.content.question_marks.push(safeGet(stats, 'content.question_marks', 0));
-      aggregates.content.exclamation_marks.push(safeGet(stats, 'content.exclamation_marks', 0));
-      aggregates.content.total_emojis.push(safeGet(stats, 'content.total_emojis', 0));
-      aggregates.content.unique_emojis.push(safeGet(stats, 'content.unique_emojis', 0));
+      // Note: most_used_emojis only contains top 10, so this is a partial count
+      const mostUsedEmojis = stats.content.most_used_emojis;
+      if (mostUsedEmojis && Array.isArray(mostUsedEmojis) && mostUsedEmojis.length > 0) {
+        const topEmojisCount = mostUsedEmojis.reduce((sum, e) => sum + (e.count || 0), 0);
+        aggregates.content.emoji_counts.push(topEmojisCount);
+        aggregates.content.total_emojis.push(topEmojisCount);
+        aggregates.content.unique_emojis.push(mostUsedEmojis.length);
+      } else {
+        // No emoji data available for this wrap
+        aggregates.content.emoji_counts.push(0);
+        aggregates.content.total_emojis.push(0);
+        aggregates.content.unique_emojis.push(0);
+      }
+      
+      // Calculate total words from avg_word_count and total sent messages
+      const avgWordCount = safeGet(stats, 'content.avg_word_count_sent', 0);
+      const totalSent = safeGet(stats, 'volume.total_sent', 0);
+      const totalWords = avgWordCount > 0 && totalSent > 0 ? Math.round(avgWordCount * totalSent) : 0;
+      aggregates.content.word_counts.push(totalWords);
+      
+      // Questions and exclamations - use correct field names
+      aggregates.content.question_marks.push(safeGet(stats, 'content.questions_asked', 0));
+      aggregates.content.exclamation_marks.push(safeGet(stats, 'content.exclamations_sent', 0));
+      
+      // Attachments and double texts
       aggregates.content.attachments_sent.push(safeGet(stats, 'content.attachments_sent', 0));
       aggregates.content.attachments_received.push(safeGet(stats, 'content.attachments_received', 0));
       aggregates.content.double_texts.push(safeGet(stats, 'content.double_text_count', 0));
@@ -311,20 +355,14 @@ function calculateAggregates(wraps) {
 
       // Message lengths
       aggregates.content.message_lengths.avg_length.push(
-        safeGet(stats, 'content.avg_message_length', 0)
+        safeGet(stats, 'content.avg_message_length_sent', 0)
       );
-      aggregates.content.message_lengths.max_length.push(
-        safeGet(stats, 'content.max_message_length', 0)
-      );
-      aggregates.content.message_lengths.short_messages.push(
-        safeGet(stats, 'content.short_messages', 0)
-      );
-      aggregates.content.message_lengths.medium_messages.push(
-        safeGet(stats, 'content.medium_messages', 0)
-      );
-      aggregates.content.message_lengths.long_messages.push(
-        safeGet(stats, 'content.long_messages', 0)
-      );
+      
+      // These fields don't exist in the analyzer, set to 0 or skip
+      aggregates.content.message_lengths.max_length.push(0);
+      aggregates.content.message_lengths.short_messages.push(0);
+      aggregates.content.message_lengths.medium_messages.push(0);
+      aggregates.content.message_lengths.long_messages.push(0);
     }
 
     // Conversations stats
@@ -383,11 +421,10 @@ function calculateAggregates(wraps) {
     // Streaks stats
     if (stats.streaks) {
       aggregates.streaks.longest_streak_days.push(
-        safeGet(stats, 'streaks.longest_streak.days', 0)
+        safeGet(stats, 'streaks.longest_streak_days', 0)
       );
-      aggregates.streaks.current_streak_days.push(
-        safeGet(stats, 'streaks.current_streak.days', 0)
-      );
+      // current_streak doesn't exist in analyzer, set to 0
+      aggregates.streaks.current_streak_days.push(0);
     }
   });
 
@@ -414,8 +451,17 @@ function calculateAggregates(wraps) {
     .slice(0, 20)
     .map(([emoji, count]) => ({ emoji, count }));
 
-  // Process busiest days
-  const busiestDays = aggregates.busiest_days_all
+  // Process busiest days - aggregate by date to avoid duplicates
+  const busiestDaysMap = {};
+  aggregates.busiest_days_all.forEach(day => {
+    if (!busiestDaysMap[day.date]) {
+      busiestDaysMap[day.date] = 0;
+    }
+    busiestDaysMap[day.date] += day.count;
+  });
+  
+  const busiestDays = Object.entries(busiestDaysMap)
+    .map(([date, count]) => ({ date, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 20);
 
@@ -578,12 +624,18 @@ export async function GET(request) {
     const aggregates = calculateAggregates(wraps);
 
     return NextResponse.json({
-      wraps: wraps.map(w => ({
-        id: w?.id || 'unknown',
-        year: w?.year || 0,
-        created_at: w?.created_at || new Date(),
-        views: w?.views || 0,
-      })),
+      wraps: wraps.map(w => {
+        const stats = w.statistics?.raw || w.statistics;
+        return {
+          id: w?.id || 'unknown',
+          year: w?.year || 0,
+          created_at: w?.created_at || new Date(),
+          views: w?.views || 0,
+          total_sent: safeGet(stats, 'volume.total_sent', 0),
+          total_received: safeGet(stats, 'volume.total_received', 0),
+          total_messages: safeGet(stats, 'volume.total_messages', 0),
+        };
+      }),
       ...aggregates,
     });
   } catch (error) {

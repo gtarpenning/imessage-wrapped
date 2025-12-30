@@ -186,9 +186,9 @@ function BusiestDaysSection({ days }) {
     <div style={{ marginTop: "2rem" }}>
       <h4 style={{ marginBottom: "1rem", opacity: 0.8 }}>📅 Busiest Days Distribution</h4>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
-        {days.slice(0, 10).map((day, idx) => (
+        {days.slice(0, 10).map((day) => (
           <div
-            key={idx}
+            key={day.date}
             style={{
               background: "rgba(255,255,255,0.03)",
               padding: "1rem",
@@ -501,32 +501,91 @@ function StreaksSection({ aggregates }) {
 }
 
 function WrapsTable({ wraps = [] }) {
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortDesc, setSortDesc] = useState(true);
+
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortDesc(!sortDesc);
+    } else {
+      setSortBy(field);
+      setSortDesc(true);
+    }
+  };
+
+  const sortedWraps = [...wraps].sort((a, b) => {
+    let aVal = a[sortBy];
+    let bVal = b[sortBy];
+    
+    // Handle date comparison
+    if (sortBy === "created_at") {
+      aVal = new Date(aVal).getTime();
+      bVal = new Date(bVal).getTime();
+    }
+    
+    if (sortDesc) {
+      return bVal - aVal;
+    } else {
+      return aVal - bVal;
+    }
+  });
+
+  const displayWraps = sortedWraps.slice(0, 10);
+
+  const SortableHeader = ({ field, children }) => (
+    <th
+      onClick={() => handleSort(field)}
+      style={{
+        padding: "1rem",
+        textAlign: "left",
+        cursor: "pointer",
+        userSelect: "none",
+        position: "relative",
+      }}
+    >
+      {children}
+      {sortBy === field && (
+        <span style={{ marginLeft: "0.5rem", opacity: 0.6 }}>
+          {sortDesc ? "↓" : "↑"}
+        </span>
+      )}
+    </th>
+  );
+
   return (
-    <Section title="🎁 All Wraps">
+    <Section title="🎁 Recent Wraps (Top 10)">
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "2px solid rgba(255,255,255,0.2)" }}>
               <th style={{ padding: "1rem", textAlign: "left" }}>ID</th>
               <th style={{ padding: "1rem", textAlign: "left" }}>Year</th>
-              <th style={{ padding: "1rem", textAlign: "left" }}>Created</th>
-              <th style={{ padding: "1rem", textAlign: "left" }}>Views</th>
+              <SortableHeader field="created_at">Created</SortableHeader>
+              <SortableHeader field="views">Views</SortableHeader>
+              <SortableHeader field="total_messages">Total Msgs</SortableHeader>
+              <SortableHeader field="total_sent">Sent</SortableHeader>
+              <SortableHeader field="total_received">Received</SortableHeader>
               <th style={{ padding: "1rem", textAlign: "left" }}>Link</th>
             </tr>
           </thead>
           <tbody>
-            {wraps.map((wrap) => (
+            {displayWraps.map((wrap) => (
               <tr key={wrap.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                <td style={{ padding: "1rem", fontFamily: "monospace" }}>{wrap.id}</td>
+                <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.85rem" }}>{wrap.id}</td>
                 <td style={{ padding: "1rem" }}>{wrap.year}</td>
-                <td style={{ padding: "1rem" }}>{new Date(wrap.created_at).toLocaleDateString()}</td>
+                <td style={{ padding: "1rem", fontSize: "0.9rem" }}>
+                  {new Date(wrap.created_at).toLocaleDateString()}
+                </td>
                 <td style={{ padding: "1rem" }}>{formatNumber(wrap.views)}</td>
+                <td style={{ padding: "1rem" }}>{formatNumber(wrap.total_messages)}</td>
+                <td style={{ padding: "1rem", color: "#8b5cf6" }}>{formatNumber(wrap.total_sent)}</td>
+                <td style={{ padding: "1rem", color: "#ec4899" }}>{formatNumber(wrap.total_received)}</td>
                 <td style={{ padding: "1rem" }}>
                   <a
                     href={`/${wrap.year}/${wrap.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: "#8b5cf6" }}
+                    style={{ color: "#8b5cf6", textDecoration: "none" }}
                   >
                     View →
                   </a>
@@ -535,6 +594,9 @@ function WrapsTable({ wraps = [] }) {
             ))}
           </tbody>
         </table>
+      </div>
+      <div style={{ marginTop: "1rem", fontSize: "0.85rem", opacity: 0.6, textAlign: "center" }}>
+        Showing {displayWraps.length} of {wraps.length} total wraps. Click column headers to sort.
       </div>
     </Section>
   );
