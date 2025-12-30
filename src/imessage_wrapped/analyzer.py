@@ -838,8 +838,8 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         conversations: dict[str, Conversation] | None = None,
     ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         # Prefer phrases precomputed at export time (no raw text needed).
-        if getattr(data, "phrases", None) is not None or getattr(data, "phrases_by_contact", None):
-            return data.phrases or {}, data.phrases_by_contact or []
+        if getattr(data, "phrases", None) is not None:
+            return data.phrases or {}, []
 
         # Fall back to live extraction only if text is available.
         has_text = any((msg.text or "").strip() for msg in sent_messages)
@@ -1205,6 +1205,12 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         tapback_counter_given = Counter(tapbacks_given)
         tapback_counter_received = Counter(tapbacks_received)
 
+        all_tapback_types = ["love", "like", "dislike", "laugh", "emphasize", "question"]
+        tapback_distribution_given = {t: tapback_counter_given.get(t, 0) for t in all_tapback_types}
+        tapback_distribution_received = {
+            t: tapback_counter_received.get(t, 0) for t in all_tapback_types
+        }
+
         return {
             "total_tapbacks_given": len(tapbacks_given),
             "total_tapbacks_received": len(tapbacks_received),
@@ -1214,8 +1220,8 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "most_received_tapback": tapback_counter_received.most_common(1)[0]
             if tapback_counter_received
             else (None, 0),
-            "tapback_distribution_given": dict(tapback_counter_given.most_common()),
-            "tapback_distribution_received": dict(tapback_counter_received.most_common()),
+            "tapback_distribution_given": tapback_distribution_given,
+            "tapback_distribution_received": tapback_distribution_received,
         }
 
 

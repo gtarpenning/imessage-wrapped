@@ -18,12 +18,8 @@ def compute_phrases_for_export(
     extractor = PhraseExtractor(config=phrase_config)
 
     texts = []
-    per_contact_messages: dict[str, list[str]] = {}
-    contact_names: dict[str, str] = {}
-
     for conv in data.conversations.values():
         contact_id = conv.chat_identifier
-        contact_names[contact_id] = conv.display_name or contact_id
         conv_texts = []
         for msg in _filter_year_messages(conv, data.year):
             text = (msg.text or "").strip()
@@ -31,16 +27,14 @@ def compute_phrases_for_export(
                 continue
             texts.append(text)
             conv_texts.append(text)
-        if conv_texts:
-            per_contact_messages[contact_id] = conv_texts
 
     if not texts:
         return {}, []
 
     result = extractor.extract(
         texts,
-        per_contact_messages=per_contact_messages or None,
-        contact_names=contact_names or None,
+        per_contact_messages=None,
+        contact_names=None,
     )
 
     if not result.overall:
@@ -55,19 +49,7 @@ def compute_phrases_for_export(
             "share": stat.share,
         }
 
-    overall = [serialize_phrase(stat) for stat in result.overall]
-    by_contact = []
-    for contact_stats in result.by_contact:
-        if not contact_stats.top_phrases:
-            continue
-        by_contact.append(
-            {
-                "contact_id": contact_stats.contact_id,
-                "contact_name": contact_stats.contact_name,
-                "total_messages": contact_stats.total_messages,
-                "top_phrases": [serialize_phrase(stat) for stat in contact_stats.top_phrases],
-            }
-        )
+    overall = [serialize_phrase(stat) for stat in result.overall][:10]
 
     config = result.config
     config_info = {
@@ -87,4 +69,4 @@ def compute_phrases_for_export(
         "config": config_info,
     }
 
-    return public_payload, by_contact
+    return public_payload, []

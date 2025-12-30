@@ -200,7 +200,8 @@ def export_command(args):
         # Precompute phrases while text is available; stored alongside export without raw text.
         phrases, phrases_by_contact = compute_phrases_for_export(data)
         data.phrases = phrases or None
-        data.phrases_by_contact = phrases_by_contact or None
+        # Per-contact phrases are intentionally omitted from export for privacy.
+        data.phrases_by_contact = None
 
         progress.update(task, description=f"Writing {data.total_messages} messages to file...")
 

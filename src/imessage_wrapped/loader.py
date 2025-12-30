@@ -46,8 +46,7 @@ class ExportLoader:
                     year = data["year"]
                 if phrases is None:
                     phrases = data.get("phrases")
-                if phrases_by_contact is None:
-                    phrases_by_contact = data.get("phrases_by_contact")
+                # Per-contact phrases are intentionally not exported.
 
                 conv_key = data["conversation_key"]
                 conv_data = conversations_dict[conv_key]
