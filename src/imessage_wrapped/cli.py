@@ -27,6 +27,7 @@ from . import (
     TerminalDisplay,
     require_database_access,
 )
+from .phrase_utils import compute_phrases_for_export
 from .utils import sanitize_statistics_for_export
 
 logger = logging.getLogger(__name__)
@@ -195,6 +196,11 @@ def export_command(args):
 
         service = MessageService(db_path=args.database)
         data = service.export_year(args.year)
+
+        # Precompute phrases while text is available; stored alongside export without raw text.
+        phrases, phrases_by_contact = compute_phrases_for_export(data)
+        data.phrases = phrases or None
+        data.phrases_by_contact = phrases_by_contact or None
 
         progress.update(task, description=f"Writing {data.total_messages} messages to file...")
 

@@ -23,6 +23,10 @@ class JSONSerializer:
                 key: self._serialize_conversation(conv) for key, conv in data.conversations.items()
             },
         }
+        if data.phrases is not None:
+            payload["phrases"] = data.phrases
+        if data.phrases_by_contact is not None:
+            payload["phrases_by_contact"] = data.phrases_by_contact
         return json.dumps(payload, indent=self.indent, ensure_ascii=False)
 
     def _serialize_conversation(self, conv: Conversation) -> dict:
@@ -44,6 +48,13 @@ class JSONSerializer:
             "sender": msg.sender,
             "service": msg.service,
             "has_attachment": msg.has_attachment,
+            "text_length": msg.text_length,
+            "word_count": msg.word_count,
+            "punctuation_count": msg.punctuation_count,
+            "has_question": msg.has_question,
+            "has_exclamation": msg.has_exclamation,
+            "has_link": msg.has_link,
+            "emoji_counts": msg.emoji_counts,
         }
 
         if self.include_text:
@@ -79,6 +90,10 @@ class JSONLSerializer:
                     "participants": conv.participants,
                     "message": self._serialize_message(msg),
                 }
+                if data.phrases is not None:
+                    line_data["phrases"] = data.phrases
+                if data.phrases_by_contact is not None:
+                    line_data["phrases_by_contact"] = data.phrases_by_contact
                 lines.append(json.dumps(line_data, ensure_ascii=False))
         return "\n".join(lines)
 
@@ -92,6 +107,13 @@ class JSONLSerializer:
             "sender": msg.sender,
             "service": msg.service,
             "has_attachment": msg.has_attachment,
+            "text_length": msg.text_length,
+            "word_count": msg.word_count,
+            "punctuation_count": msg.punctuation_count,
+            "has_question": msg.has_question,
+            "has_exclamation": msg.has_exclamation,
+            "has_link": msg.has_link,
+            "emoji_counts": msg.emoji_counts,
         }
 
         if self.include_text:

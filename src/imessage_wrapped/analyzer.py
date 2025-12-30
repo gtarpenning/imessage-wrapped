@@ -573,10 +573,45 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         received_messages: list[Message],
         conversations: dict[str, Conversation] | None = None,
     ) -> dict[str, Any]:
-        sent_with_text = [m for m in sent_messages if m.text]
-        received_with_text = [m for m in received_messages if m.text]
+        def msg_length(message: Message) -> int:
+            if hasattr(message, "text_length"):
+                return getattr(message, "text_length") or 0
+            return len(message.text or "")
 
-        punctuation_pattern = re.compile(r'[.!?,;:\-\'"()]')
+        def msg_word_count(message: Message) -> int:
+            if hasattr(message, "word_count"):
+                return getattr(message, "word_count") or 0
+            text = message.text or ""
+            return len(text.split()) if text.strip() else 0
+
+        def msg_punctuation_count(message: Message) -> int:
+            if hasattr(message, "punctuation_count"):
+                return getattr(message, "punctuation_count") or 0
+            return len(re.findall(r'[.!?,;:\-\'"()]', message.text or ""))
+
+        def msg_has_question(message: Message) -> bool:
+            if hasattr(message, "has_question"):
+                return bool(getattr(message, "has_question"))
+            return "?" in (message.text or "")
+
+        def msg_has_exclamation(message: Message) -> bool:
+            if hasattr(message, "has_exclamation"):
+                return bool(getattr(message, "has_exclamation"))
+            return "!" in (message.text or "")
+
+        def msg_has_link(message: Message) -> bool:
+            if hasattr(message, "has_link"):
+                return bool(getattr(message, "has_link"))
+            return bool(re.search(r"https?://", message.text or ""))
+
+        def msg_emoji_counts(message: Message) -> Counter[str]:
+            counts = getattr(message, "emoji_counts", None)
+            if counts:
+                return Counter(counts)
+            return count_emojis(message.text or "")
+
+        sent_with_text = [m for m in sent_messages if msg_length(m) > 0]
+        received_with_text = [m for m in received_messages if msg_length(m) > 0]
 
         emoji_counter: Counter[str] = Counter()
         sent_lengths: list[int] = []
@@ -588,26 +623,24 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         link_count = 0
 
         for msg in sent_with_text:
-            text = msg.text or ""
-            sent_lengths.append(len(text))
-            word_count = len(text.split()) if text.strip() else 0
+            sent_lengths.append(msg_length(msg))
+            word_count = msg_word_count(msg)
             sent_word_counts.append(word_count)
-            emoji_counter.update(count_emojis(text))
-            sent_punctuation_counts.append(len(punctuation_pattern.findall(text)))
-            if "?" in text:
+            emoji_counter.update(msg_emoji_counts(msg))
+            sent_punctuation_counts.append(msg_punctuation_count(msg))
+            if msg_has_question(msg):
                 question_count += 1
-            if "!" in text:
+            if msg_has_exclamation(msg):
                 exclamation_count += 1
-            if re.search(r"https?://", text):
+            if msg_has_link(msg):
                 link_count += 1
 
         for msg in received_with_text:
-            text = msg.text or ""
-            received_punctuation_counts.append(len(punctuation_pattern.findall(text)))
+            received_punctuation_counts.append(msg_punctuation_count(msg))
 
         avg_length_sent = sum(sent_lengths) / len(sent_lengths) if sent_lengths else 0
         avg_length_received = (
-            sum(len(m.text or "") for m in received_with_text) / len(received_with_text)
+            sum(msg_length(m) for m in received_with_text) / len(received_with_text)
             if received_with_text
             else 0
         )
@@ -664,7 +697,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         if sentiment_stats:
             result["sentiment"] = sentiment_stats
-        phrase_public, phrase_contacts = self._analyze_phrases(
+        phrase_public, phrase_contacts = self._get_phrases(
             data, sent_with_text, conversations=data.conversations
         )
         if phrase_public:
@@ -797,6 +830,23 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "config": config_info,
         }
         return public_payload, by_contact
+
+    def _get_phrases(
+        self,
+        data: ExportData,
+        sent_messages: list[Message],
+        conversations: dict[str, Conversation] | None = None,
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+        # Prefer phrases precomputed at export time (no raw text needed).
+        if getattr(data, "phrases", None) is not None or getattr(data, "phrases_by_contact", None):
+            return data.phrases or {}, data.phrases_by_contact or []
+
+        # Fall back to live extraction only if text is available.
+        has_text = any((msg.text or "").strip() for msg in sent_messages)
+        if not has_text:
+            return {}, []
+
+        return self._analyze_phrases(data, sent_messages, conversations=conversations)
 
     def _analyze_sentiment(
         self,
