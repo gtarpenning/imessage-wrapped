@@ -15,9 +15,7 @@ def _filter_year_messages(conv: Conversation, year: int) -> list[Message]:
     ]
 
 
-def compute_sentiment_for_export(
-    data: ExportData, interval: str = "month"
-) -> Dict[str, Any]:
+def compute_sentiment_for_export(data: ExportData, interval: str = "month") -> Dict[str, Any]:
     analyzer = LexicalSentimentAnalyzer()
 
     sent_messages: list[Message] = []
@@ -89,9 +87,7 @@ def compute_sentiment_for_export(
 
 def _public_view(bucket: dict[str, Any]) -> dict[str, Any]:
     avg_score = (
-        round(bucket["score_sum"] / bucket["message_count"], 3)
-        if bucket["message_count"]
-        else 0.0
+        round(bucket["score_sum"] / bucket["message_count"], 3) if bucket["message_count"] else 0.0
     )
     distribution = {
         "positive": int(round(bucket["distribution"]["positive"])),
