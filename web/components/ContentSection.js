@@ -61,7 +61,7 @@ export default function ContentSection({ content, percentiles = {} }) {
         )}
       </div>
 
-      <DoubleTextSection content={content} />
+      <DoubleTextSection content={content} percentiles={percentiles} />
 
       <EmojiSection content={content} />
 
@@ -73,7 +73,7 @@ export default function ContentSection({ content, percentiles = {} }) {
   );
 }
 
-function DoubleTextSection({ content }) {
+function DoubleTextSection({ content, percentiles }) {
   const prompt =
     content.double_text_count !== undefined
       ? `You sent ${content.double_text_count} double texts, that's ${content.double_text_percentage}% of your messages. ${PLAYFUL_INSTRUCTION}`
@@ -86,23 +86,34 @@ function DoubleTextSection({ content }) {
   if (content.double_text_count === undefined) return null;
 
   return (
-    <div style={{ marginTop: "2rem", textAlign: "center" }}>
-      <p
+    <div style={{ marginTop: "2rem" }}>
+      <div
         style={{
-          fontSize: "1.5rem",
-          fontWeight: "500",
+          textAlign: "center",
           marginBottom: enhancement ? "0.5rem" : "1rem",
-          opacity: 0.85,
         }}
       >
-        Double Text Count
-      </p>
+        <p
+          style={{
+            fontSize: "1.5rem",
+            fontWeight: "500",
+            opacity: 0.85,
+          }}
+        >
+          Double Text Count
+        </p>
+      </div>
       {enhancement && <EnhancedText>{enhancement}</EnhancedText>}
-      <p style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#06b6d4" }}>
-        {content.double_text_count.toLocaleString()}
-      </p>
+      <div className="stats-grid" style={{ justifyContent: "center" }}>
+        <StatCard
+          label="Double Texts Sent"
+          value={content.double_text_count.toLocaleString()}
+          percentile={percentiles["content.double_text_count"]}
+          valueStyle={{ fontSize: "2.5rem", color: "#06b6d4" }}
+        />
+      </div>
       {content.double_text_percentage !== undefined && (
-        <p style={{ opacity: 0.7 }}>
+        <p style={{ opacity: 0.7, textAlign: "center", marginTop: "1rem" }}>
           ({content.double_text_percentage}% of your messages)
         </p>
       )}

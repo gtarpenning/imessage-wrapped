@@ -211,10 +211,37 @@ function TemporalSection({ aggregates }) {
   const daily = aggregates?.temporal?.daily_distribution || Array(7).fill(0);
   const monthly = aggregates?.temporal?.monthly_distribution || Array(12).fill(0);
 
+  // Debug logging
+  console.log('Temporal Data Debug:', {
+    hourly: {
+      data: hourly,
+      sum: hourly.reduce((a, b) => a + b, 0),
+      max: Math.max(...hourly),
+      min: Math.min(...hourly),
+    },
+    daily: {
+      data: daily,
+      sum: daily.reduce((a, b) => a + b, 0),
+      max: Math.max(...daily),
+      min: Math.min(...daily),
+    },
+    monthly: {
+      data: monthly,
+      sum: monthly.reduce((a, b) => a + b, 0),
+      max: Math.max(...monthly),
+      min: Math.min(...monthly),
+    }
+  });
+
   return (
     <Section title="⏰ Temporal Patterns">
       <div style={{ marginBottom: "2rem" }}>
-        <h4 style={{ marginBottom: "1rem", opacity: 0.8 }}>Hourly Distribution</h4>
+        <h4 style={{ marginBottom: "0.5rem", opacity: 0.8 }}>Hourly Distribution</h4>
+        <p style={{ fontSize: "0.85rem", opacity: 0.6, marginBottom: "1rem" }}>
+          Total: {formatNumber(hourly.reduce((a, b) => a + b, 0))} | 
+          Max: {formatNumber(Math.max(...hourly))} | 
+          Min: {formatNumber(Math.min(...hourly))}
+        </p>
         <Histogram 
           data={hourly} 
           labels={Array.from({ length: 24 }, (_, i) => i)} 
@@ -226,11 +253,21 @@ function TemporalSection({ aggregates }) {
         />
       </div>
       <div style={{ marginBottom: "2rem" }}>
-        <h4 style={{ marginBottom: "1rem", opacity: 0.8 }}>Daily Distribution</h4>
+        <h4 style={{ marginBottom: "0.5rem", opacity: 0.8 }}>Daily Distribution</h4>
+        <p style={{ fontSize: "0.85rem", opacity: 0.6, marginBottom: "1rem" }}>
+          Total: {formatNumber(daily.reduce((a, b) => a + b, 0))} | 
+          Max: {formatNumber(Math.max(...daily))} | 
+          Min: {formatNumber(Math.min(...daily))}
+        </p>
         <Histogram data={daily} labels={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]} />
       </div>
       <div>
-        <h4 style={{ marginBottom: "1rem", opacity: 0.8 }}>Monthly Distribution</h4>
+        <h4 style={{ marginBottom: "0.5rem", opacity: 0.8 }}>Monthly Distribution</h4>
+        <p style={{ fontSize: "0.85rem", opacity: 0.6, marginBottom: "1rem" }}>
+          Total: {formatNumber(monthly.reduce((a, b) => a + b, 0))} | 
+          Max: {formatNumber(Math.max(...monthly))} | 
+          Min: {formatNumber(Math.min(...monthly))}
+        </p>
         <Histogram data={monthly} labels={["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]} />
       </div>
       {aggregates?.temporal?.weekday_weekend && (
@@ -358,11 +395,7 @@ function MessageLengthSection({ aggregates }) {
   return (
     <Section title="📏 Message Length Statistics">
       <StatGrid>
-        <MetricCard title="Avg Length" data={getAggregate(aggregates, 'content.message_lengths.avg_length')} isDecimal />
-        <MetricCard title="Max Length" data={getAggregate(aggregates, 'content.message_lengths.max_length')} />
-        <MetricCard title="Short Messages" data={getAggregate(aggregates, 'content.message_lengths.short_messages')} />
-        <MetricCard title="Medium Messages" data={getAggregate(aggregates, 'content.message_lengths.medium_messages')} />
-        <MetricCard title="Long Messages" data={getAggregate(aggregates, 'content.message_lengths.long_messages')} />
+        <MetricCard title="Avg Length (chars)" data={getAggregate(aggregates, 'content.message_lengths.avg_length')} isDecimal />
       </StatGrid>
       {aggregates?.content?.word_count_distribution && (
         <WordCountDistribution distribution={aggregates.content.word_count_distribution} />
@@ -494,7 +527,6 @@ function StreaksSection({ aggregates }) {
     <Section title="🔥 Streak Statistics">
       <StatGrid>
         <MetricCard title="Longest Streak (days)" data={getAggregate(aggregates, 'streaks.longest_streak_days')} />
-        <MetricCard title="Current Streak (days)" data={getAggregate(aggregates, 'streaks.current_streak_days')} />
       </StatGrid>
     </Section>
   );
@@ -687,6 +719,26 @@ function MetricCard({ title, data, isDecimal = false, isPercentage = false, form
 function Histogram({ data, labels, formatLabel }) {
   const safeData = data || [];
   const max = Math.max(...safeData, 0);
+  const sum = safeData.reduce((a, b) => a + b, 0);
+  
+  // Debug logging
+  console.log('Histogram rendering:', {
+    dataLength: safeData.length,
+    max,
+    sum,
+    sampleValues: safeData.slice(0, 5),
+    allZero: safeData.every(v => v === 0),
+    allSame: safeData.every(v => v === safeData[0]),
+  });
+  
+  // If all data is zero, show a message
+  if (sum === 0) {
+    return (
+      <div style={{ background: "rgba(255,255,255,0.05)", padding: "2rem", borderRadius: "1rem", border: "1px solid rgba(255,255,255,0.1)", textAlign: "center", opacity: 0.5 }}>
+        No data available
+      </div>
+    );
+  }
   
   return (
     <div style={{ background: "rgba(255,255,255,0.05)", padding: "2rem", borderRadius: "1rem", border: "1px solid rgba(255,255,255,0.1)" }}>

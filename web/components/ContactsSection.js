@@ -1,7 +1,7 @@
 import StatCard from "./StatCard";
 import ContactDistributionChart from "./ContactDistributionChart";
 
-export default function ContactsSection({ contacts }) {
+export default function ContactsSection({ contacts, percentiles = {} }) {
   if (!contacts) return null;
 
   return (
@@ -51,6 +51,7 @@ export default function ContactsSection({ contacts }) {
           <StatCard
             label="Unique Contacts Messaged"
             value={contacts.unique_contacts_messaged}
+            percentile={percentiles["contacts.unique_contacts_messaged"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -58,6 +59,7 @@ export default function ContactsSection({ contacts }) {
           <StatCard
             label="Unique Contacts Received From"
             value={contacts.unique_contacts_received_from}
+            percentile={percentiles["contacts.unique_contacts_received_from"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}

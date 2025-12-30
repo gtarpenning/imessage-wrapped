@@ -82,7 +82,7 @@ export default function WrappedPage() {
       <HeroSection year={data.year} volume={stats.volume} percentiles={percentiles} />
       <HeatmapSection volume={stats.volume} year={data.year} />
       <TemporalSection temporal={stats.temporal} />
-      <ContactsSection contacts={stats.contacts} />
+      <ContactsSection contacts={stats.contacts} percentiles={percentiles} />
       <ContentSection content={stats.content} percentiles={percentiles} />
       <MessageAnalysisSection sentiment={stats.content?.sentiment} />
       <MessageLengthSection content={stats.content} percentiles={percentiles} />

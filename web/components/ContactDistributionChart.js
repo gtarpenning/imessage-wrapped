@@ -248,7 +248,7 @@ function createPieChartConfig(distribution, onSegmentHover, hoveredSegmentKey) {
       const maxShare = Math.max(...nonRestItems.map(i => i.share ?? 0), 0);
       return getWarmColorGradient(item.share ?? 0, maxShare);
     },
-    renderLegend: (segments, hoveredSegmentKey, onSegmentHover) => {
+    renderLegend: (segments, hoveredSegmentKey, onLocalListHover) => {
       const itemHeight = 72;
       const visibleItems = 5;
       const maxHeight = itemHeight * visibleItems;
@@ -295,8 +295,8 @@ function createPieChartConfig(distribution, onSegmentHover, hoveredSegmentKey) {
             return (
               <div
                 key={segment.rank}
-                onMouseEnter={() => onSegmentHover && onSegmentHover(segmentKey)}
-                onMouseLeave={() => onSegmentHover && onSegmentHover(null)}
+                onMouseEnter={() => onLocalListHover && onLocalListHover(segmentKey)}
+                onMouseLeave={() => onLocalListHover && onLocalListHover(null)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -345,13 +345,15 @@ function createPieChartConfig(distribution, onSegmentHover, hoveredSegmentKey) {
 
 export default function ContactDistributionChart({ distribution }) {
   const [hoveredSegmentKey, setHoveredSegmentKey] = useState(null);
+  const [localListHoveredKey, setLocalListHoveredKey] = useState(null);
   
   if (!distribution || distribution.length === 0) return null;
 
   const config = createPieChartConfig(distribution, setHoveredSegmentKey, hoveredSegmentKey);
   
   const legendWithHover = (segments, hoveredSegmentKeyParam, onSegmentHoverParam) => {
-    return config.renderLegend(segments, hoveredSegmentKeyParam || hoveredSegmentKey, onSegmentHoverParam || setHoveredSegmentKey);
+    // Use local hover state for list items (no tooltip) but respect hoveredSegmentKey from pie chart
+    return config.renderLegend(segments, hoveredSegmentKeyParam || hoveredSegmentKey, setLocalListHoveredKey);
   };
 
   return (

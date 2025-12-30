@@ -1,5 +1,6 @@
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 import EnhancedText from "./EnhancedText";
+import StatCard from "./StatCard";
 
 export default function StreaksSection({ streaks, percentiles = {} }) {
   const hasStreak = !!streaks?.longest_streak_days;
@@ -18,10 +19,13 @@ export default function StreaksSection({ streaks, percentiles = {} }) {
           {enhancement}
         </EnhancedText>
       )}
-      <div style={{ textAlign: "center" }}>
-        <p style={{ fontSize: "3rem", fontWeight: "bold", color: "#f59e0b" }}>
-          {streaks.longest_streak_days} days
-        </p>
+      <div className="stats-grid" style={{ justifyContent: "center" }}>
+        <StatCard
+          label="Longest Streak"
+          value={`${streaks.longest_streak_days} days`}
+          percentile={percentiles["streaks.longest_streak_days"]}
+          valueStyle={{ fontSize: "3rem", color: "#f59e0b" }}
+        />
       </div>
     </div>
   );

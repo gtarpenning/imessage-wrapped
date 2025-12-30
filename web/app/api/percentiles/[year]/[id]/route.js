@@ -75,6 +75,8 @@ export async function GET(request, { params }) {
       "tapbacks.total_tapbacks_given",
       "tapbacks.total_tapbacks_received",
       "streaks.longest_streak_days",
+      "contacts.unique_contacts_messaged",
+      "contacts.unique_contacts_received_from",
     ];
 
     // Extract all values for each stat

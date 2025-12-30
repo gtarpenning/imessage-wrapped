@@ -61,10 +61,7 @@ function getDefaultAggregates() {
       },
       message_lengths: {
         avg_length: defaultSummary,
-        max_length: defaultSummary,
-        short_messages: defaultSummary,
-        medium_messages: defaultSummary,
-        long_messages: defaultSummary,
+        // max_length, short/medium/long_messages not provided by Python analyzer
       },
       word_count_distribution: {
         buckets: [],
@@ -92,7 +89,7 @@ function getDefaultAggregates() {
     },
     streaks: {
       longest_streak_days: defaultSummary,
-      current_streak_days: defaultSummary,
+      // current_streak_days not provided by Python analyzer
     },
   };
 }
@@ -150,10 +147,7 @@ function calculateAggregates(wraps) {
       },
       message_lengths: {
         avg_length: [],
-        max_length: [],
-        short_messages: [],
-        medium_messages: [],
-        long_messages: [],
+        // max_length, short/medium/long_messages not available from Python analyzer
       },
       word_count_histograms: [],
     },
@@ -178,7 +172,7 @@ function calculateAggregates(wraps) {
     },
     streaks: {
       longest_streak_days: [],
-      current_streak_days: [],
+      // current_streak_days not available from Python analyzer
     },
     busiest_days_all: [],
   };
@@ -219,6 +213,15 @@ function calculateAggregates(wraps) {
       const hourly = stats.temporal.hour_distribution || stats.temporal.hourly_distribution || {};
       const daily = stats.temporal.day_of_week_distribution || stats.temporal.daily_distribution || {};
       const monthly = stats.temporal.month_distribution || stats.temporal.monthly_distribution || {};
+      
+      // Debug: log first wrap's temporal data structure
+      if (wraps.indexOf(wrap) === 0) {
+        console.log('Sample temporal data from first wrap:', {
+          hourly: Object.keys(hourly).length > 0 ? hourly : 'EMPTY',
+          daily: Object.keys(daily).length > 0 ? daily : 'EMPTY',
+          monthly: Object.keys(monthly).length > 0 ? monthly : 'EMPTY',
+        });
+      }
       
       // Process hourly
       for (let i = 0; i < 24; i++) {
@@ -353,16 +356,12 @@ function calculateAggregates(wraps) {
         );
       }
 
-      // Message lengths
-      aggregates.content.message_lengths.avg_length.push(
-        safeGet(stats, 'content.avg_message_length_sent', 0)
-      );
-      
-      // These fields don't exist in the analyzer, set to 0 or skip
-      aggregates.content.message_lengths.max_length.push(0);
-      aggregates.content.message_lengths.short_messages.push(0);
-      aggregates.content.message_lengths.medium_messages.push(0);
-      aggregates.content.message_lengths.long_messages.push(0);
+      // Message lengths - Python analyzer provides avg_message_length_sent and _received
+      const avgLengthSent = safeGet(stats, 'content.avg_message_length_sent', 0);
+      const avgLengthReceived = safeGet(stats, 'content.avg_message_length_received', 0);
+      // Use the average of sent and received as the overall average
+      const avgLength = (avgLengthSent + avgLengthReceived) / 2;
+      aggregates.content.message_lengths.avg_length.push(avgLength);
     }
 
     // Conversations stats
@@ -421,13 +420,12 @@ function calculateAggregates(wraps) {
       });
     }
 
-    // Streaks stats
+    // Streaks stats - Python analyzer only provides longest_streak_days
     if (stats.streaks) {
       aggregates.streaks.longest_streak_days.push(
         safeGet(stats, 'streaks.longest_streak_days', 0)
       );
-      // current_streak doesn't exist in analyzer, set to 0
-      aggregates.streaks.current_streak_days.push(0);
+      // current_streak_days doesn't exist in Python analyzer - we'll remove from dashboard
     }
   });
 
@@ -564,10 +562,7 @@ function calculateAggregates(wraps) {
       },
       message_lengths: {
         avg_length: summarize(aggregates.content.message_lengths.avg_length),
-        max_length: summarize(aggregates.content.message_lengths.max_length),
-        short_messages: summarize(aggregates.content.message_lengths.short_messages),
-        medium_messages: summarize(aggregates.content.message_lengths.medium_messages),
-        long_messages: summarize(aggregates.content.message_lengths.long_messages),
+        // max_length, short/medium/long_messages not available from Python analyzer
       },
       word_count_distribution: {
         buckets: wordCountBuckets.concat(wordCountOverflow > 0 ? [wordCountOverflow] : []),
@@ -595,7 +590,7 @@ function calculateAggregates(wraps) {
     },
     streaks: {
       longest_streak_days: summarize(aggregates.streaks.longest_streak_days),
-      current_streak_days: summarize(aggregates.streaks.current_streak_days),
+      // current_streak_days not available from Python analyzer
     },
   };
 
@@ -625,6 +620,13 @@ export async function GET(request) {
     }
     
     const aggregates = calculateAggregates(wraps);
+    
+    // Debug: log aggregated temporal totals
+    console.log('Aggregated temporal totals:', {
+      hourly_sum: aggregates.aggregates.temporal.hourly_distribution.reduce((a, b) => a + b, 0),
+      daily_sum: aggregates.aggregates.temporal.daily_distribution.reduce((a, b) => a + b, 0),
+      monthly_sum: aggregates.aggregates.temporal.monthly_distribution.reduce((a, b) => a + b, 0),
+    });
 
     return NextResponse.json({
       wraps: wraps.map(w => {

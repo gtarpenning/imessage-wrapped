@@ -35,6 +35,7 @@ export default function ResponseTimesSection({ response_times, percentiles = {} 
             <StatCard
               label="Your Median Response Time"
               value={response_times.median_response_time_you_formatted}
+              percentile={percentiles["response_times.avg_response_time_minutes"]}
               valueStyle={{ fontSize: "2rem", color: "#10b981" }}
             />
           )}

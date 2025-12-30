@@ -20,6 +20,7 @@ export default function MessageLengthSection({ content, percentiles = {} }) {
           <StatCard
             label="Avg Length (Sent)"
             value={`${Math.round(content.avg_message_length_sent)} chars`}
+            percentile={percentiles["content.avg_message_length_sent"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -27,6 +28,7 @@ export default function MessageLengthSection({ content, percentiles = {} }) {
           <StatCard
             label="Avg Length (Received)"
             value={`${Math.round(content.avg_message_length_received)} chars`}
+            percentile={percentiles["content.avg_message_length_received"]}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
