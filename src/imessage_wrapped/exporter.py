@@ -25,6 +25,8 @@ class JSONSerializer:
         }
         if data.phrases is not None:
             payload["phrases"] = data.phrases
+        if data.sentiment is not None:
+            payload["sentiment"] = data.sentiment
         return json.dumps(payload, indent=self.indent, ensure_ascii=False)
 
     def _serialize_conversation(self, conv: Conversation) -> dict:
@@ -90,6 +92,8 @@ class JSONLSerializer:
                 }
                 if data.phrases is not None:
                     line_data["phrases"] = data.phrases
+                if data.sentiment is not None:
+                    line_data["sentiment"] = data.sentiment
                 lines.append(json.dumps(line_data, ensure_ascii=False))
         return "\n".join(lines)
 

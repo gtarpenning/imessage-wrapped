@@ -28,6 +28,7 @@ class ExportLoader:
         year = None
         phrases = None
         phrases_by_contact = None
+        sentiment = None
 
         with open(file_path, "r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, 1):
@@ -47,6 +48,8 @@ class ExportLoader:
                 if phrases is None:
                     phrases = data.get("phrases")
                 # Per-contact phrases are intentionally not exported.
+                if sentiment is None:
+                    sentiment = data.get("sentiment")
 
                 conv_key = data["conversation_key"]
                 conv_data = conversations_dict[conv_key]
@@ -102,6 +105,7 @@ class ExportLoader:
             conversations=conversations,
             phrases=phrases,
             phrases_by_contact=phrases_by_contact,
+            sentiment=sentiment,
         )
 
     @staticmethod
@@ -119,6 +123,7 @@ class ExportLoader:
 
         phrases = data.get("phrases")
         phrases_by_contact = data.get("phrases_by_contact")
+        sentiment = data.get("sentiment")
 
         conversations = {}
         for conv_key, conv_data in data["conversations"].items():
@@ -163,6 +168,7 @@ class ExportLoader:
             conversations=conversations,
             phrases=phrases,
             phrases_by_contact=phrases_by_contact,
+            sentiment=sentiment,
         )
 
     @staticmethod

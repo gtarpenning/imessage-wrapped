@@ -28,6 +28,7 @@ from . import (
     require_database_access,
 )
 from .phrase_utils import compute_phrases_for_export
+from .sentiment_utils import compute_sentiment_for_export
 from .utils import sanitize_statistics_for_export
 
 logger = logging.getLogger(__name__)
@@ -202,6 +203,9 @@ def export_command(args):
         data.phrases = phrases or None
         # Per-contact phrases are intentionally omitted from export for privacy.
         data.phrases_by_contact = None
+
+        # Precompute sentiment (overall + monthly) while text is available.
+        data.sentiment = compute_sentiment_for_export(data) or None
 
         progress.update(task, description=f"Writing {data.total_messages} messages to file...")
 

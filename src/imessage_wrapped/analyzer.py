@@ -657,11 +657,14 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         )
 
         double_texts = self._count_double_texts(data, conversations)
-        sentiment_stats = self._analyze_sentiment(
-            sent_messages,
-            received_messages,
-            interval=self._sentiment_interval,
-        )
+        if getattr(data, "sentiment", None):
+            sentiment_stats = data.sentiment
+        else:
+            sentiment_stats = self._analyze_sentiment(
+                sent_messages,
+                received_messages,
+                interval=self._sentiment_interval,
+            )
 
         word_count_histogram = self._create_word_count_histogram(sent_word_counts)
         mode_word_count = Counter(sent_word_counts).most_common(1)[0][0] if sent_word_counts else 0

@@ -59,6 +59,7 @@ class ExportData:
     conversations: dict[str, Conversation]
     phrases: dict | None = None
     phrases_by_contact: list[dict] | None = None
+    sentiment: dict | None = None
 
     @property
     def total_messages(self) -> int:
