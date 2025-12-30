@@ -4,7 +4,7 @@ import EnhancedText from "./EnhancedText";
 export default function StreaksSection({ streaks }) {
   const hasStreak = !!streaks?.longest_streak_days;
   const prompt = hasStreak
-    ? `The user had a ${streaks.longest_streak_days} day messaging streak. ${PLAYFUL_INSTRUCTION}`
+    ? `You texted someone every day for ${streaks.longest_streak_days} days straight—think calendar math: each sunrise gets a gold star if you sent at least one message, and the chain snaps the first day you skip. ${PLAYFUL_INSTRUCTION}`
     : null;
   const { enhancement } = useEnhancement(prompt, hasStreak);
 

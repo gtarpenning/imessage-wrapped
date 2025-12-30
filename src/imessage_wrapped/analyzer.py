@@ -102,12 +102,15 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         )
         sent_messages = [m for m in all_messages if m.is_from_me]
         received_messages = [m for m in all_messages if not m.is_from_me]
+        # Contacts should reflect everyone you messaged or heard from, even if a
+        # conversation was filtered out of other analyses. Use the full set.
+        contact_conversations = data.conversations
 
         return {
             "volume": self._analyze_volume(all_messages, sent_messages, received_messages),
             "temporal": self._analyze_temporal_patterns(data, sent_messages, conversations),
             "contacts": self._analyze_contacts(
-                data, sent_messages, received_messages, conversations=conversations
+                data, sent_messages, received_messages, conversations=contact_conversations
             ),
             "content": self._analyze_content(
                 data, sent_messages, received_messages, conversations=conversations
@@ -282,7 +285,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         convs = conversations or data.conversations
         for conv in convs.values():
-            messages = self._filter_conversation_messages(conv, data.year)
+            messages = sorted(
+                self._filter_conversation_messages(conv, data.year),
+                key=lambda msg: msg.timestamp,
+            )
             if not messages:
                 continue
             messages = sorted(messages, key=lambda m: m.timestamp)
@@ -492,6 +498,8 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             total_messages=total_messages_considered,
             totals_by_contact=total_messages_by_contact,
             contact_names=contact_names,
+            sent_by_contact=sent_by_contact,
+            received_by_contact=received_by_contact,
             top_n=100,
         )
 
@@ -517,6 +525,8 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         total_messages: int,
         totals_by_contact: dict[str, int],
         contact_names: dict[str, str],
+        sent_by_contact: dict[str, int] | None,
+        received_by_contact: dict[str, int] | None,
         top_n: int,
     ) -> list[dict[str, Any]]:
         if not totals_by_contact:
@@ -535,6 +545,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         for rank, (contact_id, count) in enumerate(sorted_contacts, start=1):
             share = round(count / denominator, 4)
             cumulative = round(cumulative + share, 4)
+            sent_count = (sent_by_contact or {}).get(contact_id, 0)
+            received_count = (received_by_contact or {}).get(contact_id, 0)
+            sent_ratio = round(sent_count / max(count, 1), 4)
+            received_ratio = round(received_count / max(count, 1), 4)
             distribution.append(
                 {
                     "rank": rank,
@@ -542,6 +556,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                     "contact_name": contact_names.get(contact_id),
                     "share": share,
                     "count": count,
+                    "sent_count": sent_count,
+                    "received_count": received_count,
+                    "sent_ratio": sent_ratio,
+                    "received_ratio": received_ratio,
                     "cumulative_share": min(cumulative, 1.0),
                 }
             )
@@ -605,7 +623,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             else 0
         )
 
-        double_texts = self._count_double_texts(sent_messages)
+        double_texts = self._count_double_texts(data, conversations)
         sentiment_stats = self._analyze_sentiment(
             sent_messages,
             received_messages,
@@ -656,35 +674,49 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         return result
 
-    def _count_double_texts(self, sent_messages: list[Message]) -> dict[str, Any]:
-        if not sent_messages:
-            return {"count": 0, "percentage": 0.0}
-
-        sorted_msgs = sorted(sent_messages, key=lambda m: m.timestamp)
-
+    def _count_double_texts(
+        self, data: ExportData, conversations: dict[str, Conversation] | None = None
+    ) -> dict[str, Any]:
+        total_sent = 0
         double_text_count = 0
-        i = 0
-        while i < len(sorted_msgs) - 1:
-            current = sorted_msgs[i]
-            next_msg = sorted_msgs[i + 1]
 
-            time_diff = (next_msg.timestamp - current.timestamp).total_seconds()
+        convs = conversations or data.conversations
 
-            if time_diff < 300:
-                double_text_count += 1
-                while (
-                    i < len(sorted_msgs) - 1
-                    and (sorted_msgs[i + 1].timestamp - current.timestamp).total_seconds() < 300
-                ):
+        for conv in convs.values():
+            messages = self._filter_conversation_messages(conv, data.year)
+            if not messages:
+                continue
+
+            total_sent += sum(1 for msg in messages if msg.is_from_me)
+
+            i = 0
+            while i < len(messages):
+                current = messages[i]
+
+                if not current.is_from_me:
                     i += 1
-            i += 1
+                    continue
 
-        percentage = round(double_text_count / len(sorted_msgs) * 100, 2) if sorted_msgs else 0
+                run_start_time = current.timestamp
+                run_length = 1
+                j = i + 1
 
-        return {
-            "count": double_text_count,
-            "percentage": percentage,
-        }
+                while (
+                    j < len(messages)
+                    and messages[j].is_from_me
+                    and (messages[j].timestamp - run_start_time).total_seconds() < 300
+                ):
+                    run_length += 1
+                    j += 1
+
+                if run_length > 1:
+                    double_text_count += 1
+
+                i = j
+
+        percentage = round(double_text_count / total_sent * 100, 2) if total_sent else 0.0
+
+        return {"count": double_text_count, "percentage": percentage}
 
     def _analyze_phrases(
         self,
