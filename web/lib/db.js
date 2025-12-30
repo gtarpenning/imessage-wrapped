@@ -63,6 +63,24 @@ export async function getWrapped(year, id) {
   };
 }
 
+// Get all wraps with aggregated statistics
+export async function getAllWraps() {
+  const sql = `
+    SELECT id, year, data, created_at, views
+    FROM wrapped_stats
+    ORDER BY created_at DESC
+  `;
+
+  const result = await pool.query(sql);
+  return result.rows.map(row => ({
+    id: row.id,
+    year: row.year,
+    statistics: row.data,
+    created_at: row.created_at,
+    views: row.views,
+  }));
+}
+
 // Initialize database schema
 export async function initDatabase() {
   const sql = `
