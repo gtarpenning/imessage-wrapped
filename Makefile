@@ -71,7 +71,7 @@ upload:
 	@echo "Uploading to PyPI..."
 	python -m twine upload dist/*
 
-build-upgrade-deploy: bump-patch test-install upload
+build-upgrade-deploy: bump-patch test-install build upload
 	@echo "✓ Package upgraded and deployed successfully!"
 
 release-desktop:
