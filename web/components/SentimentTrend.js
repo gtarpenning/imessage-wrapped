@@ -16,10 +16,10 @@ function getScoreBasedColorGradient(score, minScore, maxScore) {
   const range = maxScore - minScore;
   const normalized = range > 0 ? Math.max(0, Math.min(1, (score - minScore) / range)) : 0;
   const warmColors = [
-    { r: 251, g: 191, b: 36 },
-    { r: 251, g: 113, b: 133 },
-    { r: 236, g: 72, b: 153 },
     { r: 219, g: 39, b: 119 },
+    { r: 236, g: 72, b: 153 },
+    { r: 251, g: 113, b: 133 },
+    { r: 251, g: 191, b: 36 },
   ];
   const colorIndex = Math.floor(normalized * (warmColors.length - 1));
   const nextIndex = Math.min(colorIndex + 1, warmColors.length - 1);

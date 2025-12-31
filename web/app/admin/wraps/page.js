@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PieChart, getWarmColorGradient } from "@/lib/histogram";
+import { PieChart, getWarmColorGradient, Histogram } from "@/lib/histogram";
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
@@ -211,27 +211,103 @@ function TemporalSection({ aggregates }) {
   const daily = aggregates?.temporal?.daily_distribution || Array(7).fill(0);
   const monthly = aggregates?.temporal?.monthly_distribution || Array(12).fill(0);
 
-  // Debug logging
-  console.log('Temporal Data Debug:', {
-    hourly: {
-      data: hourly,
-      sum: hourly.reduce((a, b) => a + b, 0),
-      max: Math.max(...hourly),
-      min: Math.min(...hourly),
+  // Convert arrays to histogram objects
+  const hourlyHistogram = Array.isArray(hourly) 
+    ? Object.fromEntries(hourly.map((count, i) => [i, count]))
+    : hourly;
+  
+  const dailyHistogram = Array.isArray(daily)
+    ? Object.fromEntries(daily.map((count, i) => [i, count]))
+    : daily;
+  
+  const monthlyHistogram = Array.isArray(monthly)
+    ? Object.fromEntries(monthly.map((count, i) => [i, count]))
+    : monthly;
+
+  const formatHour = (h) => {
+    const period = h >= 12 ? "PM" : "AM";
+    const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return `${displayHour} ${period}`;
+  };
+
+  const hourHistogramConfig = {
+    processData: (histogram) => {
+      const buckets = [];
+      const maxCount = Math.max(...Object.values(histogram).map(v => parseInt(v, 10)), 0);
+
+      for (let hour = 0; hour < 24; hour++) {
+        const count = parseInt(histogram[hour] || histogram[String(hour)] || 0, 10);
+        buckets.push({
+          hour,
+          range: formatHour(hour),
+          count,
+        });
+      }
+
+      return { buckets, maxCount };
     },
-    daily: {
-      data: daily,
-      sum: daily.reduce((a, b) => a + b, 0),
-      max: Math.max(...daily),
-      min: Math.min(...daily),
+    generateTicks: (buckets) => {
+      const tickInterval = 4;
+      const ticks = [];
+      for (let i = 0; i < 24; i += tickInterval) {
+        ticks.push(i);
+      }
+      return ticks;
     },
-    monthly: {
-      data: monthly,
-      sum: monthly.reduce((a, b) => a + b, 0),
-      max: Math.max(...monthly),
-      min: Math.min(...monthly),
-    }
-  });
+    formatLabel: (bucket) => bucket.range,
+    formatValue: (bucket) => `${bucket.count.toLocaleString()} messages`,
+    formatTick: formatHour,
+    getBucketKey: (bucket) => bucket.hour,
+    formatLargestLabel: (bucket) => `Busiest: ${bucket.range} (${bucket.count.toLocaleString()} messages)`,
+  };
+
+  const dayHistogramConfig = {
+    processData: (histogram) => {
+      const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const buckets = [];
+      const maxCount = Math.max(...Object.values(histogram).map(v => parseInt(v, 10)), 0);
+
+      for (let day = 0; day < 7; day++) {
+        const count = parseInt(histogram[day] || histogram[String(day)] || 0, 10);
+        buckets.push({
+          day,
+          range: dayLabels[day],
+          count,
+        });
+      }
+
+      return { buckets, maxCount };
+    },
+    generateTicks: (buckets) => buckets.map((b) => b.day),
+    formatLabel: (bucket) => bucket.range,
+    formatValue: (bucket) => `${bucket.count.toLocaleString()} messages`,
+    formatTick: (day) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][day],
+    getBucketKey: (bucket) => bucket.day,
+  };
+
+  const monthHistogramConfig = {
+    processData: (histogram) => {
+      const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const buckets = [];
+      const maxCount = Math.max(...Object.values(histogram).map(v => parseInt(v, 10)), 0);
+
+      for (let month = 0; month < 12; month++) {
+        const count = parseInt(histogram[month] || histogram[String(month)] || 0, 10);
+        buckets.push({
+          month,
+          range: monthLabels[month],
+          count,
+        });
+      }
+
+      return { buckets, maxCount };
+    },
+    generateTicks: (buckets) => buckets.map((b) => b.month),
+    formatLabel: (bucket) => bucket.range,
+    formatValue: (bucket) => `${bucket.count.toLocaleString()} messages`,
+    formatTick: (month) => ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][month],
+    getBucketKey: (bucket) => bucket.month,
+  };
 
   return (
     <Section title="⏰ Temporal Patterns">
@@ -243,13 +319,10 @@ function TemporalSection({ aggregates }) {
           Min: {formatNumber(Math.min(...hourly))}
         </p>
         <Histogram 
-          data={hourly} 
-          labels={Array.from({ length: 24 }, (_, i) => i)} 
-          formatLabel={(h) => {
-            const period = h >= 12 ? "PM" : "AM";
-            const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-            return `${displayHour}${period}`;
-          }}
+          histogram={hourlyHistogram}
+          config={hourHistogramConfig}
+          title=""
+          highlightLargest={true}
         />
       </div>
       <div style={{ marginBottom: "2rem" }}>
@@ -259,7 +332,12 @@ function TemporalSection({ aggregates }) {
           Max: {formatNumber(Math.max(...daily))} | 
           Min: {formatNumber(Math.min(...daily))}
         </p>
-        <Histogram data={daily} labels={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]} />
+        <Histogram 
+          histogram={dailyHistogram}
+          config={dayHistogramConfig}
+          title=""
+          highlightLargest={true}
+        />
       </div>
       <div>
         <h4 style={{ marginBottom: "0.5rem", opacity: 0.8 }}>Monthly Distribution</h4>
@@ -268,7 +346,12 @@ function TemporalSection({ aggregates }) {
           Max: {formatNumber(Math.max(...monthly))} | 
           Min: {formatNumber(Math.min(...monthly))}
         </p>
-        <Histogram data={monthly} labels={["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]} />
+        <Histogram 
+          histogram={monthlyHistogram}
+          config={monthHistogramConfig}
+          title=""
+          highlightLargest={true}
+        />
       </div>
       {aggregates?.temporal?.weekday_weekend && (
         <div style={{ marginTop: "2rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
@@ -297,38 +380,49 @@ function ContactsSection({ aggregates }) {
 }
 
 function ContactDistributionChart({ distribution }) {
-  const max = Math.max(...distribution.map(d => d.count), 0);
-  
+  // Convert distribution array to histogram object
+  const histogram = Object.fromEntries(
+    distribution.map((bucket, i) => [i, bucket.count])
+  );
+
+  const contactDistConfig = {
+    processData: (histogram) => {
+      const buckets = [];
+      const maxCount = Math.max(...Object.values(histogram).map(v => parseInt(v, 10)), 0);
+
+      distribution.forEach((bucket, i) => {
+        const count = parseInt(histogram[i] || histogram[String(i)] || 0, 10);
+        buckets.push({
+          index: i,
+          range: bucket.label,
+          count,
+        });
+      });
+
+      return { buckets, maxCount };
+    },
+    generateTicks: (buckets) => {
+      // Show fewer ticks for readability
+      const step = Math.max(1, Math.ceil(buckets.length / 10));
+      return buckets
+        .map((b, i) => i)
+        .filter((i) => i % step === 0 || i === buckets.length - 1);
+    },
+    formatLabel: (bucket) => bucket.range,
+    formatValue: (bucket) => `${bucket.count.toLocaleString()} contacts`,
+    formatTick: (index) => distribution[index]?.label || '',
+    getBucketKey: (bucket) => bucket.index,
+  };
+
   return (
     <div style={{ marginTop: "2rem" }}>
-      <h4 style={{ marginBottom: "1rem", opacity: 0.8 }}>Message Distribution Across Contacts</h4>
-      <div style={{ background: "rgba(255,255,255,0.05)", padding: "2rem", borderRadius: "1rem", border: "1px solid rgba(255,255,255,0.1)" }}>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-end", height: "200px" }}>
-          {distribution.map((bucket, i) => {
-            const height = max > 0 ? (bucket.count / max) * 100 : 0;
-            return (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div
-                  style={{
-                    width: "100%",
-                    height: `${height}%`,
-                    background: getWarmColorGradient(bucket.count, max),
-                    borderRadius: "0.25rem 0.25rem 0 0",
-                    minHeight: height > 0 ? "2px" : "0",
-                  }}
-                  title={`${bucket.label}: ${bucket.count} contacts`}
-                />
-                <span style={{ fontSize: "0.65rem", marginTop: "0.25rem", opacity: 0.6 }}>
-                  {bucket.label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-        <div style={{ marginTop: "1rem", fontSize: "0.85rem", opacity: 0.7, textAlign: "center" }}>
-          Number of contacts by message count ranges
-        </div>
-      </div>
+      <Histogram 
+        histogram={histogram}
+        config={contactDistConfig}
+        title="Message Distribution Across Contacts"
+        highlightLargest={false}
+        xAxisLabel="Number of contacts by message count ranges"
+      />
     </div>
   );
 }
@@ -405,16 +499,48 @@ function MessageLengthSection({ aggregates }) {
 }
 
 function WordCountDistribution({ distribution }) {
+  // Convert to histogram object
+  const histogram = Object.fromEntries(
+    distribution.buckets.map((count, i) => [i, count])
+  );
+
+  const wordCountConfig = {
+    processData: (histogram) => {
+      const buckets = [];
+      const maxCount = Math.max(...Object.values(histogram).map(v => parseInt(v, 10)), 0);
+
+      distribution.labels.forEach((label, i) => {
+        const count = parseInt(histogram[i] || histogram[String(i)] || 0, 10);
+        buckets.push({
+          index: i,
+          range: label,
+          count,
+        });
+      });
+
+      return { buckets, maxCount };
+    },
+    generateTicks: (buckets) => {
+      // Show fewer ticks for readability
+      const step = Math.ceil(buckets.length / 8);
+      return buckets
+        .map((b, i) => i)
+        .filter((i) => i % step === 0 || i === buckets.length - 1);
+    },
+    formatLabel: (bucket) => `${bucket.range} words`,
+    formatValue: (bucket) => `${bucket.count.toLocaleString()} messages`,
+    formatTick: (index) => distribution.labels[index],
+    getBucketKey: (bucket) => bucket.index,
+  };
+
   return (
     <div style={{ marginTop: "2rem" }}>
-      <h4 style={{ marginBottom: "1rem", opacity: 0.8 }}>Word Count Distribution</h4>
-      <div style={{ background: "rgba(255,255,255,0.05)", padding: "2rem", borderRadius: "1rem", border: "1px solid rgba(255,255,255,0.1)" }}>
-        <Histogram 
-          data={distribution.buckets} 
-          labels={distribution.labels}
-          formatLabel={(label) => `${label} words`}
-        />
-      </div>
+      <Histogram 
+        histogram={histogram}
+        config={wordCountConfig}
+        title="Word Count Distribution"
+        highlightLargest={false}
+      />
     </div>
   );
 }
@@ -716,67 +842,6 @@ function MetricCard({ title, data, isDecimal = false, isPercentage = false, form
   );
 }
 
-function Histogram({ data, labels, formatLabel }) {
-  const safeData = data || [];
-  const max = Math.max(...safeData, 0);
-  const sum = safeData.reduce((a, b) => a + b, 0);
-  
-  // Debug logging
-  console.log('Histogram rendering:', {
-    dataLength: safeData.length,
-    max,
-    sum,
-    sampleValues: safeData.slice(0, 5),
-    allZero: safeData.every(v => v === 0),
-    allSame: safeData.every(v => v === safeData[0]),
-  });
-  
-  // If all data is zero, show a message
-  if (sum === 0) {
-    return (
-      <div style={{ background: "rgba(255,255,255,0.05)", padding: "2rem", borderRadius: "1rem", border: "1px solid rgba(255,255,255,0.1)", textAlign: "center", opacity: 0.5 }}>
-        No data available
-      </div>
-    );
-  }
-  
-  return (
-    <div style={{ background: "rgba(255,255,255,0.05)", padding: "2rem", borderRadius: "1rem", border: "1px solid rgba(255,255,255,0.1)" }}>
-      <div style={{ display: "flex", gap: "0.25rem", alignItems: "flex-end", height: "200px", marginBottom: "1rem" }}>
-        {safeData.map((value, i) => {
-          const height = max > 0 ? ((value || 0) / max) * 100 : 0;
-          return (
-            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <div
-                style={{
-                  width: "100%",
-                  height: `${height}%`,
-                  background: getWarmColorGradient(value || 0, max),
-                  borderRadius: "0.25rem 0.25rem 0 0",
-                  minHeight: height > 0 ? "2px" : "0",
-                  transition: "height 0.3s",
-                }}
-                title={`${labels?.[i] || i}: ${(value || 0).toLocaleString()}`}
-              />
-            </div>
-          );
-        })}
-      </div>
-      {labels && (
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", opacity: 0.6 }}>
-          {labels.map((label, i) => {
-            // Show every nth label to avoid crowding
-            const showEvery = labels.length > 12 ? Math.ceil(labels.length / 12) : 1;
-            if (i % showEvery !== 0 && i !== labels.length - 1) return <span key={i} />;
-            
-            const displayLabel = formatLabel ? formatLabel(label) : label;
-            return <span key={i}>{displayLabel}</span>;
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // Utility Functions
 function formatNumber(num) {
