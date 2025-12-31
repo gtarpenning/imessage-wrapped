@@ -21,7 +21,7 @@ export async function POST(request) {
 
     // Parse request
     const body = await request.json();
-    const { type = "single", year, statistics, user_name, year1, year2, statistics1, statistics2 } = body;
+    const { type = "single", year, statistics, user_name, metadata, year1, year2, statistics1, statistics2 } = body;
 
     // Handle comparison upload
     if (type === "comparison") {
@@ -45,7 +45,7 @@ export async function POST(request) {
     const cleanData = sanitizeStatistics(statistics);
 
     // Save to database (user_name is not PII in this context - it's chosen by the user)
-    const wrapped = await createWrapped(year, cleanData, user_name);
+    const wrapped = await createWrapped(year, cleanData, user_name, metadata);
 
     // Generate shareable URL
     const baseUrl =
@@ -70,7 +70,7 @@ export async function POST(request) {
 }
 
 async function handleComparisonUpload(request, body) {
-  const { year1, year2, statistics1, statistics2, user_name } = body;
+  const { year1, year2, statistics1, statistics2, user_name, metadata } = body;
 
   // Validate input
   if (!year1 || !year2 || !statistics1 || !statistics2) {
@@ -100,8 +100,8 @@ async function handleComparisonUpload(request, body) {
   const cleanData2 = sanitizeStatistics(laterStats);
 
   // Create both wrapped entries
-  const wrapped1 = await createWrapped(earlierYear, cleanData1, user_name);
-  const wrapped2 = await createWrapped(laterYear, cleanData2, user_name);
+  const wrapped1 = await createWrapped(earlierYear, cleanData1, user_name, metadata);
+  const wrapped2 = await createWrapped(laterYear, cleanData2, user_name, metadata);
 
   // Create comparison entry
   const comparison = await createComparison(

@@ -680,9 +680,9 @@ function WrapsTable({ wraps = [] }) {
     if (!searchTerm) return true;
     const search = searchTerm.toLowerCase();
     return (
-      wrap.id?.toLowerCase().includes(search) ||
       wrap.year?.toString().includes(search) ||
-      wrap.user_name?.toLowerCase().includes(search)
+      wrap.user_name?.toLowerCase().includes(search) ||
+      wrap.sdk_version?.toLowerCase().includes(search)
     );
   });
 
@@ -749,7 +749,7 @@ function WrapsTable({ wraps = [] }) {
       <div style={{ marginBottom: "1rem" }}>
         <input
           type="text"
-          placeholder="Search by ID, year, or name..."
+          placeholder="Search by year, name, or SDK version..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{
@@ -768,9 +768,9 @@ function WrapsTable({ wraps = [] }) {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "2px solid rgba(255,255,255,0.2)" }}>
-              <th style={{ padding: "1rem", textAlign: "left" }}>ID</th>
               <th style={{ padding: "1rem", textAlign: "left" }}>Year</th>
               <SortableHeader field="user_name">Name</SortableHeader>
+              <SortableHeader field="sdk_version">SDK Version</SortableHeader>
               <SortableHeader field="created_at">Created</SortableHeader>
               <SortableHeader field="views">Views</SortableHeader>
               <SortableHeader field="total_messages">Total Msgs</SortableHeader>
@@ -786,12 +786,24 @@ function WrapsTable({ wraps = [] }) {
                 ? wrap.user_name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
                 : "—";
               
+              // Format SDK version for display
+              const sdkVersion = wrap.sdk_version || "—";
+              const dmgVersion = wrap.dmg_version;
+              const versionDisplay = dmgVersion ? `${sdkVersion} (DMG: ${dmgVersion})` : sdkVersion;
+              
               return (
               <tr key={wrap.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.85rem" }}>{wrap.id}</td>
                 <td style={{ padding: "1rem" }}>{wrap.year}</td>
                 <td style={{ padding: "1rem", opacity: wrap.user_name ? 1 : 0.4 }}>
                   {displayName}
+                </td>
+                <td style={{ 
+                  padding: "1rem", 
+                  fontFamily: "monospace", 
+                  fontSize: "0.85rem",
+                  opacity: wrap.sdk_version ? 1 : 0.4 
+                }}>
+                  {versionDisplay}
                 </td>
                 <td style={{ padding: "1rem", fontSize: "0.9rem" }}>
                   {new Date(wrap.created_at).toLocaleString('en-US', {

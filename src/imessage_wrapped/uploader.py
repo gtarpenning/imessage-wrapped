@@ -8,6 +8,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
+from .metadata import collect_metadata
+
 API_BASE_URL = "https://imessage-wrapped.fly.dev"
 
 
@@ -22,7 +24,15 @@ class StatsUploader:
         Returns shareable URL or None if failed.
         """
         try:
-            payload = {"year": year, "statistics": statistics}
+            # Collect system metadata
+            metadata = {}
+            try:
+                metadata = collect_metadata()
+            except Exception:
+                # Never fail on metadata collection
+                pass
+
+            payload = {"year": year, "statistics": statistics, "metadata": metadata}
             if user_name:
                 payload["user_name"] = user_name
             payload_size = len(json.dumps(payload).encode("utf-8"))
@@ -129,12 +139,21 @@ class ComparisonUploader:
         Returns shareable comparison URL or None if failed.
         """
         try:
+            # Collect system metadata
+            metadata = {}
+            try:
+                metadata = collect_metadata()
+            except Exception:
+                # Never fail on metadata collection
+                pass
+
             payload = {
                 "type": "comparison",
                 "year1": year1,
                 "year2": year2,
                 "statistics1": statistics1,
                 "statistics2": statistics2,
+                "metadata": metadata,
             }
             if user_name:
                 payload["user_name"] = user_name

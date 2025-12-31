@@ -214,15 +214,6 @@ function calculateAggregates(wraps) {
       const daily = stats.temporal.day_of_week_distribution || stats.temporal.daily_distribution || {};
       const monthly = stats.temporal.month_distribution || stats.temporal.monthly_distribution || {};
       
-      // Debug: log first wrap's temporal data structure
-      if (wraps.indexOf(wrap) === 0) {
-        console.log('Sample temporal data from first wrap:', {
-          hourly: Object.keys(hourly).length > 0 ? hourly : 'EMPTY',
-          daily: Object.keys(daily).length > 0 ? daily : 'EMPTY',
-          monthly: Object.keys(monthly).length > 0 ? monthly : 'EMPTY',
-        });
-      }
-      
       // Process hourly
       for (let i = 0; i < 24; i++) {
         const count = hourly[i] || hourly[String(i)] || 0;
@@ -621,12 +612,6 @@ export async function GET(request) {
     
     const aggregates = calculateAggregates(wraps);
     
-    // Debug: log aggregated temporal totals
-    console.log('Aggregated temporal totals:', {
-      hourly_sum: aggregates.aggregates.temporal.hourly_distribution.reduce((a, b) => a + b, 0),
-      daily_sum: aggregates.aggregates.temporal.daily_distribution.reduce((a, b) => a + b, 0),
-      monthly_sum: aggregates.aggregates.temporal.monthly_distribution.reduce((a, b) => a + b, 0),
-    });
 
     return NextResponse.json({
       wraps: wraps.map(w => {
@@ -640,13 +625,15 @@ export async function GET(request) {
           total_received: safeGet(stats, 'volume.total_received', 0),
           total_messages: safeGet(stats, 'volume.total_messages', 0),
           user_name: w.statistics?.user_name || null,
+          sdk_version: w?.sdk_version || null,
+          dmg_version: w?.dmg_version || null,
+          metadata: w?.metadata || {},
         };
       }),
       ...aggregates,
     });
   } catch (error) {
     console.error("Admin fetch error:", error);
-    console.error("Error stack:", error.stack);
     return NextResponse.json(
       { error: "Internal server error", details: error.message },
       { status: 500 }

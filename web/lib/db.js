@@ -20,7 +20,7 @@ export function generateId() {
 }
 
 // Save wrapped statistics to database
-export async function createWrapped(year, data, userName = null) {
+export async function createWrapped(year, data, userName = null, metadata = null) {
   const id = generateId();
 
   // Include user_name in the data if provided
@@ -29,13 +29,20 @@ export async function createWrapped(year, data, userName = null) {
     wrappedData.user_name = userName;
   }
 
+  // Store metadata as JSON (defaults to empty object if not provided)
+  const metadataJson = metadata || {};
+
   const sql = `
-    INSERT INTO wrapped_stats (id, year, data, created_at, views)
-    VALUES ($1, $2, $3, NOW(), 0)
+    INSERT INTO wrapped_stats (
+      id, year, data, created_at, views, metadata
+    )
+    VALUES ($1, $2, $3, NOW(), 0, $4)
     RETURNING id, year, created_at
   `;
 
-  const result = await pool.query(sql, [id, year, JSON.stringify(wrappedData)]);
+  const result = await pool.query(sql, [
+    id, year, JSON.stringify(wrappedData), JSON.stringify(metadataJson)
+  ]);
   return result.rows[0];
 }
 
@@ -73,7 +80,8 @@ export async function getWrapped(year, id) {
 // Get all wraps with aggregated statistics
 export async function getAllWraps() {
   const sql = `
-    SELECT id, year, data, created_at, views
+    SELECT 
+      id, year, data, created_at, views, metadata
     FROM wrapped_stats
     ORDER BY created_at DESC
   `;
@@ -86,6 +94,10 @@ export async function getAllWraps() {
     user_name: row.data.user_name || null,
     created_at: row.created_at,
     views: row.views,
+    metadata: row.metadata || {},
+    // Convenience accessors for common metadata fields
+    sdk_version: row.metadata?.sdk_version || null,
+    dmg_version: row.metadata?.dmg_version || null,
   }));
 }
 
@@ -157,11 +169,13 @@ export async function initDatabase() {
       year INTEGER NOT NULL,
       data JSONB NOT NULL,
       created_at TIMESTAMP DEFAULT NOW(),
-      views INTEGER DEFAULT 0
+      views INTEGER DEFAULT 0,
+      metadata JSONB DEFAULT '{}'::jsonb
     );
     
     CREATE INDEX IF NOT EXISTS idx_year ON wrapped_stats(year);
     CREATE INDEX IF NOT EXISTS idx_created_at ON wrapped_stats(created_at);
+    CREATE INDEX IF NOT EXISTS idx_metadata_sdk_version ON wrapped_stats((metadata->>'sdk_version'));
     
     CREATE TABLE IF NOT EXISTS llm_cache (
       prompt_hash TEXT PRIMARY KEY,

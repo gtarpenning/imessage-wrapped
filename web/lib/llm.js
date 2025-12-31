@@ -82,11 +82,6 @@ export async function getCompletion(prompt) {
     }
   }
 
-  console.log(
-    "→ Calling OpenAI API for prompt:",
-    prompt.substring(0, 60) + "...",
-  );
-
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {

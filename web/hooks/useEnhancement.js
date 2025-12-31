@@ -44,7 +44,6 @@ export function useEnhancement(prompt, enabled = true) {
         if (!response.ok) {
           const data = await response.json();
           if (response.status === 429) {
-            console.log("Enhancement limit reached");
             return;
           }
           throw new Error(data.error || "Failed to fetch enhancement");
