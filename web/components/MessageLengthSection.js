@@ -2,7 +2,7 @@ import StatCard from "./StatCard";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 import { Histogram, getWarmColorGradient } from "@/lib/histogram";
 
-export default function MessageLengthSection({ content, percentiles = {} }) {
+export default function MessageLengthSection({ content, percentiles = {}, totalWraps = 0 }) {
   if (!content) return null;
 
   const hasLengthData =
@@ -21,6 +21,7 @@ export default function MessageLengthSection({ content, percentiles = {} }) {
             label="Avg Length (Sent)"
             value={`${Math.round(content.avg_message_length_sent)} chars`}
             percentile={percentiles["content.avg_message_length_sent"]}
+            totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -29,6 +30,7 @@ export default function MessageLengthSection({ content, percentiles = {} }) {
             label="Avg Length (Received)"
             value={`${Math.round(content.avg_message_length_received)} chars`}
             percentile={percentiles["content.avg_message_length_received"]}
+            totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -36,6 +38,8 @@ export default function MessageLengthSection({ content, percentiles = {} }) {
           <StatCard
             label="Avg Words (Sent)"
             value={`${Math.round(content.avg_word_count_sent)} words`}
+            percentile={percentiles["content.avg_word_count_sent"]}
+            totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}

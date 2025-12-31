@@ -3,7 +3,7 @@ import PhraseHighlights from "./PhraseHighlights";
 import EnhancedText from "./EnhancedText";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 
-export default function ContentSection({ content, percentiles = {} }) {
+export default function ContentSection({ content, percentiles = {}, totalWraps = 0 }) {
   if (!content) return null;
 
   return (
@@ -16,6 +16,7 @@ export default function ContentSection({ content, percentiles = {} }) {
             label="Avg Message Length (Sent)"
             value={`${Math.round(content.avg_message_length_sent)} chars`}
             percentile={percentiles["content.avg_message_length_sent"]}
+            totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -24,6 +25,7 @@ export default function ContentSection({ content, percentiles = {} }) {
             label="Avg Message Length (Received)"
             value={`${Math.round(content.avg_message_length_received)} chars`}
             percentile={percentiles["content.avg_message_length_received"]}
+            totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -32,6 +34,7 @@ export default function ContentSection({ content, percentiles = {} }) {
             label="❓ Questions Asked"
             value={`${content.questions_percentage}%`}
             percentile={percentiles["content.questions_percentage"]}
+            totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -40,6 +43,7 @@ export default function ContentSection({ content, percentiles = {} }) {
             label="❗ Enthusiasm Level"
             value={`${content.enthusiasm_percentage}%`}
             percentile={percentiles["content.enthusiasm_percentage"]}
+            totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -48,6 +52,7 @@ export default function ContentSection({ content, percentiles = {} }) {
             label="📎 Attachments Sent"
             value={content.attachments_sent.toLocaleString()}
             percentile={percentiles["content.attachments_sent"]}
+            totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -56,12 +61,13 @@ export default function ContentSection({ content, percentiles = {} }) {
             label="📎 Attachments Received"
             value={content.attachments_received.toLocaleString()}
             percentile={percentiles["content.attachments_received"]}
+            totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
       </div>
 
-      <DoubleTextSection content={content} percentiles={percentiles} />
+      <DoubleTextSection content={content} percentiles={percentiles} totalWraps={totalWraps} />
 
       <EmojiSection content={content} />
 
@@ -73,7 +79,7 @@ export default function ContentSection({ content, percentiles = {} }) {
   );
 }
 
-function DoubleTextSection({ content, percentiles }) {
+function DoubleTextSection({ content, percentiles, totalWraps }) {
   const prompt =
     content.double_text_count !== undefined
       ? `You sent ${content.double_text_count} double texts, that's ${content.double_text_percentage}% of your messages. ${PLAYFUL_INSTRUCTION}`
@@ -109,6 +115,7 @@ function DoubleTextSection({ content, percentiles }) {
           label="Double Texts Sent"
           value={content.double_text_count.toLocaleString()}
           percentile={percentiles["content.double_text_count"]}
+          totalWraps={totalWraps}
           valueStyle={{ fontSize: "2.5rem", color: "#06b6d4" }}
         />
       </div>

@@ -1,6 +1,6 @@
 import StatCard from "./StatCard";
 
-export default function HeroSection({ year, volume, percentiles = {} }) {
+export default function HeroSection({ year, volume, percentiles = {}, totalWraps = 0 }) {
   return (
     <div className="hero">
       <h1>
@@ -12,12 +12,14 @@ export default function HeroSection({ year, volume, percentiles = {} }) {
           label="Messages Sent"
           value={volume?.total_sent?.toLocaleString() || 0}
           percentile={percentiles["volume.total_sent"]}
+          totalWraps={totalWraps}
         />
 
         <StatCard
           label="Messages Received"
           value={volume?.total_received?.toLocaleString() || 0}
           percentile={percentiles["volume.total_received"]}
+          totalWraps={totalWraps}
           valueStyle={{
             background: "linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)",
             WebkitBackgroundClip: "text",

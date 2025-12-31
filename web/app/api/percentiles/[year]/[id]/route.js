@@ -17,8 +17,10 @@ function calculatePercentile(value, allValues) {
 
 // Helper to extract stat from data JSON
 function extractStat(data, path) {
+  // Handle both data.raw.X and data.X structures
+  let value = data?.raw || data;
+  
   const keys = path.split(".");
-  let value = data;
   for (const key of keys) {
     if (value === null || value === undefined) return null;
     value = value[key];
@@ -63,6 +65,7 @@ export async function GET(request, { params }) {
       "volume.total_received",
       "content.avg_message_length_sent",
       "content.avg_message_length_received",
+      "content.avg_word_count_sent",
       "content.questions_percentage",
       "content.enthusiasm_percentage",
       "content.attachments_sent",
@@ -72,11 +75,16 @@ export async function GET(request, { params }) {
       "conversations.one_on_one_chats",
       "content.double_text_count",
       "response_times.avg_response_time_minutes",
+      "response_times.median_response_time_you_seconds",
+      "response_times.median_response_time_them_seconds",
       "tapbacks.total_tapbacks_given",
       "tapbacks.total_tapbacks_received",
       "streaks.longest_streak_days",
       "contacts.unique_contacts_messaged",
       "contacts.unique_contacts_received_from",
+      "ghosts.people_you_left_hanging",
+      "ghosts.people_who_left_you_hanging",
+      "ghosts.ghost_ratio",
     ];
 
     // Extract all values for each stat
@@ -106,7 +114,10 @@ export async function GET(request, { params }) {
       }
     });
 
-    return NextResponse.json({ percentiles });
+    return NextResponse.json({ 
+      percentiles,
+      total: result.rows.length 
+    });
   } catch (error) {
     console.error("Percentile calculation error:", error);
     return NextResponse.json(

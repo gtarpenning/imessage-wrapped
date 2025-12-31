@@ -1,6 +1,6 @@
 import StatCard from "./StatCard";
 
-export default function GhostSection({ ghosts, percentiles = {} }) {
+export default function GhostSection({ ghosts, percentiles = {}, totalWraps = 0 }) {
   if (!ghosts) return null;
 
   const totalYou = ghosts.people_you_left_hanging || 0;
@@ -25,17 +25,23 @@ export default function GhostSection({ ghosts, percentiles = {} }) {
         <StatCard
           label="People You Left Hanging"
           value={totalYou.toLocaleString()}
+          percentile={percentiles["ghosts.people_you_left_hanging"]}
+          totalWraps={totalWraps}
           valueStyle={{ fontSize: "2rem" }}
         />
         <StatCard
           label="People Who Left You Hanging"
           value={totalThem.toLocaleString()}
+          percentile={percentiles["ghosts.people_who_left_you_hanging"]}
+          totalWraps={totalWraps}
           valueStyle={{ fontSize: "2rem" }}
         />
         {typeof ratio === "number" && (
           <StatCard
             label="Ghost Ratio (You/Them)"
             value={ratio.toFixed(2)}
+            percentile={percentiles["ghosts.ghost_ratio"]}
+            totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}

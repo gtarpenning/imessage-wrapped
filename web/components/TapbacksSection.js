@@ -20,7 +20,7 @@ const TAPBACK_LABELS = {
   question: "Question",
 };
 
-export default function TapbacksSection({ tapbacks, percentiles = {} }) {
+export default function TapbacksSection({ tapbacks, percentiles = {}, totalWraps = 0 }) {
   if (
     !tapbacks ||
     (tapbacks.total_tapbacks_given === 0 &&
@@ -44,6 +44,7 @@ export default function TapbacksSection({ tapbacks, percentiles = {} }) {
             label="Tapbacks Given"
             value={tapbacks.total_tapbacks_given.toLocaleString()}
             percentile={percentiles["tapbacks.total_tapbacks_given"]}
+            totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
@@ -52,6 +53,7 @@ export default function TapbacksSection({ tapbacks, percentiles = {} }) {
             label="Tapbacks Received"
             value={tapbacks.total_tapbacks_received.toLocaleString()}
             percentile={percentiles["tapbacks.total_tapbacks_received"]}
+            totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}

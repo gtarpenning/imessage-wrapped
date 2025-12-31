@@ -2,7 +2,7 @@ import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 import EnhancedText from "./EnhancedText";
 import StatCard from "./StatCard";
 
-export default function StreaksSection({ streaks, percentiles = {} }) {
+export default function StreaksSection({ streaks, percentiles = {}, totalWraps = 0 }) {
   const hasStreak = !!streaks?.longest_streak_days;
   const prompt = hasStreak
     ? `You texted someone every day for ${streaks.longest_streak_days} days straight—think calendar math: each sunrise gets a gold star if you sent at least one message, and the chain snaps the first day you skip. ${PLAYFUL_INSTRUCTION}`
@@ -24,6 +24,7 @@ export default function StreaksSection({ streaks, percentiles = {} }) {
           label="Longest Streak"
           value={`${streaks.longest_streak_days} days`}
           percentile={percentiles["streaks.longest_streak_days"]}
+          totalWraps={totalWraps}
           valueStyle={{ fontSize: "3rem", color: "#f59e0b" }}
         />
       </div>

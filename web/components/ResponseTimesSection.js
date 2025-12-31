@@ -2,7 +2,7 @@ import StatCard from "./StatCard";
 import EnhancedText from "./EnhancedText";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 
-export default function ResponseTimesSection({ response_times, percentiles = {} }) {
+export default function ResponseTimesSection({ response_times, percentiles = {}, totalWraps = 0 }) {
   const hasData =
     response_times &&
     (response_times.total_responses_you > 0 ||
@@ -35,7 +35,8 @@ export default function ResponseTimesSection({ response_times, percentiles = {} 
             <StatCard
               label="Your Median Response Time"
               value={response_times.median_response_time_you_formatted}
-              percentile={percentiles["response_times.avg_response_time_minutes"]}
+              percentile={percentiles["response_times.median_response_time_you_seconds"]}
+              totalWraps={totalWraps}
               valueStyle={{ fontSize: "2rem", color: "#10b981" }}
             />
           )}
@@ -44,6 +45,8 @@ export default function ResponseTimesSection({ response_times, percentiles = {} 
             <StatCard
               label="Their Median Response Time"
               value={response_times.median_response_time_them_formatted}
+              percentile={percentiles["response_times.median_response_time_them_seconds"]}
+              totalWraps={totalWraps}
               valueStyle={{ fontSize: "2rem", color: "#10b981" }}
             />
           )}
