@@ -27,14 +27,24 @@ const migrations = [
       `);
     },
   },
+  {
+    id: 2,
+    name: "add_user_fingerprint_index",
+    up: async (client) => {
+      // Add index on user_fingerprint for efficient lookups when replacing wraps
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_metadata_user_fingerprint 
+        ON wrapped_stats((metadata->>'user_fingerprint'))
+      `);
+      
+      // Add compound index for finding existing wraps by fingerprint + year
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_user_fingerprint_year 
+        ON wrapped_stats((metadata->>'user_fingerprint'), year)
+      `);
+    },
+  },
   // Add future migrations here with incrementing ids
-  // {
-  //   id: 2,
-  //   name: "add_another_feature",
-  //   up: async (client) => {
-  //     // migration code here
-  //   },
-  // },
 ];
 
 /**

@@ -10,7 +10,8 @@ const pool = new Pool({
 
 // Helper function to calculate percentile
 function calculatePercentile(value, allValues, lowerIsBetter = false) {
-  if (!value || allValues.length === 0) return null;
+  // Allow 0 as a valid value - only reject null/undefined
+  if (value == null || allValues.length === 0) return null;
   
   // For "lower is better" stats (like response time), count values GREATER than current
   // For "higher is better" stats (like message count), count values LESS than current

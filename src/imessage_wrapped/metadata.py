@@ -1,5 +1,6 @@
 """Collect system and SDK metadata for uploads."""
 
+import hashlib
 import platform
 import sys
 from typing import Optional
@@ -65,10 +66,56 @@ def get_dmg_version() -> Optional[str]:
     return None
 
 
-def collect_metadata() -> dict:
+def generate_user_fingerprint(
+    user_name: Optional[str] = None, platform_info: Optional[dict] = None
+) -> str:
+    """
+    Generate a stable fingerprint to identify the same user across uploads.
+    Uses machine-specific information to create a consistent hash.
+
+    Args:
+        user_name: The user's name (optional)
+        platform_info: Dictionary with platform, machine info (optional)
+
+    Returns:
+        A stable hash string identifying this user/machine combination
+    """
+    try:
+        # Collect identifying information
+        components = []
+
+        # Add platform info
+        if platform_info:
+            components.append(platform_info.get("platform", ""))
+            components.append(platform_info.get("machine", ""))
+            components.append(platform_info.get("platform_version", ""))
+        else:
+            components.append(platform.system())
+            components.append(platform.machine())
+            components.append(platform.release())
+
+        # Add user name if provided
+        if user_name:
+            components.append(user_name)
+
+        # Create stable hash from these components
+        fingerprint_str = "|".join(str(c) for c in components)
+        fingerprint_hash = hashlib.sha256(fingerprint_str.encode()).hexdigest()
+
+        # Return first 16 characters for readability
+        return fingerprint_hash[:16]
+    except Exception:
+        # Fallback to a generic fingerprint
+        return "unknown"
+
+
+def collect_metadata(user_name: Optional[str] = None) -> dict:
     """
     Collect system and SDK metadata.
     This should never raise an exception.
+
+    Args:
+        user_name: Optional user name to include in fingerprint generation
     """
     metadata = {}
 
@@ -104,6 +151,13 @@ def collect_metadata() -> dict:
     try:
         metadata["machine"] = platform.machine()
     except Exception:
+        pass
+
+    # Generate user fingerprint for deduplication
+    try:
+        metadata["user_fingerprint"] = generate_user_fingerprint(user_name, metadata)
+    except Exception:
+        # Never fail on fingerprint generation
         pass
 
     return metadata

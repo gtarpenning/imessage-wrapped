@@ -26,11 +26,11 @@ export default function StatCard({
 
   const rankInfo = getRankInfo();
   
-  // Determine badge type based on rank
+  // Determine badge type based on percentile and rank
   const getBadgeType = () => {
-    if (!rankInfo) return 'normal';
-    if (rankInfo.rank === 1) return 'first';
-    if (rankInfo.rank <= 10) return 'top10';
+    if (percentile === undefined || percentile === null) return 'normal';
+    if (rankInfo && rankInfo.rank === 1) return 'first';
+    if (percentile >= 90) return 'top10'; // Top 10%
     return 'normal';
   };
   

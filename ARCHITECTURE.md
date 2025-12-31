@@ -504,7 +504,156 @@ Operations:
 
 ## Key Implementation Details
 
-### 1. Apple Timestamp Conversion
+### 1. User Identification & Wrap Deduplication
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│            Deduplication System Architecture                │
+└─────────────────────────────────────────────────────────────┘
+
+Goal: One wrap per user per year. Re-running analysis replaces old wrap.
+
+┌─────────────────────────────────────────────────────────────┐
+│ Step 1: Generate User Fingerprint (Local)                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  metadata.py - generate_user_fingerprint()                 │
+│                                                             │
+│  Input:                                                     │
+│    • platform.system()      → "Darwin"                     │
+│    • platform.machine()     → "arm64"                      │
+│    • platform.release()     → "24.6.0"                     │
+│    • user_name              → "Griffin Smith"              │
+│                                                             │
+│  Process:                                                   │
+│    components = ["Darwin", "arm64", "24.6.0", "Griffin"]  │
+│    fingerprint_str = "|".join(components)                  │
+│    hash = SHA256(fingerprint_str)                          │
+│    fingerprint = hash[:16]  # First 16 chars              │
+│                                                             │
+│  Output:                                                    │
+│    → "a1b2c3d4e5f6g7h8" (stable per user/machine)         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ Step 2: Upload with Metadata (Local → Cloud)               │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  uploader.py - StatsUploader.upload()                      │
+│                                                             │
+│  metadata = {                                              │
+│    "user_fingerprint": "a1b2c3d4e5f6g7h8",                │
+│    "sdk_version": "0.1.20",                                │
+│    "platform": "Darwin",                                   │
+│    "machine": "arm64",                                     │
+│    ...                                                     │
+│  }                                                         │
+│                                                             │
+│  POST /api/upload {                                        │
+│    year: 2024,                                            │
+│    statistics: { ... },                                   │
+│    user_name: "Griffin",                                  │
+│    metadata: metadata                                     │
+│  }                                                         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ Step 3: Check for Existing Wrap (Cloud)                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  db.js - createWrapped()                                   │
+│                                                             │
+│  1. Extract fingerprint from metadata                      │
+│     userFingerprint = metadata.user_fingerprint            │
+│                                                             │
+│  2. Query for existing wrap                                │
+│     SELECT id, year, created_at                           │
+│     FROM wrapped_stats                                     │
+│     WHERE metadata->>'user_fingerprint' = $1              │
+│       AND year = $2                                       │
+│     ORDER BY created_at DESC LIMIT 1                      │
+│                                                             │
+│  3. If found → DELETE old wrap                            │
+│     (CASCADE deletes related comparisons)                 │
+│                                                             │
+│  4. INSERT new wrap with fresh ID                         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Database Indexes (migrations.js):**
+```sql
+-- Fast fingerprint lookups
+CREATE INDEX idx_metadata_user_fingerprint 
+ON wrapped_stats((metadata->>'user_fingerprint'));
+
+-- Compound index for fingerprint + year queries
+CREATE INDEX idx_user_fingerprint_year 
+ON wrapped_stats((metadata->>'user_fingerprint'), year);
+```
+
+**Edge Cases:**
+```
+Missing Fingerprint (old SDK or failure)
+  → Skip deduplication, allow multiple wraps
+  → Graceful degradation, no errors
+
+Changed Machine/User
+  → Different fingerprint → separate wrap
+  → Intentional: represents different environment
+
+Fingerprint Collision (extremely rare)
+  → SHA-256 provides 2^128 possible hashes
+  → Acceptable risk: one user replaces another's wrap
+
+Cascade Deletion
+  → Old wrap deleted → comparisons auto-deleted
+  → User must re-create comparisons after update
+```
+
+**Example Flow:**
+```
+Upload #1 (First Time)
+  user_fingerprint: "a1b2c3d4e5f6g7h8"
+  year: 2024
+  → No existing wrap found
+  → Create wrap with ID: "xyz123"
+  → URL: /2024/xyz123
+
+Upload #2 (Re-run Analysis)
+  user_fingerprint: "a1b2c3d4e5f6g7h8" (same)
+  year: 2024
+  → Existing wrap found: "xyz123"
+  → DELETE wrap "xyz123"
+  → Create new wrap with ID: "abc789"
+  → URL: /2024/abc789 (new URL!)
+  → Old URL returns 404
+
+Upload #3 (Different Year)
+  user_fingerprint: "a1b2c3d4e5f6g7h8" (same)
+  year: 2025
+  → No wrap for 2025 found
+  → Create wrap with ID: "def456"
+  → URL: /2025/def456
+```
+
+**Benefits:**
+- ✅ Users only have one "current" wrap per year
+- ✅ Re-running analysis refreshes stats automatically
+- ✅ No duplicate wraps cluttering database
+- ✅ Best-effort approach (fails gracefully)
+- ✅ No user accounts or auth required
+- ✅ Privacy-preserving (hashed fingerprint)
+
+**Limitations:**
+- ⚠️ New URL generated each time (old links break)
+- ⚠️ No historical versions preserved
+- ⚠️ Comparisons deleted when wraps updated
+- ⚠️ Fingerprint changes with machine/user change
+
+### 2. Apple Timestamp Conversion
 
 ```python
 # utils.py
@@ -516,7 +665,7 @@ def apple_timestamp_to_datetime(ns: int) -> datetime:
     return APPLE_EPOCH + timedelta(seconds=seconds)
 ```
 
-### 2. Tapback Association (Cross-Year)
+### 3. Tapback Association (Cross-Year)
 
 ```python
 # service.py - MessageProcessor._build_conversations()
@@ -529,7 +678,7 @@ def apple_timestamp_to_datetime(ns: int) -> datetime:
 6. Apply tapbacks to parent messages in index
 ```
 
-### 3. Privacy Sanitization
+### 4. Privacy Sanitization
 
 ```javascript
 // web/lib/privacy.js
@@ -549,7 +698,7 @@ export function sanitizeStatistics(statistics) {
 }
 ```
 
-### 4. Rate Limiting (In-Memory)
+### 5. Rate Limiting (In-Memory)
 
 ```javascript
 // web/lib/rateLimit.js
@@ -577,7 +726,7 @@ export function checkRateLimit(ip) {
 }
 ```
 
-### 5. Desktop App Background Processing
+### 6. Desktop App Background Processing
 
 ```python
 # desktop/gui.py - IMessageWrappedApp
@@ -595,7 +744,7 @@ def _run_analysis(self):
     # 6. Show macOS notifications at each step
 ```
 
-### 6. JSONL Format (Streaming Friendly)
+### 7. JSONL Format (Streaming Friendly)
 
 ```python
 # exporter.py - JSONLSerializer

@@ -24,10 +24,10 @@ class StatsUploader:
         Returns shareable URL or None if failed.
         """
         try:
-            # Collect system metadata
+            # Collect system metadata (include user_name for fingerprinting)
             metadata = {}
             try:
-                metadata = collect_metadata()
+                metadata = collect_metadata(user_name)
             except Exception:
                 # Never fail on metadata collection
                 pass
@@ -139,10 +139,10 @@ class ComparisonUploader:
         Returns shareable comparison URL or None if failed.
         """
         try:
-            # Collect system metadata
+            # Collect system metadata (include user_name for fingerprinting)
             metadata = {}
             try:
-                metadata = collect_metadata()
+                metadata = collect_metadata(user_name)
             except Exception:
                 # Never fail on metadata collection
                 pass

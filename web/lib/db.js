@@ -19,8 +19,48 @@ export function generateId() {
   return crypto.randomBytes(6).toString("base64url");
 }
 
+// Find existing wrap by user fingerprint and year
+export async function findExistingWrap(userFingerprint, year) {
+  if (!userFingerprint) {
+    return null;
+  }
+  
+  const sql = `
+    SELECT id, year, created_at
+    FROM wrapped_stats
+    WHERE metadata->>'user_fingerprint' = $1 AND year = $2
+    ORDER BY created_at DESC
+    LIMIT 1
+  `;
+  
+  const result = await pool.query(sql, [userFingerprint, year]);
+  return result.rows.length > 0 ? result.rows[0] : null;
+}
+
+// Delete a wrap by ID
+export async function deleteWrap(id) {
+  const sql = `DELETE FROM wrapped_stats WHERE id = $1`;
+  await pool.query(sql, [id]);
+}
+
 // Save wrapped statistics to database
+// If a wrap with the same user_fingerprint and year exists, it will be replaced
 export async function createWrapped(year, data, userName = null, metadata = null) {
+  // Store metadata as JSON (defaults to empty object if not provided)
+  const metadataJson = metadata || {};
+  
+  // Check if this user already has a wrap for this year
+  const userFingerprint = metadataJson.user_fingerprint;
+  if (userFingerprint) {
+    const existingWrap = await findExistingWrap(userFingerprint, year);
+    if (existingWrap) {
+      // Delete the old wrap - this will also cascade delete any comparisons
+      console.log(`Replacing existing wrap ${existingWrap.id} for user ${userFingerprint} year ${year}`);
+      await deleteWrap(existingWrap.id);
+    }
+  }
+  
+  // Generate new ID for the wrap
   const id = generateId();
 
   // Include user_name in the data if provided
@@ -28,9 +68,6 @@ export async function createWrapped(year, data, userName = null, metadata = null
   if (userName) {
     wrappedData.user_name = userName;
   }
-
-  // Store metadata as JSON (defaults to empty object if not provided)
-  const metadataJson = metadata || {};
 
   const sql = `
     INSERT INTO wrapped_stats (
