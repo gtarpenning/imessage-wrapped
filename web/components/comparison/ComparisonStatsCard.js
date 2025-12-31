@@ -37,6 +37,8 @@ export default function ComparisonStatsCard({
     ? ((delta / value1) * 100).toFixed(1)
     : null;
 
+  // For most metrics: increase (delta > 0) = green, decrease (delta < 0) = red
+  // For metrics where lower is better (higherIsBetter=false): reverse the colors
   const isPositive = delta !== null
     ? (higherIsBetter ? delta > 0 : delta < 0)
     : null;

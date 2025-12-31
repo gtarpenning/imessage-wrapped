@@ -161,7 +161,7 @@ export async function getComparison(year1, year2, id) {
   };
 }
 
-// Initialize database schema
+// Initialize database schema (base tables only)
 export async function initDatabase() {
   const sql = `
     CREATE TABLE IF NOT EXISTS wrapped_stats (
@@ -169,13 +169,11 @@ export async function initDatabase() {
       year INTEGER NOT NULL,
       data JSONB NOT NULL,
       created_at TIMESTAMP DEFAULT NOW(),
-      views INTEGER DEFAULT 0,
-      metadata JSONB DEFAULT '{}'::jsonb
+      views INTEGER DEFAULT 0
     );
     
     CREATE INDEX IF NOT EXISTS idx_year ON wrapped_stats(year);
     CREATE INDEX IF NOT EXISTS idx_created_at ON wrapped_stats(created_at);
-    CREATE INDEX IF NOT EXISTS idx_metadata_sdk_version ON wrapped_stats((metadata->>'sdk_version'));
     
     CREATE TABLE IF NOT EXISTS llm_cache (
       prompt_hash TEXT PRIMARY KEY,
@@ -203,5 +201,9 @@ export async function initDatabase() {
   `;
 
   await pool.query(sql);
-  console.log("Database initialized");
+  console.log("Database schema initialized");
+  
+  // Run migrations for any schema changes
+  const { runMigrations } = await import("./migrations.js");
+  await runMigrations();
 }

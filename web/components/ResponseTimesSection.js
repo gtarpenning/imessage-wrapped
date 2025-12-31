@@ -2,6 +2,13 @@ import StatCard from "./StatCard";
 import EnhancedText from "./EnhancedText";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 
+function buildPercentileContext(percentile, totalWraps) {
+  if (percentile === undefined || percentile === null || totalWraps <= 0) {
+    return "";
+  }
+  return ` You're faster than ${percentile}% of ${totalWraps.toLocaleString()} users.`;
+}
+
 export default function ResponseTimesSection({ response_times, percentiles = {}, totalWraps = 0 }) {
   const hasData =
     response_times &&
@@ -11,8 +18,13 @@ export default function ResponseTimesSection({ response_times, percentiles = {},
     response_times?.total_responses_you > 0 &&
     response_times?.total_responses_them > 0;
 
+  const yourPercentile = percentiles["response_times.median_response_time_you_seconds"];
+  const theirPercentile = percentiles["response_times.median_response_time_them_seconds"];
+  
+  const percentileContext = buildPercentileContext(yourPercentile, totalWraps);
+
   const prompt = hasBoth
-    ? `Our median response time is ${response_times.median_response_time_you_formatted}, theirs is ${response_times.median_response_time_them_formatted}. ${PLAYFUL_INSTRUCTION}`
+    ? `Our median response time is ${response_times.median_response_time_you_formatted}, theirs is ${response_times.median_response_time_them_formatted}.${percentileContext} ${PLAYFUL_INSTRUCTION}`
     : null;
 
   const { enhancement, loading } = useEnhancement(prompt, hasBoth);

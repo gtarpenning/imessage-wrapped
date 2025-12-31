@@ -27,7 +27,7 @@ export default function ComparisonConversationsSection({
           value2={conversations2.group_chats}
           year1={year1}
           year2={year2}
-          higherIsBetter={false}
+          higherIsBetter={true}
         />
         <ComparisonStatsCard
           label="1-on-1 Chats"
@@ -45,7 +45,7 @@ export default function ComparisonConversationsSection({
           year2={year2}
           format="decimal"
           suffix="%"
-          higherIsBetter={false}
+          higherIsBetter={true}
         />
       </div>
 

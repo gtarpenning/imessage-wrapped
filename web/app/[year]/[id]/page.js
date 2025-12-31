@@ -95,7 +95,7 @@ export default function WrappedPage() {
       <ResponseTimesSection response_times={stats.response_times} percentiles={percentiles} totalWraps={totalWraps} />
       <TapbacksSection tapbacks={stats.tapbacks} percentiles={percentiles} totalWraps={totalWraps} />
       <StreaksSection streaks={stats.streaks} percentiles={percentiles} totalWraps={totalWraps} />
-      <WrappedFooter views={data.views} volume={stats.volume} />
+      <WrappedFooter views={data.views} volume={stats.volume} percentiles={percentiles} totalWraps={totalWraps} />
     </main>
   );
 }

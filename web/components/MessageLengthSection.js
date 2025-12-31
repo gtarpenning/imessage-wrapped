@@ -49,15 +49,22 @@ export default function MessageLengthSection({ content, percentiles = {}, totalW
         <WordCountHistogram
           histogram={content.word_count_histogram}
           modeWordCount={content.mode_word_count}
+          percentiles={percentiles}
+          totalWraps={totalWraps}
         />
       )}
     </div>
   );
 }
 
-function WordCountHistogram({ histogram, modeWordCount }) {
+function WordCountHistogram({ histogram, modeWordCount, percentiles, totalWraps }) {
+  const wordCountPercentile = percentiles ? percentiles["content.avg_word_count_sent"] : undefined;
+  const percentileContext = wordCountPercentile !== undefined && wordCountPercentile !== null && totalWraps > 0
+    ? ` Your average is better than ${wordCountPercentile}% of ${totalWraps.toLocaleString()} users.`
+    : "";
+  
   const prompt = modeWordCount
-    ? `Your most common message length is ${modeWordCount} words. Categorize this messaging style with a playful category name like (doesn't have to be exact) "sniper" (1-5 words), "conversationalist" (6-15 words), "essayist" (50+ words), etc. ${PLAYFUL_INSTRUCTION}`
+    ? `Your most common message length is ${modeWordCount} words. Categorize this messaging style with a playful category name like (doesn't have to be exact) "sniper" (1-5 words), "conversationalist" (6-15 words), "essayist" (50+ words), etc.${percentileContext} ${PLAYFUL_INSTRUCTION}`
     : null;
 
   const { enhancement } = useEnhancement(prompt, !!prompt);

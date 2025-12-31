@@ -63,15 +63,22 @@ export default function TapbacksSection({ tapbacks, percentiles = {}, totalWraps
         <TapbackReactionsSection
           orderedTapbacks={orderedTapbacks}
           tapbackDistribution={tapbackDistribution}
+          percentiles={percentiles}
+          totalWraps={totalWraps}
         />
       )}
     </div>
   );
 }
 
-function TapbackReactionsSection({ orderedTapbacks, tapbackDistribution }) {
+function TapbackReactionsSection({ orderedTapbacks, tapbackDistribution, percentiles, totalWraps }) {
+  const tapbackPercentile = percentiles ? percentiles["tapbacks.total_tapbacks_given"] : undefined;
+  const percentileContext = tapbackPercentile !== undefined && tapbackPercentile !== null && totalWraps > 0
+    ? ` More than ${tapbackPercentile}% of ${totalWraps.toLocaleString()} users.`
+    : "";
+  
   const prompt = orderedTapbacks[0]
-    ? `Your friend's favorite tapback reaction is ${TAPBACK_LABELS[orderedTapbacks[0]]} ${TAPBACK_EMOJIS[orderedTapbacks[0]]} which they used ${tapbackDistribution[orderedTapbacks[0]]} times. ${PLAYFUL_INSTRUCTION}`
+    ? `Your friend's favorite tapback reaction is ${TAPBACK_LABELS[orderedTapbacks[0]]} ${TAPBACK_EMOJIS[orderedTapbacks[0]]} which they used ${tapbackDistribution[orderedTapbacks[0]]} times.${percentileContext} ${PLAYFUL_INSTRUCTION}`
     : null;
 
   const { enhancement } = useEnhancement(prompt, !!prompt);

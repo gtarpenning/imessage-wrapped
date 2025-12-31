@@ -41,7 +41,7 @@ export default function ComparisonGhostSection({ ghosts1, ghosts2, year1, year2 
             <strong>
               {ghosts2.people_you_left_hanging - ghosts1.people_you_left_hanging}
             </strong>{" "}
-            more people in {year2}. Maybe time to respond?
+            more people in {year2}.... yikes.
           </p>
         ) : (
           <p>

@@ -69,7 +69,7 @@ export default function ContentSection({ content, percentiles = {}, totalWraps =
 
       <DoubleTextSection content={content} percentiles={percentiles} totalWraps={totalWraps} />
 
-      <EmojiSection content={content} />
+      <EmojiSection content={content} percentiles={percentiles} totalWraps={totalWraps} />
 
       <PhraseHighlights
         overall={content.phrases?.overall}
@@ -80,9 +80,14 @@ export default function ContentSection({ content, percentiles = {}, totalWraps =
 }
 
 function DoubleTextSection({ content, percentiles, totalWraps }) {
+  const doubleTextPercentile = percentiles["content.double_text_count"];
+  const percentileContext = doubleTextPercentile !== undefined && doubleTextPercentile !== null && totalWraps > 0
+    ? ` That's more than ${doubleTextPercentile}% of ${totalWraps.toLocaleString()} users.`
+    : "";
+  
   const prompt =
     content.double_text_count !== undefined
-      ? `You sent ${content.double_text_count} double texts, that's ${content.double_text_percentage}% of your messages. ${PLAYFUL_INSTRUCTION}`
+      ? `You sent ${content.double_text_count} double texts, that's ${content.double_text_percentage}% of your messages.${percentileContext} ${PLAYFUL_INSTRUCTION}`
       : null;
   const { enhancement, loading } = useEnhancement(
     prompt,
@@ -137,11 +142,18 @@ function DoubleTextSection({ content, percentiles, totalWraps }) {
   );
 }
 
-function EmojiSection({ content }) {
+function EmojiSection({ content, percentiles, totalWraps }) {
   const hasEmojis =
     content.most_used_emojis && content.most_used_emojis.length > 0;
+  
+  // Check for emoji-related percentile (if available)
+  const emojiPercentile = percentiles ? percentiles["content.emoji_count"] : undefined;
+  const percentileContext = emojiPercentile !== undefined && emojiPercentile !== null && totalWraps > 0
+    ? ` That's more emojis than ${emojiPercentile}% of ${totalWraps.toLocaleString()} users.`
+    : "";
+  
   const prompt = hasEmojis
-    ? `Your favorite emoji was ${content.most_used_emojis[0].emoji} which you used ${content.most_used_emojis[0].count} times. ${PLAYFUL_INSTRUCTION}`
+    ? `Your favorite emoji was ${content.most_used_emojis[0].emoji} which you used ${content.most_used_emojis[0].count} times.${percentileContext} ${PLAYFUL_INSTRUCTION}`
     : null;
   const { enhancement, loading } = useEnhancement(prompt, hasEmojis);
 

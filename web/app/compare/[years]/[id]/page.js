@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   ComparisonHeroSection,
-  ComparisonHeatmapSection,
   ComparisonContactsSection,
   ComparisonTemporalSection,
   ComparisonContentSection,
@@ -77,13 +76,6 @@ export default function ComparisonPage() {
         volume1={stats1.volume}
         volume2={stats2.volume}
         userName={userName}
-      />
-      
-      <ComparisonHeatmapSection
-        volume1={stats1.volume}
-        volume2={stats2.volume}
-        year1={year1}
-        year2={year2}
       />
       
       <ComparisonTemporalSection

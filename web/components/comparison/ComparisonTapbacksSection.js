@@ -28,7 +28,7 @@ export default function ComparisonTapbacksSection({
           value2={tapbacks2.total_tapbacks_given}
           year1={year1}
           year2={year2}
-          higherIsBetter={false}
+          higherIsBetter={true}
         />
         <ComparisonStatsCard
           label="Tapbacks Received"
@@ -36,7 +36,7 @@ export default function ComparisonTapbacksSection({
           value2={tapbacks2.total_tapbacks_received}
           year1={year1}
           year2={year2}
-          higherIsBetter={false}
+          higherIsBetter={true}
         />
       </div>
 

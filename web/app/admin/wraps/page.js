@@ -474,9 +474,9 @@ function TopEmojisSection({ emojis }) {
 
 function SentimentSection({ aggregates }) {
   return (
-    <Section title="😊 Sentiment Analysis">
+    <Section title="😊 User Sentiment Analysis (Sent Messages Only)">
       <StatGrid>
-        <MetricCard title="Overall Score" data={getAggregate(aggregates, 'content.sentiment.overall_scores')} isDecimal />
+        <MetricCard title="Avg Sentiment Score" data={getAggregate(aggregates, 'content.sentiment.overall_scores')} isDecimal />
         <MetricCard title="Positive %" data={getAggregate(aggregates, 'content.sentiment.positive_percentages')} isPercentage />
         <MetricCard title="Negative %" data={getAggregate(aggregates, 'content.sentiment.negative_percentages')} isPercentage />
         <MetricCard title="Neutral %" data={getAggregate(aggregates, 'content.sentiment.neutral_percentages')} isPercentage />

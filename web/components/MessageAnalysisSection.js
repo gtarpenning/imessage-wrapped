@@ -11,7 +11,7 @@ export default function MessageAnalysisSection({ sentiment }) {
 
   return (
     <div className="section">
-      <h2 className="section-title">🧠 Message Analysis</h2>
+      <h2 className="section-title">🧠 Your Message Sentiment</h2>
       <SentimentTrend sentiment={sentiment} />
     </div>
   );

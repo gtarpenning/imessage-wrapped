@@ -20,7 +20,7 @@ export default function ComparisonContentSection({
           year1={year1}
           year2={year2}
           suffix="chars"
-          higherIsBetter={false}
+          higherIsBetter={true}
         />
         <ComparisonStatsCard
           label="Avg Word Count"
@@ -29,7 +29,7 @@ export default function ComparisonContentSection({
           year1={year1}
           year2={year2}
           suffix="words"
-          higherIsBetter={false}
+          higherIsBetter={true}
         />
         <ComparisonStatsCard
           label="Questions Asked"
@@ -37,7 +37,7 @@ export default function ComparisonContentSection({
           value2={content2.questions_asked}
           year1={year1}
           year2={year2}
-          higherIsBetter={false}
+          higherIsBetter={true}
         />
         <ComparisonStatsCard
           label="Enthusiasm %"
@@ -47,7 +47,7 @@ export default function ComparisonContentSection({
           year2={year2}
           format="decimal"
           suffix="%"
-          higherIsBetter={false}
+          higherIsBetter={true}
         />
         <ComparisonStatsCard
           label="Links Shared"
@@ -55,7 +55,7 @@ export default function ComparisonContentSection({
           value2={content2.links_shared}
           year1={year1}
           year2={year2}
-          higherIsBetter={false}
+          higherIsBetter={true}
         />
         <ComparisonStatsCard
           label="Double Text %"
@@ -65,7 +65,7 @@ export default function ComparisonContentSection({
           year2={year2}
           format="decimal"
           suffix="%"
-          higherIsBetter={false}
+          higherIsBetter={true}
         />
       </div>
 

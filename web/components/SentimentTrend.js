@@ -125,13 +125,13 @@ export default function SentimentTrend({ sentiment }) {
   if (!periods || periods.length === 0 || sorted.length === 0) return null;
 
   const average = sentiment?.overall?.avg_score ?? 0;
-  const enhancement = `Average sentiment: ${average >= 0 ? "+" : ""}${average.toFixed(2)}`;
+  const enhancement = `Your average sentiment: ${average >= 0 ? "+" : ""}${average.toFixed(2)}`;
 
   return (
     <Histogram
       histogram={sentiment}
       config={histogramConfig}
-      title="Monthly Mood"
+      title="Your Monthly Mood"
       enhancement={enhancement}
       containerStyle={{
         background: "rgba(255,255,255,0.04)",

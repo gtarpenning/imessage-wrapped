@@ -1,13 +1,18 @@
 import { useEnhancement } from "@/hooks/useEnhancement";
 import EnhancedText from "./EnhancedText";
 
-export default function WrappedFooter({ views, volume, isComparison = false }) {
+export default function WrappedFooter({ views, volume, isComparison = false, percentiles = {}, totalWraps = 0 }) {
   const totalMessages = volume
     ? (volume.total_sent || 0) + (volume.total_received || 0)
     : 0;
 
+  const volumePercentile = percentiles["volume.total_sent"];
+  const percentileContext = volumePercentile !== undefined && volumePercentile !== null && totalWraps > 0
+    ? ` They're more active than ${volumePercentile}% of ${totalWraps.toLocaleString()} users.`
+    : "";
+
   const enhancementPrompt = !isComparison && totalMessages > 0
-      ? `Their friend sent ${totalMessages.toLocaleString()} messages this year. Write a spicy, provocative, ` +
+      ? `Their friend sent ${totalMessages.toLocaleString()} messages this year.${percentileContext} Write a spicy, provocative, ` +
         `attention-grabbing call-to-action (under 15 words) encouraging the viewer to click the button to see ` +
         `their own analysis. Be bold and playful. Use past tense example: Think you topped <number> texts?`
       : null;

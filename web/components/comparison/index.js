@@ -1,7 +1,6 @@
 // Export all comparison components from a single entry point
 export { default as ComparisonStatsCard } from "./ComparisonStatsCard";
 export { default as ComparisonHeroSection } from "./ComparisonHeroSection";
-export { default as ComparisonHeatmapSection } from "./ComparisonHeatmapSection";
 export { default as ComparisonContactsSection } from "./ComparisonContactsSection";
 export { default as ComparisonTemporalSection } from "./ComparisonTemporalSection";
 export { default as ComparisonContentSection } from "./ComparisonContentSection";

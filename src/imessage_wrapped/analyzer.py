@@ -660,9 +660,9 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         if getattr(data, "sentiment", None):
             sentiment_stats = data.sentiment
         else:
+            # Only analyze sentiment for user's own messages (sent), not received
             sentiment_stats = self._analyze_sentiment(
                 sent_messages,
-                received_messages,
                 interval=self._sentiment_interval,
             )
 
@@ -862,27 +862,23 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
     def _analyze_sentiment(
         self,
         sent_messages: list[Message],
-        received_messages: list[Message],
         interval: str = "month",
     ) -> dict[str, Any]:
+        # Only analyze sentiment for user's own messages (sent), not received
         sent_bucket = self._score_sentiment_messages(sent_messages, interval, stage="sent")
-        received_bucket = self._score_sentiment_messages(
-            received_messages, interval, stage="received"
-        )
-        overall_bucket = self._combine_sentiment_buckets(sent_bucket, received_bucket)
 
-        if overall_bucket["message_count"] == 0:
+        if sent_bucket["message_count"] == 0:
             return {}
 
+        # Return sentiment data with "overall" pointing to sent messages
+        # (since we only want to analyze the user's own sentiment, not received messages)
         sentiment = {
-            "overall": self._public_sentiment_view(overall_bucket),
+            "overall": self._public_sentiment_view(sent_bucket),
             "sent": self._public_sentiment_view(sent_bucket),
-            "received": self._public_sentiment_view(received_bucket),
             "periods": {
                 "interval": interval,
-                "overall": self._format_period_trend(overall_bucket["period_totals"]),
+                "overall": self._format_period_trend(sent_bucket["period_totals"]),
                 "sent": self._format_period_trend(sent_bucket["period_totals"]),
-                "received": self._format_period_trend(received_bucket["period_totals"]),
             },
         }
         return sentiment

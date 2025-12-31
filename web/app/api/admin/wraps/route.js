@@ -331,20 +331,27 @@ function calculateAggregates(wraps) {
         aggregates.content.word_count_histograms.push(stats.content.word_count_histogram);
       }
 
-      // Sentiment
-      if (stats.content.sentiment) {
+      // Sentiment (user's sent messages only)
+      if (stats.content.sentiment && stats.content.sentiment.overall) {
+        const sentimentOverall = stats.content.sentiment.overall;
         aggregates.content.sentiment.overall_scores.push(
-          safeGet(stats, 'content.sentiment.overall_score', 0)
+          safeGet(sentimentOverall, 'avg_score', 0)
         );
-        aggregates.content.sentiment.positive_percentages.push(
-          safeGet(stats, 'content.sentiment.positive_percentage', 0)
-        );
-        aggregates.content.sentiment.negative_percentages.push(
-          safeGet(stats, 'content.sentiment.negative_percentage', 0)
-        );
-        aggregates.content.sentiment.neutral_percentages.push(
-          safeGet(stats, 'content.sentiment.neutral_percentage', 0)
-        );
+        
+        // Calculate percentages from distribution
+        const distribution = sentimentOverall.distribution || {};
+        const total = (distribution.positive || 0) + (distribution.neutral || 0) + (distribution.negative || 0);
+        if (total > 0) {
+          aggregates.content.sentiment.positive_percentages.push(
+            ((distribution.positive || 0) / total) * 100
+          );
+          aggregates.content.sentiment.negative_percentages.push(
+            ((distribution.negative || 0) / total) * 100
+          );
+          aggregates.content.sentiment.neutral_percentages.push(
+            ((distribution.neutral || 0) / total) * 100
+          );
+        }
       }
 
       // Message lengths - Python analyzer provides avg_message_length_sent and _received

@@ -53,6 +53,27 @@ export default function ComparisonSentimentSection({
     );
   }, [sentiment1, sentiment2]);
 
+  // Calculate dynamic bounds for y-axis
+  const { minScore, maxScore } = useMemo(() => {
+    const allScores = monthlyData
+      .flatMap((d) => [d.score1, d.score2])
+      .filter((s) => s !== null);
+    
+    if (allScores.length === 0) return { minScore: -1, maxScore: 1 };
+    
+    const min = Math.min(...allScores);
+    const max = Math.max(...allScores);
+    
+    // Add 10% padding to make the chart more readable
+    const range = max - min;
+    const padding = range * 0.1;
+    
+    return {
+      minScore: min - padding,
+      maxScore: max + padding,
+    };
+  }, [monthlyData]);
+
   // Find biggest sentiment shifts
   const biggestShifts = useMemo(() => {
     const shifts = monthlyData
@@ -90,11 +111,11 @@ export default function ComparisonSentimentSection({
 
   return (
     <div className="section comparison-sentiment">
-      <h2 className="section-title">🧠 Sentiment Evolution</h2>
+      <h2 className="section-title">🧠 Your Sentiment Evolution</h2>
 
       <div className="stats-grid">
         <ComparisonStatsCard
-          label="Overall Sentiment"
+          label="Your Sentiment"
           value1={sentiment1.overall.avg_score}
           value2={sentiment2.overall.avg_score}
           year1={year1}
@@ -103,7 +124,7 @@ export default function ComparisonSentimentSection({
           higherIsBetter={true}
         />
         <ComparisonStatsCard
-          label="Messages Analyzed"
+          label="Your Messages Analyzed"
           value1={sentiment1.overall.message_count}
           value2={sentiment2.overall.message_count}
           year1={year1}
@@ -114,7 +135,7 @@ export default function ComparisonSentimentSection({
 
       {/* Overlaid Monthly Sentiment Chart */}
       <div className="comparison-chart-container">
-        <h3 className="chart-title">Monthly Sentiment Comparison</h3>
+        <h3 className="chart-title">Your Monthly Sentiment Comparison</h3>
         <div className="comparison-legend">
           <span className="legend-item year1">
             <span className="legend-color"></span>
@@ -127,102 +148,121 @@ export default function ComparisonSentimentSection({
         </div>
         <div className="sentiment-comparison-chart">
           <svg viewBox="0 0 600 300" className="sentiment-chart-svg">
-            {/* Zero line */}
-            <line
-              x1="50"
-              y1="150"
-              x2="550"
-              y2="150"
-              stroke="rgba(255,255,255,0.1)"
-              strokeWidth="1"
-            />
+            {(() => {
+              // Calculate y-coordinate based on dynamic range
+              const scoreToY = (score) => {
+                const range = maxScore - minScore;
+                const normalized = (maxScore - score) / range;
+                return 40 + normalized * 220; // Chart area: y=40 to y=260
+              };
 
-            {/* Y-axis labels */}
-            <text x="30" y="50" className="chart-label" textAnchor="end">
-              +1.0
-            </text>
-            <text x="30" y="155" className="chart-label" textAnchor="end">
-              0.0
-            </text>
-            <text x="30" y="260" className="chart-label" textAnchor="end">
-              -1.0
-            </text>
+              // Zero line (if within range)
+              const zeroY = minScore <= 0 && maxScore >= 0 ? scoreToY(0) : null;
 
-            {/* Data lines */}
-            {monthlyData.length > 1 && (
-              <>
-                {/* Year 1 line */}
-                <polyline
-                  points={monthlyData
-                    .map((d, i) => {
-                      if (d.score1 === null) return null;
-                      const x = 50 + (i / (monthlyData.length - 1)) * 500;
-                      const y = 150 - d.score1 * 100;
-                      return `${x},${y}`;
-                    })
-                    .filter(Boolean)
-                    .join(" ")}
-                  fill="none"
-                  stroke="#60a5fa"
-                  strokeWidth="3"
-                  className="year1-line"
-                />
+              return (
+                <>
+                  {/* Zero line */}
+                  {zeroY !== null && (
+                    <line
+                      x1="50"
+                      y1={zeroY}
+                      x2="550"
+                      y2={zeroY}
+                      stroke="rgba(255,255,255,0.1)"
+                      strokeWidth="1"
+                      strokeDasharray="4,4"
+                    />
+                  )}
 
-                {/* Year 2 line */}
-                <polyline
-                  points={monthlyData
-                    .map((d, i) => {
-                      if (d.score2 === null) return null;
-                      const x = 50 + (i / (monthlyData.length - 1)) * 500;
-                      const y = 150 - d.score2 * 100;
-                      return `${x},${y}`;
-                    })
-                    .filter(Boolean)
-                    .join(" ")}
-                  fill="none"
-                  stroke="#f472b6"
-                  strokeWidth="3"
-                  className="year2-line"
-                />
+                  {/* Y-axis labels */}
+                  <text x="30" y="45" className="chart-label" textAnchor="end">
+                    {maxScore.toFixed(2)}
+                  </text>
+                  <text x="30" y="155" className="chart-label" textAnchor="end">
+                    {((maxScore + minScore) / 2).toFixed(2)}
+                  </text>
+                  <text x="30" y="265" className="chart-label" textAnchor="end">
+                    {minScore.toFixed(2)}
+                  </text>
 
-                {/* Data points */}
-                {monthlyData.map((d, i) => {
-                  const x = 50 + (i / (monthlyData.length - 1)) * 500;
-                  return (
-                    <g key={i}>
-                      {d.score1 !== null && (
-                        <circle
-                          cx={x}
-                          cy={150 - d.score1 * 100}
-                          r="4"
-                          fill="#60a5fa"
-                          className="data-point"
-                        />
-                      )}
-                      {d.score2 !== null && (
-                        <circle
-                          cx={x}
-                          cy={150 - d.score2 * 100}
-                          r="4"
-                          fill="#f472b6"
-                          className="data-point"
-                        />
-                      )}
-                      {i % 3 === 0 && (
-                        <text
-                          x={x}
-                          y="285"
-                          className="chart-label"
-                          textAnchor="middle"
-                        >
-                          {monthNames[parseInt(d.month) - 1]}
-                        </text>
-                      )}
-                    </g>
-                  );
-                })}
-              </>
-            )}
+                  {/* Data lines */}
+                  {monthlyData.length > 1 && (
+                    <>
+                      {/* Year 1 line */}
+                      <polyline
+                        points={monthlyData
+                          .map((d, i) => {
+                            if (d.score1 === null) return null;
+                            const x = 50 + (i / (monthlyData.length - 1)) * 500;
+                            const y = scoreToY(d.score1);
+                            return `${x},${y}`;
+                          })
+                          .filter(Boolean)
+                          .join(" ")}
+                        fill="none"
+                        stroke="#60a5fa"
+                        strokeWidth="3"
+                        className="year1-line"
+                      />
+
+                      {/* Year 2 line */}
+                      <polyline
+                        points={monthlyData
+                          .map((d, i) => {
+                            if (d.score2 === null) return null;
+                            const x = 50 + (i / (monthlyData.length - 1)) * 500;
+                            const y = scoreToY(d.score2);
+                            return `${x},${y}`;
+                          })
+                          .filter(Boolean)
+                          .join(" ")}
+                        fill="none"
+                        stroke="#f472b6"
+                        strokeWidth="3"
+                        className="year2-line"
+                      />
+
+                      {/* Data points */}
+                      {monthlyData.map((d, i) => {
+                        const x = 50 + (i / (monthlyData.length - 1)) * 500;
+                        return (
+                          <g key={i}>
+                            {d.score1 !== null && (
+                              <circle
+                                cx={x}
+                                cy={scoreToY(d.score1)}
+                                r="4"
+                                fill="#60a5fa"
+                                className="data-point"
+                              />
+                            )}
+                            {d.score2 !== null && (
+                              <circle
+                                cx={x}
+                                cy={scoreToY(d.score2)}
+                                r="4"
+                                fill="#f472b6"
+                                className="data-point"
+                              />
+                            )}
+                            {i % 3 === 0 && (
+                              <text
+                                x={x}
+                                y="285"
+                                className="chart-label"
+                                textAnchor="middle"
+                              >
+                                {monthNames[parseInt(d.month) - 1]}
+                              </text>
+                            )}
+                          </g>
+                        );
+                      })}
+                    </>
+                  )}
+                </>
+              );
+            })()}
           </svg>
         </div>
       </div>
@@ -230,7 +270,7 @@ export default function ComparisonSentimentSection({
       {/* Biggest Sentiment Shifts */}
       {biggestShifts.length > 0 && (
         <div className="sentiment-shifts">
-          <h3>Biggest Sentiment Changes</h3>
+          <h3>Your Biggest Sentiment Changes</h3>
           <div className="shifts-list">
             {biggestShifts.map((shift, i) => (
               <div key={i} className="shift-item">

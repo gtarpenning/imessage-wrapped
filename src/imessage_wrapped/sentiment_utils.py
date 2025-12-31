@@ -16,18 +16,20 @@ def _filter_year_messages(conv: Conversation, year: int) -> list[Message]:
 
 
 def compute_sentiment_for_export(data: ExportData, interval: str = "month") -> Dict[str, Any]:
+    """
+    Compute sentiment for export.
+    Only analyzes user's own messages (sent), not received messages.
+    """
     analyzer = LexicalSentimentAnalyzer()
 
     sent_messages: list[Message] = []
-    received_messages: list[Message] = []
     for conv in data.conversations.values():
         for msg in _filter_year_messages(conv, data.year):
             if not (msg.text or "").strip():
                 continue
+            # Only analyze sentiment for user's own messages (sent)
             if msg.is_from_me:
                 sent_messages.append(msg)
-            else:
-                received_messages.append(msg)
 
     def score_messages(messages: List[Message]) -> Dict[str, Any]:
         distribution = {"positive": 0, "neutral": 0, "negative": 0}
@@ -65,21 +67,19 @@ def compute_sentiment_for_export(data: ExportData, interval: str = "month") -> D
         }
 
     sent_bucket = score_messages(sent_messages)
-    received_bucket = score_messages(received_messages)
-    overall_bucket = _combine_buckets(sent_bucket, received_bucket)
 
-    if overall_bucket["message_count"] == 0:
+    if sent_bucket["message_count"] == 0:
         return {}
 
+    # Return sentiment data with "overall" pointing to sent messages
+    # (since we only want to analyze the user's own sentiment, not received messages)
     sentiment = {
-        "overall": _public_view(overall_bucket),
+        "overall": _public_view(sent_bucket),
         "sent": _public_view(sent_bucket),
-        "received": _public_view(received_bucket),
         "periods": {
             "interval": interval,
-            "overall": _format_period_trend(overall_bucket["period_totals"], data.year, interval),
+            "overall": _format_period_trend(sent_bucket["period_totals"], data.year, interval),
             "sent": _format_period_trend(sent_bucket["period_totals"], data.year, interval),
-            "received": _format_period_trend(received_bucket["period_totals"], data.year, interval),
         },
     }
     return sentiment

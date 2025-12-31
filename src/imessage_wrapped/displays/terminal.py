@@ -326,36 +326,27 @@ class TerminalDisplay(Display):
             self.console.print(table)
 
     def _render_sentiment_overview(self, sentiment: dict[str, Any]) -> None:
-        self.console.print("\n[bold cyan]🧠 Sentiment Snapshot[/]")
+        self.console.print("\n[bold cyan]🧠 Your Sentiment (Sent Messages Only)[/]")
         table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Perspective", style="dim")
+        table.add_column("Metric", style="dim")
         table.add_column("Positive", justify="right")
         table.add_column("Neutral", justify="right")
         table.add_column("Negative", justify="right")
         table.add_column("Avg Score", justify="right")
 
-        perspectives = [
-            ("Overall", sentiment.get("overall")),
-            ("You", sentiment.get("sent")),
-            ("Them", sentiment.get("received")),
-        ]
+        # Only show user's sent message sentiment (received is no longer calculated)
+        data = sentiment.get("sent") or sentiment.get("overall")
 
-        has_data = False
-        for label, data in perspectives:
-            if not data or data.get("message_count", 0) == 0:
-                continue
-            has_data = True
+        if data and data.get("message_count", 0) > 0:
             percentages = self._sentiment_percentages(data.get("distribution", {}))
             avg_score = data.get("avg_score", 0.0)
             table.add_row(
-                label,
+                "Your Messages",
                 percentages["positive"],
                 percentages["neutral"],
                 percentages["negative"],
                 f"{avg_score:+.2f}",
             )
-
-        if has_data:
             self.console.print(table)
         else:
             self.console.print("[dim]No sentiment-ready messages found.[/]")
@@ -368,30 +359,27 @@ class TerminalDisplay(Display):
         if interval != "month":
             return
 
-        sent = periods.get("sent", [])
-        received = periods.get("received", [])
-        rows = self._merge_period_rows(sent, received)
-        if not rows:
+        # Only show user's sent sentiment (received is no longer calculated)
+        sent = periods.get("sent") or periods.get("overall") or []
+        if not sent:
             return
 
-        self.console.print("\n[bold cyan]📅 Monthly Sentiment (You vs Them)[/]")
+        self.console.print("\n[bold cyan]📅 Your Monthly Sentiment (Sent Messages)[/]")
         table = Table(show_header=True, header_style="bold cyan")
         table.add_column("Month", style="dim")
-        table.add_column("You (avg)", justify="right")
-        table.add_column("Them (avg)", justify="right")
+        table.add_column("Your Sentiment", justify="right")
 
-        for row in rows:
+        for row in sent:
             table.add_row(
                 self._format_period_label(row["period"], interval),
-                self._format_sentiment_value(row["sent"]),
-                self._format_sentiment_value(row["received"]),
+                self._format_sentiment_value(row),
             )
 
         self.console.print(table)
 
-        overall = periods.get("overall") or []
-        if overall:
-            self._render_sentiment_bar_chart(overall, interval)
+        # Show bar chart
+        if sent:
+            self._render_sentiment_bar_chart(sent, interval)
 
     def _share_bar(self, share: float) -> str:
         total_width = 30
@@ -403,9 +391,9 @@ class TerminalDisplay(Display):
         if not rows:
             return
 
-        self.console.print("\n[bold cyan]🌈 Mood Flow[/]")
+        self.console.print("\n[bold cyan]🌈 Your Mood Flow[/]")
         axis_label = "Month" if interval == "month" else interval.title()
-        self.console.print(f"[dim]{axis_label} vs sentiment intensity[/]")
+        self.console.print(f"[dim]{axis_label} vs your sentiment intensity[/]")
 
         for row in rows:
             score = row.get("avg_score", 0.0)
@@ -583,7 +571,7 @@ class TerminalDisplay(Display):
                 if when and when != "unknown date":
                     details.append(when)
                 meta = " • ".join(details) if details else "unknown date"
-                self.console.print(f" • {contact}: “{preview}” ({meta})")
+                self.console.print(f' • {contact}: "{preview}" ({meta})')
 
         examples_them = cliffhangers.get("examples_them") or []
         if examples_them:
@@ -594,13 +582,13 @@ class TerminalDisplay(Display):
                 when = example.get("timestamp") or "unknown date"
                 wait_hours = example.get("hours_waited")
                 preview = snippet if len(snippet) <= 60 else f"{snippet[:57]}..."
-                details: list[str] = []
+                meta_parts: list[str] = []
                 if isinstance(wait_hours, (int, float)):
-                    details.append(f"{wait_hours:.1f}h wait")
+                    meta_parts.append(f"{wait_hours:.1f}h wait")
                 if when and when != "unknown date":
-                    details.append(when)
-                meta = " • ".join(details) if details else "unknown date"
-                self.console.print(f" • {contact}: “{preview}” ({meta})")
+                    meta_parts.append(when)
+                meta = " • ".join(meta_parts) if meta_parts else "unknown date"
+                self.console.print(f' • {contact}: "{preview}" ({meta})')
 
     def _render_stub_section(self, title: str, stub_data: dict[str, Any]) -> None:
         self.console.print(f"\n[bold cyan]{title}[/]")
