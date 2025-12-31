@@ -23,17 +23,19 @@ function extractTextFromResponse(data) {
     let text = data.output[0].content[0].text;
 
     // Remove JSON encoding if present (text might be "\"quoted text\"")
-    if (
-      typeof text === "string" &&
-      text.startsWith('"') &&
-      text.endsWith('"')
-    ) {
-      try {
-        text = JSON.parse(text);
-      } catch (e) {
-        // If parsing fails, manually remove quotes
-        text = text.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+    if (typeof text === "string") {
+      // Try JSON parsing first for proper unescaping
+      if (text.startsWith('"') && text.endsWith('"')) {
+        try {
+          text = JSON.parse(text);
+        } catch (e) {
+          // If parsing fails, manually remove quotes
+          text = text.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+        }
       }
+      
+      // Strip any remaining leading/trailing quotes (single or double)
+      text = text.replace(/^["']+|["']+$/g, '').trim();
     }
 
     return text;
@@ -51,7 +53,12 @@ export async function getCachedCompletion(prompt) {
   );
 
   if (result.rows.length > 0) {
-    return result.rows[0].completion;
+    let completion = result.rows[0].completion;
+    // Strip quotes from cached completions for consistency
+    if (typeof completion === "string") {
+      completion = completion.replace(/^["']+|["']+$/g, '').trim();
+    }
+    return completion;
   }
 
   return null;
@@ -95,7 +102,7 @@ export async function getCompletion(prompt) {
           type: "message",
           role: "system",
           content:
-            "You are a witty, playful assistant that enhances statistics with short, fun commentary. Keep responses under 15 words. Be clever and conversational.",
+            "You are a witty, playful assistant that enhances statistics with short, fun commentary. Keep responses under 15 words. Be clever and conversational. Do not wrap your response in quotes.",
         },
         {
           type: "message",

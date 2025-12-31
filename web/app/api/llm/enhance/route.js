@@ -65,8 +65,14 @@ export async function POST(request) {
 
     const result = await getCompletion(prompt);
 
+    // Ensure quotes are stripped from the completion
+    let enhancement = result.completion || "";
+    if (typeof enhancement === "string") {
+      enhancement = enhancement.replace(/^["']+|["']+$/g, '').trim();
+    }
+
     return NextResponse.json({
-      enhancement: result.completion,
+      enhancement,
       cached: result.cached,
       remaining: limit.remaining,
     });

@@ -2,6 +2,7 @@
 
 import hashlib
 import platform
+import random
 import sys
 from typing import Optional
 
@@ -66,6 +67,19 @@ def get_dmg_version() -> Optional[str]:
     return None
 
 
+def generate_unlock_code() -> str:
+    """
+    Generate a random 6-character alphanumeric unlock code.
+    This code is used to unlock hydrated contact information.
+
+    Returns:
+        A 6-character uppercase alphanumeric string
+    """
+    # Use uppercase letters and digits for clarity (excluding confusing chars like O/0, I/1)
+    chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    return "".join(random.choice(chars) for _ in range(6))
+
+
 def generate_user_fingerprint(
     user_name: Optional[str] = None, platform_info: Optional[dict] = None
 ) -> str:
@@ -109,13 +123,14 @@ def generate_user_fingerprint(
         return "unknown"
 
 
-def collect_metadata(user_name: Optional[str] = None) -> dict:
+def collect_metadata(user_name: Optional[str] = None, with_contacts: bool = False) -> dict:
     """
     Collect system and SDK metadata.
     This should never raise an exception.
 
     Args:
         user_name: Optional user name to include in fingerprint generation
+        with_contacts: If True, generate an unlock code for contact hydration
     """
     metadata = {}
 
@@ -159,5 +174,13 @@ def collect_metadata(user_name: Optional[str] = None) -> dict:
     except Exception:
         # Never fail on fingerprint generation
         pass
+
+    # Generate unlock code for contact hydration (only if with_contacts is True)
+    if with_contacts:
+        try:
+            metadata["unlock_code"] = generate_unlock_code()
+        except Exception:
+            # Never fail on unlock code generation
+            pass
 
     return metadata

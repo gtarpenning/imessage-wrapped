@@ -696,7 +696,7 @@ function WrapsTable({ wraps = [] }) {
     let bVal = b[sortBy];
     
     // Handle date comparison
-    if (sortBy === "created_at") {
+    if (sortBy === "created_at" || sortBy === "updated_at") {
       aVal = new Date(aVal).getTime();
       bVal = new Date(bVal).getTime();
     }
@@ -772,6 +772,8 @@ function WrapsTable({ wraps = [] }) {
               <SortableHeader field="user_name">Name</SortableHeader>
               <SortableHeader field="sdk_version">SDK Version</SortableHeader>
               <SortableHeader field="created_at">Created</SortableHeader>
+              <SortableHeader field="updated_at">Updated</SortableHeader>
+              <SortableHeader field="update_count">Updates</SortableHeader>
               <SortableHeader field="views">Views</SortableHeader>
               <SortableHeader field="total_messages">Total Msgs</SortableHeader>
               <SortableHeader field="total_sent">Sent</SortableHeader>
@@ -791,6 +793,23 @@ function WrapsTable({ wraps = [] }) {
               const dmgVersion = wrap.dmg_version;
               const versionDisplay = dmgVersion ? `${sdkVersion} (DMG: ${dmgVersion})` : sdkVersion;
               
+              // Check if wrap was updated
+              const wasUpdated = wrap.was_updated || false;
+              const updateCount = wrap.update_count || 0;
+              
+              // Format dates
+              const formatDate = (dateStr) => {
+                if (!dateStr) return "—";
+                return new Date(dateStr).toLocaleString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true
+                });
+              };
+              
               return (
               <tr key={wrap.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
                 <td style={{ padding: "1rem" }}>{wrap.year}</td>
@@ -806,14 +825,35 @@ function WrapsTable({ wraps = [] }) {
                   {versionDisplay}
                 </td>
                 <td style={{ padding: "1rem", fontSize: "0.9rem" }}>
-                  {new Date(wrap.created_at).toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true
-                  })}
+                  {formatDate(wrap.created_at)}
+                </td>
+                <td style={{ padding: "1rem", fontSize: "0.9rem" }}>
+                  {wasUpdated ? (
+                    <span style={{ color: "#10b981" }} title={`Last updated: ${formatDate(wrap.updated_at)}`}>
+                      {formatDate(wrap.updated_at)}
+                    </span>
+                  ) : (
+                    <span style={{ opacity: 0.4 }}>—</span>
+                  )}
+                </td>
+                <td style={{ padding: "1rem" }}>
+                  {updateCount > 0 ? (
+                    <span 
+                      style={{ 
+                        background: "rgba(16, 185, 129, 0.2)",
+                        color: "#10b981",
+                        padding: "0.25rem 0.5rem",
+                        borderRadius: "0.25rem",
+                        fontSize: "0.85rem",
+                        fontWeight: "600"
+                      }}
+                      title={`Updated ${updateCount} time${updateCount > 1 ? 's' : ''}`}
+                    >
+                      {updateCount}
+                    </span>
+                  ) : (
+                    <span style={{ opacity: 0.4 }}>—</span>
+                  )}
                 </td>
                 <td style={{ padding: "1rem" }}>{formatNumber(wrap.views)}</td>
                 <td style={{ padding: "1rem" }}>{formatNumber(wrap.total_messages)}</td>

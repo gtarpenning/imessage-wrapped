@@ -162,6 +162,120 @@ def count_emojis(text: str) -> Counter:
     return Counter(emojis)
 
 
+def extract_hydrated_contact_data(statistics: dict[str, Any]) -> dict[str, Any]:
+    """
+    Extract contact-specific data that needs to be hydrated (with real names).
+
+    Returns a dictionary containing paths and values of fields that contain contact names.
+    This data can be used to "rehydrate" sanitized statistics when the user unlocks.
+    """
+    hydrated_data = {}
+
+    def _extract_contact_fields(node: Any, path: str = "") -> None:
+        if isinstance(node, dict):
+            # Extract top_sent_to and top_received_from arrays with names
+            if "top_sent_to" in node and isinstance(node["top_sent_to"], list):
+                hydrated_data[f"{path}.top_sent_to"] = [
+                    {"name": item.get("name"), "count": item.get("count")}
+                    for item in node["top_sent_to"]
+                    if isinstance(item, dict) and item.get("name")
+                ]
+
+            if "top_received_from" in node and isinstance(node["top_received_from"], list):
+                hydrated_data[f"{path}.top_received_from"] = [
+                    {"name": item.get("name"), "count": item.get("count")}
+                    for item in node["top_received_from"]
+                    if isinstance(item, dict) and item.get("name")
+                ]
+
+            # Extract message_distribution with contact names
+            if "message_distribution" in node and isinstance(node["message_distribution"], list):
+                dist = []
+                for idx, entry in enumerate(node["message_distribution"]):
+                    if isinstance(entry, dict):
+                        item = {}
+                        if "contact_name" in entry:
+                            item["contact_name"] = entry["contact_name"]
+                        if "contact_id" in entry:
+                            item["contact_id"] = entry["contact_id"]
+                        if item:
+                            item["index"] = idx
+                            dist.append(item)
+                if dist:
+                    hydrated_data[f"{path}.message_distribution"] = dist
+
+            # Extract cliffhanger examples
+            cliff = node.get("cliffhangers")
+            if isinstance(cliff, dict):
+                if "examples" in cliff and cliff["examples"]:
+                    hydrated_data[f"{path}.cliffhangers.examples"] = cliff["examples"]
+                if "examples_them" in cliff and cliff["examples_them"]:
+                    hydrated_data[f"{path}.cliffhangers.examples_them"] = cliff["examples_them"]
+
+            # Extract temporal MVP info
+            if "temporal" in node and isinstance(node["temporal"], dict):
+                temporal = node["temporal"]
+                if "weekday_mvp" in temporal and temporal["weekday_mvp"]:
+                    hydrated_data[f"{path}.temporal.weekday_mvp"] = temporal["weekday_mvp"]
+                if "weekend_mvp" in temporal and temporal["weekend_mvp"]:
+                    hydrated_data[f"{path}.temporal.weekend_mvp"] = temporal["weekend_mvp"]
+
+            # Extract longest_streak_contact
+            if "longest_streak_contact" in node and node["longest_streak_contact"]:
+                hydrated_data[f"{path}.longest_streak_contact"] = node["longest_streak_contact"]
+
+            # Extract ghost stats
+            if "ghosts" in node and isinstance(node["ghosts"], dict):
+                ghosts = node["ghosts"]
+                if "top_left_unread" in ghosts and isinstance(ghosts["top_left_unread"], list):
+                    contacts = []
+                    for item in ghosts["top_left_unread"]:
+                        if isinstance(item, dict) and item.get("contact_name"):
+                            contacts.append(
+                                {
+                                    "contact_name": item["contact_name"],
+                                    "count": item.get("count", 0),
+                                }
+                            )
+                    if contacts:
+                        hydrated_data[f"{path}.ghosts.top_left_unread"] = contacts
+
+                if "top_left_you_hanging" in ghosts and isinstance(
+                    ghosts["top_left_you_hanging"], list
+                ):
+                    contacts = []
+                    for item in ghosts["top_left_you_hanging"]:
+                        if isinstance(item, dict) and item.get("contact_name"):
+                            contacts.append(
+                                {
+                                    "contact_name": item["contact_name"],
+                                    "count": item.get("count", 0),
+                                }
+                            )
+                    if contacts:
+                        hydrated_data[f"{path}.ghosts.top_left_you_hanging"] = contacts
+
+            # Recursively process nested dicts
+            for key, value in node.items():
+                if isinstance(value, (dict, list)) and key not in [
+                    "top_sent_to",
+                    "top_received_from",
+                    "message_distribution",
+                    "cliffhangers",
+                    "temporal",
+                    "ghosts",
+                ]:
+                    new_path = f"{path}.{key}" if path else key
+                    _extract_contact_fields(value, new_path)
+        elif isinstance(node, list):
+            for idx, item in enumerate(node):
+                if isinstance(item, dict):
+                    _extract_contact_fields(item, f"{path}[{idx}]")
+
+    _extract_contact_fields(statistics)
+    return hydrated_data
+
+
 def sanitize_statistics_for_export(statistics: dict[str, Any]) -> dict[str, Any]:
     """
     Return a deep-copied statistics object with privacy-sensitive fields stripped.

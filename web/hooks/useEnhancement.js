@@ -52,7 +52,12 @@ export function useEnhancement(prompt, enabled = true) {
         const data = await response.json();
 
         if (!cancelled) {
-          setEnhancement(data.enhancement || "");
+          // Strip any quotes from the enhancement text
+          let enhancementText = data.enhancement || "";
+          if (typeof enhancementText === "string") {
+            enhancementText = enhancementText.replace(/^["']+|["']+$/g, '').trim();
+          }
+          setEnhancement(enhancementText);
         }
       } catch (err) {
         if (!cancelled) {

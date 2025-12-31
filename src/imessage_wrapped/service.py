@@ -22,14 +22,25 @@ LINK_RE = re.compile(r"https?://", re.IGNORECASE)
 
 
 class MessageProcessor:
-    def __init__(self, reader: DatabaseReader):
+    def __init__(self, reader: DatabaseReader, with_contacts: bool = False):
         self.reader = reader
-        self._guid_to_message = {}
+        self._guid_to_message: dict[str, Message] = {}
+        self.with_contacts = with_contacts
 
     def process_year(self, year: int) -> ExportData:
         logger.debug(f"Processing messages for year {year}")
         conversations = self._build_conversations(year)
         logger.debug(f"Built {len(conversations)} conversations")
+
+        # Enrich with contact names if requested
+        if self.with_contacts:
+            logger.info("Enriching conversations with contact names from Contacts app")
+            try:
+                from .contacts import enrich_conversations_with_contacts
+
+                conversations = enrich_conversations_with_contacts(conversations)
+            except Exception as e:
+                logger.warning(f"Failed to enrich with contacts: {e}")
 
         user_name = get_user_full_name()
         logger.debug(f"Retrieved user name: {user_name}")
@@ -209,10 +220,11 @@ class MessageProcessor:
 
 
 class MessageService:
-    def __init__(self, db_path: str | None = None):
+    def __init__(self, db_path: str | None = None, with_contacts: bool = False):
         self.db_path = db_path
+        self.with_contacts = with_contacts
 
     def export_year(self, year: int) -> ExportData:
         with DatabaseReader(self.db_path) as reader:
-            processor = MessageProcessor(reader)
+            processor = MessageProcessor(reader, with_contacts=self.with_contacts)
             return processor.process_year(year)

@@ -3,6 +3,7 @@ from .analyzer import (
     RawStatisticsAnalyzer,
     StatisticsAnalyzer,
 )
+from .contacts import ContactsReader, check_contacts_access, enrich_conversations_with_contacts
 from .displays import Display, TerminalDisplay
 from .exporter import Exporter, JSONLSerializer, JSONSerializer
 from .loader import ExportLoader
@@ -28,4 +29,7 @@ __all__ = [
     "NLPStatisticsAnalyzer",
     "Display",
     "TerminalDisplay",
+    "ContactsReader",
+    "check_contacts_access",
+    "enrich_conversations_with_contacts",
 ]

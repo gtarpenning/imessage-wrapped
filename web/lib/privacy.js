@@ -32,8 +32,14 @@ function scanObject(obj) {
 
   const cleaned = {};
   for (const [key, value] of Object.entries(obj)) {
-    // Skip any keys that might contain PII
-    if (key === "name" || key === "display_name") {
+    // Skip any keys that might contain PII (contact names/phone numbers)
+    if (
+      key === "name" ||
+      key === "display_name" ||
+      key === "longest_streak_contact" ||
+      key === "contact" ||
+      key === "contact_name"
+    ) {
       cleaned[key] = null;
     } else if (key === "identifier" && typeof value === "string") {
       // Anonymize identifiers

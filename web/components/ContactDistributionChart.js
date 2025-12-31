@@ -184,6 +184,7 @@ function createPieChartConfig(distribution, onSegmentHover, hoveredSegmentKey) {
           sentRatio,
           receivedRatio,
           contactName: entry.contact_name,
+          isGroupChat: entry.is_group_chat ?? false,
         };
       });
       
@@ -217,6 +218,7 @@ function createPieChartConfig(distribution, onSegmentHover, hoveredSegmentKey) {
           receivedRatio,
           contactName: "The Rest",
           isRest: true,
+          isGroupChat: null, // Mixed collection
         });
       }
       
@@ -288,7 +290,10 @@ function createPieChartConfig(distribution, onSegmentHover, hoveredSegmentKey) {
           >
             {segments.map((segment) => {
             const percentage = Math.round((segment.share ?? 0) * 100);
-            const label = segment.contactName || `Chat #${String(segment.rank).padStart(2, "0")}`;
+            const baseName = segment.contactName || `Chat #${String(segment.rank).padStart(2, "0")}`;
+            // Only show emoji for individual chats (not for "The Rest" where isGroupChat is null)
+            const emoji = segment.isGroupChat === null ? "" : (segment.isGroupChat ? " 👥" : " 👤");
+            const label = baseName + emoji;
             const isHovered = hoveredSegmentKey === segment.rank;
             const segmentKey = segment.rank;
             

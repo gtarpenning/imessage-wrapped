@@ -16,6 +16,9 @@ import ResponseTimesSection from "@/components/ResponseTimesSection";
 import TapbacksSection from "@/components/TapbacksSection";
 import StreaksSection from "@/components/StreaksSection";
 import WrappedFooter from "@/components/WrappedFooter";
+import UnlockButton from "@/components/UnlockButton";
+import { useUnlock } from "@/hooks/useUnlock";
+import { applyHydratedData } from "@/lib/hydration";
 
 export default function WrappedPage() {
   const params = useParams();
@@ -26,6 +29,9 @@ export default function WrappedPage() {
   const [totalWraps, setTotalWraps] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Initialize unlock functionality
+  const { isUnlocked, hydratedData, isUnlocking, error: unlockError, unlock, reset, checkStoredUnlock } = useUnlock(params.year, params.id);
 
   useEffect(() => {
     async function fetchData() {
@@ -63,7 +69,9 @@ export default function WrappedPage() {
     }
 
     fetchData();
-  }, [params.year, params.id]);
+    // Check if already unlocked in sessionStorage
+    checkStoredUnlock();
+  }, [params.year, params.id, checkStoredUnlock]);
 
   if (loading) {
     return <div className="loading">Loading your Wrapped...</div>;
@@ -81,25 +89,43 @@ export default function WrappedPage() {
     );
   }
 
-  const stats = data.statistics?.raw || data.statistics;
+  // Apply hydrated data if unlocked
+  let stats = data.statistics?.raw || data.statistics;
+  if (isUnlocked && hydratedData) {
+    stats = applyHydratedData(stats, hydratedData);
+  }
+  
   const userName = data.user_name || null;
+  
+  // Check if this wrapped has contact data available (has unlock_code in metadata)
+  const hasContactData = data.metadata?.unlock_code ? true : false;
 
   return (
-    <main className="container">
-      <HeroSection year={data.year} volume={stats.volume} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} userName={userName} />
-      <HeatmapSection volume={stats.volume} year={data.year} />
-      <TemporalSection temporal={stats.temporal} />
-      <ContactsSection contacts={stats.contacts} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
-      <ContentSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
-      <MessageAnalysisSection sentiment={stats.content?.sentiment} />
-      <MessageLengthSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
-      <ConversationsSection conversations={stats.conversations} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
-      <GhostSection ghosts={stats.ghosts} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
-      {/* <CliffhangerSection cliffhangers={stats.cliffhangers} /> */}
-      <ResponseTimesSection response_times={stats.response_times} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
-      <TapbacksSection tapbacks={stats.tapbacks} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
-      <StreaksSection streaks={stats.streaks} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
-      <WrappedFooter views={data.views} volume={stats.volume} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
-    </main>
+    <>
+      <UnlockButton 
+        isUnlocked={isUnlocked}
+        isUnlocking={isUnlocking}
+        error={unlockError}
+        onUnlock={unlock}
+        onReset={reset}
+        hasContactData={hasContactData}
+      />
+      <main className="container">
+        <HeroSection year={data.year} volume={stats.volume} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} userName={userName} />
+        <HeatmapSection volume={stats.volume} year={data.year} />
+        <TemporalSection temporal={stats.temporal} />
+        <ContactsSection contacts={stats.contacts} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+        <ContentSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+        <MessageAnalysisSection sentiment={stats.content?.sentiment} />
+        <MessageLengthSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+        <ConversationsSection conversations={stats.conversations} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+        <GhostSection ghosts={stats.ghosts} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+        {/* <CliffhangerSection cliffhangers={stats.cliffhangers} /> */}
+        <ResponseTimesSection response_times={stats.response_times} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+        <TapbacksSection tapbacks={stats.tapbacks} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+        <StreaksSection streaks={stats.streaks} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+        <WrappedFooter views={data.views} volume={stats.volume} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+      </main>
+    </>
   );
 }

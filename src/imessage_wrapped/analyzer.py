@@ -494,12 +494,18 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         }
         total_messages_considered = sum(total_messages_by_contact.values())
 
+        # Build mapping of contact_id to is_group_chat
+        is_group_chat_by_contact = {
+            conv.chat_identifier: conv.is_group_chat for conv in convs.values()
+        }
+
         distribution = self._build_chat_concentration(
             total_messages=total_messages_considered,
             totals_by_contact=total_messages_by_contact,
             contact_names=contact_names,
             sent_by_contact=sent_by_contact,
             received_by_contact=received_by_contact,
+            is_group_chat_by_contact=is_group_chat_by_contact,
             top_n=100,
         )
 
@@ -527,6 +533,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         contact_names: dict[str, str],
         sent_by_contact: dict[str, int] | None,
         received_by_contact: dict[str, int] | None,
+        is_group_chat_by_contact: dict[str, bool] | None,
         top_n: int,
     ) -> list[dict[str, Any]]:
         if not totals_by_contact:
@@ -549,6 +556,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             received_count = (received_by_contact or {}).get(contact_id, 0)
             sent_ratio = round(sent_count / max(count, 1), 4)
             received_ratio = round(received_count / max(count, 1), 4)
+            is_group_chat = (is_group_chat_by_contact or {}).get(contact_id, False)
             distribution.append(
                 {
                     "rank": rank,
@@ -561,6 +569,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                     "sent_ratio": sent_ratio,
                     "received_ratio": received_ratio,
                     "cumulative_share": min(cumulative, 1.0),
+                    "is_group_chat": is_group_chat,
                 }
             )
 

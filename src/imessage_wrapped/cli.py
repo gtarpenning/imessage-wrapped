@@ -165,6 +165,12 @@ def parse_args():
         help="Compare two years (e.g., --compare 2024 2025). Creates both individual wraps and a comparison view.",
     )
 
+    parser.add_argument(
+        "--with-contacts",
+        action="store_true",
+        help="Include contact names from Contacts app (requires Full Disk Access)",
+    )
+
     args = parser.parse_args()
 
     if args.dev:
@@ -195,6 +201,8 @@ def export_command(args):
         console.print("[dim]Use --replace-cache to regenerate[/]")
         return output_path
 
+    with_contacts = getattr(args, "with_contacts", False)
+
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -202,7 +210,7 @@ def export_command(args):
     ) as progress:
         task = progress.add_task(f"Exporting messages from {args.year}...", total=None)
 
-        service = MessageService(db_path=args.database)
+        service = MessageService(db_path=args.database, with_contacts=with_contacts)
         data = service.export_year(args.year)
 
         # Precompute phrases while text is available; stored alongside export without raw text.
@@ -374,6 +382,8 @@ def analyze_command(args, input_path=None):
             statistics[analyzer.name] = analyzer.analyze(data)
             progress.advance(analyzer_task)
 
+    # Keep original statistics for hydration, then sanitize for export
+    original_statistics = statistics
     sanitized_statistics = sanitize_statistics_for_export(statistics)
 
     if args.stats_output:
@@ -396,7 +406,14 @@ def analyze_command(args, input_path=None):
 
         year = data.year if hasattr(data, "year") else 2025
         user_name = data.user_name if hasattr(data, "user_name") else None
-        share_url = uploader.upload(year, sanitized_statistics, user_name=user_name)
+        with_contacts = getattr(args, "with_contacts", False)
+        share_url = uploader.upload(
+            year,
+            sanitized_statistics,
+            user_name=user_name,
+            original_statistics=original_statistics,
+            with_contacts=with_contacts,
+        )
 
         if not share_url:
             console.print("\n[yellow]Tip: Make sure the web server is running:[/]")
@@ -477,8 +494,11 @@ def compare_command(args):
     # Sanitize statistics for both years
     from .utils import sanitize_statistics_for_export
 
-    sanitized_stats1 = sanitize_statistics_for_export({"raw": stats1})
-    sanitized_stats2 = sanitize_statistics_for_export({"raw": stats2})
+    # Keep original statistics for hydration
+    original_stats1 = {"raw": stats1}
+    original_stats2 = {"raw": stats2}
+    sanitized_stats1 = sanitize_statistics_for_export(original_stats1)
+    sanitized_stats2 = sanitize_statistics_for_export(original_stats2)
 
     # Upload comparison
     console.print("[cyan]━━━ Creating comparison view ━━━[/]")
@@ -491,8 +511,17 @@ def compare_command(args):
     user_name2 = data2.user_name if hasattr(data2, "user_name") else None
     user_name = user_name1 or user_name2  # Use whichever is available
 
+    with_contacts = getattr(args, "with_contacts", False)
+
     comparison_url = uploader.upload_comparison(
-        year1, year2, sanitized_stats1, sanitized_stats2, user_name=user_name
+        year1,
+        year2,
+        sanitized_stats1,
+        sanitized_stats2,
+        user_name=user_name,
+        original_statistics1=original_stats1,
+        original_statistics2=original_stats2,
+        with_contacts=with_contacts,
     )
 
     if not comparison_url:

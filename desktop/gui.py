@@ -22,6 +22,7 @@ from imessage_wrapped import (
     MessageService,
     RawStatisticsAnalyzer,
 )
+from imessage_wrapped.metadata import collect_metadata
 from imessage_wrapped.uploader import StatsUploader
 from imessage_wrapped.utils import sanitize_statistics_for_export
 
@@ -53,13 +54,20 @@ class IMessageWrappedApp(rumps.App):
         self.copy_link_item = rumps.MenuItem("Copy link", callback=self.copy_link)
         self.copy_link_item.set_callback(self.copy_link)
 
+        self.copy_unlock_code_item = rumps.MenuItem(
+            "Copy unlock code", callback=self.copy_unlock_code
+        )
+        self.copy_unlock_code_item.set_callback(self.copy_unlock_code)
+
         self.view_logs_item = rumps.MenuItem("View logs", callback=self.view_logs)
         self.view_logs_item.set_callback(self.view_logs)
 
         self.menu = [
             rumps.MenuItem("Analyze my messages", callback=self.analyze_messages),
+            rumps.MenuItem("Analyze with contacts", callback=self.analyze_with_contacts),
             rumps.separator,
             self.copy_link_item,
+            self.copy_unlock_code_item,
             self.view_logs_item,
             rumps.separator,
             rumps.MenuItem("About", callback=self.show_about),
@@ -68,6 +76,7 @@ class IMessageWrappedApp(rumps.App):
 
         self.running = False
         self.current_url = None
+        self.unlock_code = None
         self.has_error = False
 
         self._update_menu_states()
@@ -81,12 +90,30 @@ class IMessageWrappedApp(rumps.App):
             self.copy_link_item.title = "📋 Copy link (not available)"
             self.copy_link_item.set_callback(None)
 
+        if self.unlock_code:
+            self.copy_unlock_code_item.title = f"🔐 Copy unlock code ({self.unlock_code})"
+            self.copy_unlock_code_item.set_callback(self.copy_unlock_code)
+        else:
+            self.copy_unlock_code_item.title = "🔐 Copy unlock code (not available)"
+            self.copy_unlock_code_item.set_callback(None)
+
         if self.has_error:
             self.view_logs_item.title = "📄 View logs"
             self.view_logs_item.set_callback(self.view_logs)
         else:
             self.view_logs_item.title = "📄 View logs (no errors)"
             self.view_logs_item.set_callback(None)
+
+    @rumps.clicked("Copy unlock code")
+    def copy_unlock_code(self, _):
+        """Copy the unlock code to clipboard"""
+        if self.unlock_code:
+            subprocess.run("pbcopy", text=True, input=self.unlock_code)
+            rumps.notification(
+                title="Copied!",
+                subtitle="Unlock code copied to clipboard",
+                message=f"Code: {self.unlock_code}",
+            )
 
     @rumps.clicked("Copy link")
     def copy_link(self, _):
@@ -111,6 +138,7 @@ class IMessageWrappedApp(rumps.App):
 
     @rumps.clicked("Analyze my messages")
     def analyze_messages(self, _):
+        """Start the analysis process without contacts"""
         if self.running:
             rumps.alert("Already running", "Please wait for the current analysis to complete")
             return
@@ -124,7 +152,26 @@ class IMessageWrappedApp(rumps.App):
         self.running = True
         self.title = "⏳"
 
-        thread = threading.Thread(target=self._run_analysis, daemon=True)
+        thread = threading.Thread(target=self._run_analysis, args=(False,), daemon=True)
+        thread.start()
+
+    @rumps.clicked("Analyze with contacts")
+    def analyze_with_contacts(self, _):
+        """Start the analysis process with contact names"""
+        if self.running:
+            rumps.alert("Already running", "Please wait for the current analysis to complete")
+            return
+
+        self.logger.info("Starting message analysis with contacts")
+
+        if not self.check_permissions():
+            self.logger.warning("Permission check failed")
+            return
+
+        self.running = True
+        self.title = "⏳"
+
+        thread = threading.Thread(target=self._run_analysis, args=(True,), daemon=True)
         thread.start()
 
     def _reset_icon(self):
@@ -160,8 +207,12 @@ class IMessageWrappedApp(rumps.App):
             )
             return False
 
-    def _run_analysis(self):
-        """Run the analysis in background thread"""
+    def _run_analysis(self, with_contacts=False):
+        """Run the analysis in background thread
+
+        Args:
+            with_contacts: If True, include contact names for unlocking
+        """
         try:
             self.logger.info("Starting analysis process")
             year = 2025
@@ -173,13 +224,17 @@ class IMessageWrappedApp(rumps.App):
 
             if not export_path.exists():
                 self.logger.info("Export doesn't exist, creating new export")
+                notification_msg = "This may take a minute"
+                if with_contacts:
+                    notification_msg += " (including contacts)"
+
                 rumps.notification(
                     title="Exporting messages",
                     subtitle="Reading iMessage database...",
-                    message="This may take a minute",
+                    message=notification_msg,
                 )
 
-                service = MessageService()
+                service = MessageService(with_contacts=with_contacts)
                 data = service.export_year(year)
                 self.logger.info(f"Exported {len(data.conversations)} conversations")
 
@@ -200,6 +255,7 @@ class IMessageWrappedApp(rumps.App):
 
             analyzer = RawStatisticsAnalyzer()
             statistics = {"raw": analyzer.analyze(data)}
+            original_statistics = statistics  # Keep original for hydration
             sanitized_statistics = sanitize_statistics_for_export(statistics)
             self.logger.info("Statistics computed")
 
@@ -207,18 +263,35 @@ class IMessageWrappedApp(rumps.App):
                 title="Uploading", subtitle="Creating shareable link...", message="Final step"
             )
 
+            # Collect metadata to get unlock code (only if with_contacts is enabled)
+            user_name = data.user_name if hasattr(data, "user_name") else None
+            metadata = collect_metadata(user_name, with_contacts=with_contacts)
+            unlock_code = metadata.get("unlock_code")
+
             uploader = StatsUploader(base_url="https://imessage-wrapped.fly.dev")
-            share_url = uploader.upload(year, sanitized_statistics)
+            share_url = uploader.upload(
+                year,
+                sanitized_statistics,
+                user_name=user_name,
+                original_statistics=original_statistics,
+                with_contacts=with_contacts,
+            )
 
             if share_url:
                 self.logger.info(f"Upload successful: {share_url}")
                 self.current_url = share_url
+                # Only set unlock code if with_contacts was enabled
+                self.unlock_code = unlock_code if with_contacts else None
                 self._update_menu_states()
+
+                notification_message = "Click 'Copy Link' to share!"
+                if with_contacts and unlock_code:
+                    notification_message += f"\nUnlock code: {unlock_code}"
 
                 rumps.notification(
                     title="Success! 🎉",
                     subtitle="Your wrapped is ready",
-                    message="Click 'Copy Link' to share!",
+                    message=notification_message,
                 )
 
                 webbrowser.open(share_url)

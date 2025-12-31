@@ -124,7 +124,7 @@ export default function ComparisonTemporalSection({
       </div>
 
       {/* MVP comparisons */}
-      {temporal1.weekday_mvp && temporal2.weekday_mvp && (
+      {temporal1.weekday_mvp?.contact && temporal2.weekday_mvp?.contact && (
         <div className="comparison-mvp-container">
           <h3>Weekday Warrior</h3>
           <div className="mvp-comparison">

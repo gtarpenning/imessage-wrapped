@@ -44,6 +44,73 @@ const migrations = [
       `);
     },
   },
+  {
+    id: 3,
+    name: "add_updated_at_and_version_tracking",
+    up: async (client) => {
+      // Add updated_at column to track when wraps are modified
+      await client.query(`
+        ALTER TABLE wrapped_stats 
+        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP
+      `);
+      
+      // Initialize updated_at for existing rows (set to created_at)
+      await client.query(`
+        UPDATE wrapped_stats 
+        SET updated_at = created_at 
+        WHERE updated_at IS NULL
+      `);
+      
+      // Add NOT NULL constraint after initialization
+      await client.query(`
+        ALTER TABLE wrapped_stats 
+        ALTER COLUMN updated_at SET DEFAULT NOW(),
+        ALTER COLUMN updated_at SET NOT NULL
+      `);
+      
+      // Add index for querying recently updated wraps
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_updated_at 
+        ON wrapped_stats(updated_at DESC)
+      `);
+      
+      // Initialize version_history array in metadata for existing rows
+      // This stores the history of updates (SDK versions, timestamps)
+      await client.query(`
+        UPDATE wrapped_stats 
+        SET metadata = jsonb_set(
+          COALESCE(metadata, '{}'::jsonb),
+          '{version_history}',
+          '[]'::jsonb,
+          true
+        )
+        WHERE metadata->>'version_history' IS NULL
+      `);
+    },
+  },
+  {
+    id: 4,
+    name: "add_hydrated_data_and_unlock_code",
+    up: async (client) => {
+      // Add hydrated_data column to store contact names separately
+      await client.query(`
+        ALTER TABLE wrapped_stats 
+        ADD COLUMN IF NOT EXISTS hydrated_data JSONB
+      `);
+      
+      // Add unlock_code column to store the 6-character unlock code
+      await client.query(`
+        ALTER TABLE wrapped_stats 
+        ADD COLUMN IF NOT EXISTS unlock_code TEXT
+      `);
+      
+      // Add index on unlock_code for efficient lookups
+      await client.query(`
+        CREATE INDEX IF NOT EXISTS idx_unlock_code 
+        ON wrapped_stats(unlock_code) WHERE unlock_code IS NOT NULL
+      `);
+    },
+  },
   // Add future migrations here with incrementing ids
 ];
 
