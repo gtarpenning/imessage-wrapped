@@ -516,3 +516,624 @@ footer {
     height: 130px;
   }
 }
+
+/* ============================================
+   COMPARISON VIEW STYLES
+   ============================================ */
+
+.comparison-view .year-highlight {
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.comparison-view .year-highlight.year1 {
+  background: rgba(96, 165, 250, 0.2);
+  color: #60a5fa;
+}
+
+.comparison-view .year-highlight.year2 {
+  background: rgba(244, 114, 182, 0.2);
+  color: #f472b6;
+}
+
+/* Comparison Stats Card */
+.comparison-stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.comparison-stat-card .stat-label {
+  font-size: 0.875rem;
+  opacity: 0.7;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.comparison-values {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.year-value {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.year-tag {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.year1-value .year-tag {
+  background: rgba(96, 165, 250, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.year2-value .year-tag {
+  background: rgba(244, 114, 182, 0.2);
+  color: #f472b6;
+  border: 1px solid rgba(244, 114, 182, 0.3);
+}
+
+.year-value .value {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.delta-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  min-width: 60px;
+}
+
+.delta-indicator.positive {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.delta-indicator.negative {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.delta-indicator.neutral {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.delta-arrow {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.delta-percent {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.delta-neutral {
+  font-size: 1.5rem;
+  opacity: 0.5;
+}
+
+/* Comparison Hero */
+.comparison-hero .hero-content {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.comparison-hero .hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.comparison-hero .hero-subtitle {
+  font-size: 1.5rem;
+  opacity: 0.8;
+}
+
+.comparison-insight {
+  text-align: center;
+  padding: 1.5rem;
+  background: rgba(139, 92, 246, 0.1);
+  border-radius: 1rem;
+  margin-top: 2rem;
+  font-size: 1.1rem;
+}
+
+.comparison-insight strong {
+  color: #8b5cf6;
+}
+
+/* Comparison Charts */
+.comparison-chart-container {
+  margin: 2rem 0;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.chart-title {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.comparison-legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.legend-item .legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+.legend-item.year1 .legend-color {
+  background: #60a5fa;
+}
+
+.legend-item.year2 .legend-color {
+  background: #f472b6;
+}
+
+/* Hour Comparison Chart */
+.hour-comparison-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 200px;
+  gap: 2px;
+  padding: 1rem 0;
+}
+
+.hour-bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.hour-bars {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+}
+
+.hour-bar {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  transition: all 0.2s ease;
+  min-height: 2px;
+}
+
+.hour-bar:hover {
+  opacity: 0.8;
+  transform: scaleY(1.05);
+}
+
+.year1-bar {
+  background: #60a5fa;
+}
+
+.year2-bar {
+  background: #f472b6;
+}
+
+.hour-label {
+  font-size: 0.65rem;
+  opacity: 0.6;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+/* Sentiment Chart */
+.sentiment-comparison-chart {
+  margin-top: 1rem;
+}
+
+.sentiment-chart-svg {
+  width: 100%;
+  height: auto;
+}
+
+.chart-label {
+  font-size: 0.75rem;
+  fill: rgba(255, 255, 255, 0.6);
+}
+
+.year1-line {
+  filter: drop-shadow(0 0 3px rgba(96, 165, 250, 0.5));
+}
+
+.year2-line {
+  filter: drop-shadow(0 0 3px rgba(244, 114, 182, 0.5));
+}
+
+.data-point {
+  cursor: pointer;
+}
+
+.data-point:hover {
+  r: 6;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+/* Sentiment Shifts */
+.sentiment-shifts {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 1rem;
+}
+
+.sentiment-shifts h3 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.shifts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.shift-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0.75rem;
+}
+
+.shift-month {
+  font-weight: 600;
+  min-width: 60px;
+}
+
+.shift-visual {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.shift-score {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.shift-arrow {
+  font-size: 1.5rem;
+}
+
+.shift-arrow.positive {
+  color: #10b981;
+}
+
+.shift-arrow.negative {
+  color: #ef4444;
+}
+
+.shift-magnitude {
+  font-size: 0.875rem;
+  opacity: 0.7;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* Comparison Highlights */
+.comparison-highlight {
+  margin: 2rem 0;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.comparison-highlight h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.comparison-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.comparison-item {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 1rem;
+  text-align: center;
+}
+
+.comparison-item .year-tag {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.highlight-date,
+.thread-name,
+.streak-contact,
+.tapback-emoji {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.highlight-detail,
+.thread-count,
+.streak-days,
+.tapback-count {
+  font-size: 0.875rem;
+  opacity: 0.7;
+}
+
+.tapback-emoji {
+  font-size: 3rem;
+  margin: 1rem 0;
+}
+
+.tapback-name {
+  text-transform: capitalize;
+  opacity: 0.8;
+}
+
+/* MVP Comparison */
+.comparison-mvp-container {
+  margin-top: 2rem;
+}
+
+.comparison-mvp-container h3 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.mvp-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.mvp-item {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0.75rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mvp-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.mvp-count {
+  font-size: 0.875rem;
+  opacity: 0.7;
+}
+
+/* Emoji Comparison */
+.emoji-comparison {
+  margin: 2rem 0;
+}
+
+.emoji-comparison h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.emoji-comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.emoji-list {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 1rem;
+}
+
+.emoji-list .year-tag {
+  display: block;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.emoji-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0.5rem;
+}
+
+.emoji-icon {
+  font-size: 1.5rem;
+}
+
+.emoji-count {
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+/* Ghost & Streak Insights */
+.ghost-insight,
+.streak-insight {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(139, 92, 246, 0.1);
+  border-radius: 1rem;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.ghost-insight strong,
+.streak-insight strong {
+  color: #8b5cf6;
+}
+
+/* View Toggle */
+.view-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 2rem 0;
+}
+
+.view-toggle button {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-toggle button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.view-toggle button.active {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #8b5cf6;
+}
+
+/* Heatmaps Side by Side */
+.heatmaps-side-by-side {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.heatmap-wrapper {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 1rem;
+}
+
+.heatmap-year-label {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .heatmaps-side-by-side {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-row,
+  .mvp-comparison,
+  .emoji-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .comparison-hero .hero-title {
+    font-size: 2rem;
+  }
+
+  .comparison-hero .hero-subtitle {
+    font-size: 1.1rem;
+  }
+
+  .comparison-values {
+    flex-direction: column;
+  }
+
+  .delta-indicator {
+    flex-direction: row;
+    min-width: unset;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .year-value .value {
+    font-size: 1.5rem;
+  }
+
+  .comparison-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hour-comparison-chart {
+    height: 150px;
+  }
+
+  .hour-label {
+    font-size: 0.55rem;
+  }
+
+  .sentiment-comparison-chart {
+    overflow-x: auto;
+  }
+
+  .comparison-insight,
+  .ghost-insight,
+  .streak-insight {
+    font-size: 0.95rem;
+  }
+}

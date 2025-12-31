@@ -78,10 +78,11 @@ export default function WrappedPage() {
   }
 
   const stats = data.statistics?.raw || data.statistics;
+  const userName = data.user_name || null;
 
   return (
     <main className="container">
-      <HeroSection year={data.year} volume={stats.volume} percentiles={percentiles} totalWraps={totalWraps} />
+      <HeroSection year={data.year} volume={stats.volume} percentiles={percentiles} totalWraps={totalWraps} userName={userName} />
       <HeatmapSection volume={stats.volume} year={data.year} />
       <TemporalSection temporal={stats.temporal} />
       <ContactsSection contacts={stats.contacts} percentiles={percentiles} totalWraps={totalWraps} />

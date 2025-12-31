@@ -26,6 +26,7 @@ class ExportLoader:
 
         export_date = None
         year = None
+        user_name = None
         phrases = None
         phrases_by_contact = None
         sentiment = None
@@ -45,6 +46,8 @@ class ExportLoader:
                     export_date = datetime.fromisoformat(data["export_date"])
                 if year is None:
                     year = data["year"]
+                if user_name is None:
+                    user_name = data.get("user_name")
                 if phrases is None:
                     phrases = data.get("phrases")
                 # Per-contact phrases are intentionally not exported.
@@ -120,6 +123,7 @@ class ExportLoader:
 
         export_date = datetime.fromisoformat(data["export_date"])
         year = data["year"]
+        user_name = data.get("user_name")
 
         phrases = data.get("phrases")
         phrases_by_contact = data.get("phrases_by_contact")
@@ -166,6 +170,7 @@ class ExportLoader:
             export_date=export_date,
             year=year,
             conversations=conversations,
+            user_name=user_name,
             phrases=phrases,
             phrases_by_contact=phrases_by_contact,
             sentiment=sentiment,

@@ -10,6 +10,7 @@ from .utils import (
     count_emojis,
     extract_text_from_attributed_body,
     get_tapback_type,
+    get_user_full_name,
     is_tapback,
     strip_guid_prefix,
 )
@@ -30,10 +31,14 @@ class MessageProcessor:
         conversations = self._build_conversations(year)
         logger.debug(f"Built {len(conversations)} conversations")
 
+        user_name = get_user_full_name()
+        logger.debug(f"Retrieved user name: {user_name}")
+
         return ExportData(
             export_date=datetime.now(timezone.utc),
             year=year,
             conversations=conversations,
+            user_name=user_name,
         )
 
     def _build_conversations(self, year: int) -> dict[str, Conversation]:

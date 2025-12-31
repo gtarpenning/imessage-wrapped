@@ -269,6 +269,10 @@ class TerminalDisplay(Display):
             "Double Text Count",
             f"{content.get('double_text_count', 0):,} ({content.get('double_text_percentage', 0)}%)",
         )
+        table.add_row(
+            "Quadruple Text Count (Crash Outs)",
+            f"{content.get('quadruple_text_count', 0):,}",
+        )
 
         self.console.print(table)
 

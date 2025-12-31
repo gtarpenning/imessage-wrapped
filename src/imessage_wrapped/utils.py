@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import pwd
 from collections import Counter
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
@@ -34,6 +36,25 @@ EXCLUDED_EMOJIS = {
     "\u2640\ufe0f",
     "\ufe0f",
 }
+
+
+def get_user_full_name() -> str:
+    """
+    Get the full name of the current macOS user.
+    Falls back to username if full name is not available.
+    """
+    try:
+        username = os.getlogin()
+        user_info = pwd.getpwnam(username)
+        # GECOS field format: full_name,room,work_phone,home_phone,other
+        full_name = user_info.pw_gecos.split(",")[0]
+        if full_name and full_name.strip():
+            return full_name.strip()
+        # Fallback to username
+        return username
+    except Exception:
+        # If anything fails, return a generic fallback
+        return "User"
 
 
 def apple_timestamp_to_datetime(ns: int) -> datetime | None:

@@ -110,7 +110,7 @@ function DoubleTextSection({ content, percentiles, totalWraps }) {
         </p>
       </div>
       {enhancement && <EnhancedText>{enhancement}</EnhancedText>}
-      <div className="stats-grid" style={{ justifyContent: "center" }}>
+      <div className="stats-grid">
         <StatCard
           label="Double Texts Sent"
           value={content.double_text_count.toLocaleString()}
@@ -118,6 +118,15 @@ function DoubleTextSection({ content, percentiles, totalWraps }) {
           totalWraps={totalWraps}
           valueStyle={{ fontSize: "2.5rem", color: "#06b6d4" }}
         />
+        {content.quadruple_text_count !== undefined && (
+          <StatCard
+            label="💥 Quadruple Texts (Crash Outs)"
+            value={content.quadruple_text_count.toLocaleString()}
+            percentile={percentiles["content.quadruple_text_count"]}
+            totalWraps={totalWraps}
+            valueStyle={{ fontSize: "2.5rem", color: "#ef4444" }}
+          />
+        )}
       </div>
       {content.double_text_percentage !== undefined && (
         <p style={{ opacity: 0.7, textAlign: "center", marginTop: "1rem" }}>

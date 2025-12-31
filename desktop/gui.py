@@ -164,7 +164,7 @@ class IMessageWrappedApp(rumps.App):
         """Run the analysis in background thread"""
         try:
             self.logger.info("Starting analysis process")
-            year = datetime.now().year
+            year = 2025
             exports_dir = Path("exports")
             exports_dir.mkdir(exist_ok=True)
 

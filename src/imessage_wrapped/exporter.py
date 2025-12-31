@@ -23,6 +23,8 @@ class JSONSerializer:
                 key: self._serialize_conversation(conv) for key, conv in data.conversations.items()
             },
         }
+        if data.user_name is not None:
+            payload["user_name"] = data.user_name
         if data.phrases is not None:
             payload["phrases"] = data.phrases
         if data.sentiment is not None:
@@ -90,6 +92,8 @@ class JSONLSerializer:
                     "participants": conv.participants,
                     "message": self._serialize_message(msg),
                 }
+                if data.user_name is not None:
+                    line_data["user_name"] = data.user_name
                 if data.phrases is not None:
                     line_data["phrases"] = data.phrases
                 if data.sentiment is not None:

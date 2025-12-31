@@ -47,6 +47,29 @@ async function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_llm_created_at ON llm_cache(created_at);
     `);
 
+    // Create comparisons table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS wrapped_comparisons (
+        id TEXT PRIMARY KEY,
+        year1_id TEXT NOT NULL,
+        year2_id TEXT NOT NULL,
+        year1 INTEGER NOT NULL,
+        year2 INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        views INTEGER DEFAULT 0,
+        FOREIGN KEY (year1_id) REFERENCES wrapped_stats(id) ON DELETE CASCADE,
+        FOREIGN KEY (year2_id) REFERENCES wrapped_stats(id) ON DELETE CASCADE
+      );
+    `);
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_comparison_years ON wrapped_comparisons(year1, year2);
+    `);
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_comparison_created_at ON wrapped_comparisons(created_at);
+    `);
+
     console.log("✓ Database initialized successfully");
 
     // Test insert/select

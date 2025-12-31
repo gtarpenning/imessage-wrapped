@@ -1,7 +1,6 @@
 import argparse
 import logging
 import sys
-from datetime import datetime
 from pathlib import Path
 
 import questionary
@@ -45,8 +44,8 @@ def parse_args():
         "-y",
         "--year",
         type=int,
-        default=datetime.now().year,
-        help="Year to export (default: current year)",
+        default=2025,
+        help="Year to export (default: 2025)",
     )
 
     parser.add_argument(
@@ -156,6 +155,14 @@ def parse_args():
         type=int,
         default=7,
         help="Days without a reply before someone counts as a ghost (default: 7)",
+    )
+
+    parser.add_argument(
+        "--compare",
+        nargs=2,
+        type=int,
+        metavar=("YEAR1", "YEAR2"),
+        help="Compare two years (e.g., --compare 2024 2025). Creates both individual wraps and a comparison view.",
     )
 
     args = parser.parse_args()
@@ -387,12 +394,110 @@ def analyze_command(args, input_path=None):
         server_url = "http://localhost:3000" if args.dev else args.server_url
         uploader = StatsUploader(base_url=server_url)
 
-        year = data.year if hasattr(data, "year") else datetime.now().year
-        share_url = uploader.upload(year, sanitized_statistics)
+        year = data.year if hasattr(data, "year") else 2025
+        user_name = data.user_name if hasattr(data, "user_name") else None
+        share_url = uploader.upload(year, sanitized_statistics, user_name=user_name)
 
         if not share_url:
             console.print("\n[yellow]Tip: Make sure the web server is running:[/]")
             console.print("[dim]  cd web && npm install && npm run dev[/]")
+
+
+def compare_command(args):
+    """Handle year-over-year comparison"""
+    console = Console()
+
+    year1, year2 = args.compare
+
+    # Ensure year1 < year2 for consistency
+    if year1 > year2:
+        year1, year2 = year2, year1
+
+    if year1 == year2:
+        console.print("[red]✗[/] Cannot compare the same year")
+        sys.exit(1)
+
+    console.print(f"\n[bold cyan]Creating year-over-year comparison: {year1} vs {year2}[/]\n")
+
+    # Export and analyze year 1
+    console.print(f"[cyan]━━━ Analyzing {year1} ━━━[/]")
+    args_year1 = argparse.Namespace(**vars(args))
+    args_year1.year = year1
+    args_year1.share = False  # Don't upload individual years yet
+    export_path1 = export_command(args_year1)
+
+    if not export_path1:
+        console.print(f"[red]✗[/] Failed to export {year1}")
+        sys.exit(1)
+
+    # Temporarily suppress sharing for individual analysis
+    stats1 = {}
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+        transient=True,
+    ) as progress:
+        load_task = progress.add_task(f"Loading {year1} export data...", total=1)
+        data1 = ExportLoader.load(export_path1)
+        progress.update(load_task, advance=1)
+
+        analyzer = RawStatisticsAnalyzer(ghost_timeline_days=args.ghost_timeline)
+        stats1 = analyzer.analyze(data1)
+
+    console.print(f"[green]✓[/] {year1} analysis complete\n")
+
+    # Export and analyze year 2
+    console.print(f"[cyan]━━━ Analyzing {year2} ━━━[/]")
+    args_year2 = argparse.Namespace(**vars(args))
+    args_year2.year = year2
+    args_year2.share = False
+    export_path2 = export_command(args_year2)
+
+    if not export_path2:
+        console.print(f"[red]✗[/] Failed to export {year2}")
+        sys.exit(1)
+
+    stats2 = {}
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+        transient=True,
+    ) as progress:
+        load_task = progress.add_task(f"Loading {year2} export data...", total=1)
+        data2 = ExportLoader.load(export_path2)
+        progress.update(load_task, advance=1)
+
+        analyzer = RawStatisticsAnalyzer(ghost_timeline_days=args.ghost_timeline)
+        stats2 = analyzer.analyze(data2)
+
+    console.print(f"[green]✓[/] {year2} analysis complete\n")
+
+    # Sanitize statistics for both years
+    from .utils import sanitize_statistics_for_export
+
+    sanitized_stats1 = sanitize_statistics_for_export({"raw": stats1})
+    sanitized_stats2 = sanitize_statistics_for_export({"raw": stats2})
+
+    # Upload comparison
+    console.print("[cyan]━━━ Creating comparison view ━━━[/]")
+    from .uploader import ComparisonUploader
+
+    server_url = "http://localhost:3000" if args.dev else args.server_url
+    uploader = ComparisonUploader(base_url=server_url)
+
+    user_name1 = data1.user_name if hasattr(data1, "user_name") else None
+    user_name2 = data2.user_name if hasattr(data2, "user_name") else None
+    user_name = user_name1 or user_name2  # Use whichever is available
+
+    comparison_url = uploader.upload_comparison(
+        year1, year2, sanitized_stats1, sanitized_stats2, user_name=user_name
+    )
+
+    if not comparison_url:
+        console.print("\n[yellow]Tip: Make sure the web server is running:[/]")
+        console.print("[dim]  cd web && npm install && npm run dev[/]")
 
 
 def main():
@@ -403,6 +508,11 @@ def main():
             level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
         logger.debug("Debug logging enabled")
+
+    # Handle comparison mode
+    if args.compare:
+        compare_command(args)
+        return
 
     if args.input:
         analyze_command(args)

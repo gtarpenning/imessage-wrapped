@@ -661,6 +661,9 @@ function StreaksSection({ aggregates }) {
 function WrapsTable({ wraps = [] }) {
   const [sortBy, setSortBy] = useState("created_at");
   const [sortDesc, setSortDesc] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -669,9 +672,26 @@ function WrapsTable({ wraps = [] }) {
       setSortBy(field);
       setSortDesc(true);
     }
+    setCurrentPage(1); // Reset to first page when sorting
   };
 
-  const sortedWraps = [...wraps].sort((a, b) => {
+  // Filter wraps based on search term
+  const filteredWraps = wraps.filter((wrap) => {
+    if (!searchTerm) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      wrap.id?.toLowerCase().includes(search) ||
+      wrap.year?.toString().includes(search) ||
+      wrap.user_name?.toLowerCase().includes(search)
+    );
+  });
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const sortedWraps = [...filteredWraps].sort((a, b) => {
     let aVal = a[sortBy];
     let bVal = b[sortBy];
     
@@ -681,14 +701,28 @@ function WrapsTable({ wraps = [] }) {
       bVal = new Date(bVal).getTime();
     }
     
+    // Handle string comparison (for user_name)
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      aVal = aVal.toLowerCase();
+      bVal = bVal.toLowerCase();
+    }
+    
+    // Handle null values (put them at the end)
+    if (aVal === null || aVal === undefined) return sortDesc ? 1 : -1;
+    if (bVal === null || bVal === undefined) return sortDesc ? -1 : 1;
+    
     if (sortDesc) {
-      return bVal - aVal;
+      return bVal > aVal ? 1 : -1;
     } else {
-      return aVal - bVal;
+      return aVal > bVal ? 1 : -1;
     }
   });
 
-  const displayWraps = sortedWraps.slice(0, 10);
+  // Pagination calculations
+  const totalPages = Math.ceil(sortedWraps.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const displayWraps = sortedWraps.slice(startIndex, endIndex);
 
   const SortableHeader = ({ field, children }) => (
     <th
@@ -711,13 +745,32 @@ function WrapsTable({ wraps = [] }) {
   );
 
   return (
-    <Section title="🎁 Recent Wraps (Top 10)">
+    <Section title="🎁 All Wraps">
+      <div style={{ marginBottom: "1rem" }}>
+        <input
+          type="text"
+          placeholder="Search by ID, year, or name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "0.75rem 1rem",
+            borderRadius: "0.5rem",
+            border: "2px solid rgba(255,255,255,0.2)",
+            background: "rgba(255,255,255,0.05)",
+            color: "white",
+            fontSize: "1rem",
+            outline: "none",
+          }}
+        />
+      </div>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "2px solid rgba(255,255,255,0.2)" }}>
               <th style={{ padding: "1rem", textAlign: "left" }}>ID</th>
               <th style={{ padding: "1rem", textAlign: "left" }}>Year</th>
+              <SortableHeader field="user_name">Name</SortableHeader>
               <SortableHeader field="created_at">Created</SortableHeader>
               <SortableHeader field="views">Views</SortableHeader>
               <SortableHeader field="total_messages">Total Msgs</SortableHeader>
@@ -731,6 +784,9 @@ function WrapsTable({ wraps = [] }) {
               <tr key={wrap.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
                 <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.85rem" }}>{wrap.id}</td>
                 <td style={{ padding: "1rem" }}>{wrap.year}</td>
+                <td style={{ padding: "1rem", opacity: wrap.user_name ? 1 : 0.4 }}>
+                  {wrap.user_name || "—"}
+                </td>
                 <td style={{ padding: "1rem", fontSize: "0.9rem" }}>
                   {new Date(wrap.created_at).toLocaleDateString()}
                 </td>
@@ -754,9 +810,133 @@ function WrapsTable({ wraps = [] }) {
         </table>
       </div>
       <div style={{ marginTop: "1rem", fontSize: "0.85rem", opacity: 0.6, textAlign: "center" }}>
-        Showing {displayWraps.length} of {wraps.length} total wraps. Click column headers to sort.
+        Showing {startIndex + 1}-{Math.min(endIndex, sortedWraps.length)} of {filteredWraps.length} wraps
+        {searchTerm && ` (filtered from ${wraps.length} total)`}
+        {!searchTerm && ` (${wraps.length} total)`}
       </div>
+      
+      {totalPages > 1 && (
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </Section>
+  );
+}
+
+// Pagination Component
+function Pagination({ currentPage, totalPages, onPageChange }) {
+  const maxVisiblePages = 7;
+  
+  const getPageNumbers = () => {
+    if (totalPages <= maxVisiblePages) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    
+    const pages = [];
+    const leftSiblingIndex = Math.max(currentPage - 1, 1);
+    const rightSiblingIndex = Math.min(currentPage + 1, totalPages);
+    
+    const shouldShowLeftDots = leftSiblingIndex > 2;
+    const shouldShowRightDots = rightSiblingIndex < totalPages - 1;
+    
+    // Always show first page
+    pages.push(1);
+    
+    if (shouldShowLeftDots) {
+      pages.push('...');
+    }
+    
+    // Show pages around current page
+    for (let i = leftSiblingIndex; i <= rightSiblingIndex; i++) {
+      if (i !== 1 && i !== totalPages) {
+        pages.push(i);
+      }
+    }
+    
+    if (shouldShowRightDots) {
+      pages.push('...');
+    }
+    
+    // Always show last page
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
+  
+  const pageNumbers = getPageNumbers();
+  
+  return (
+    <div style={{ 
+      display: "flex", 
+      justifyContent: "center", 
+      alignItems: "center", 
+      gap: "0.5rem",
+      marginTop: "2rem",
+      flexWrap: "wrap"
+    }}>
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        style={{
+          padding: "0.5rem 1rem",
+          borderRadius: "0.5rem",
+          background: currentPage === 1 ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)",
+          color: currentPage === 1 ? "rgba(255,255,255,0.3)" : "white",
+          border: "1px solid rgba(255,255,255,0.2)",
+          cursor: currentPage === 1 ? "not-allowed" : "pointer",
+          fontSize: "0.9rem",
+        }}
+      >
+        ← Previous
+      </button>
+      
+      {pageNumbers.map((page, idx) => (
+        page === '...' ? (
+          <span key={`dots-${idx}`} style={{ padding: "0.5rem", opacity: 0.5 }}>...</span>
+        ) : (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            style={{
+              padding: "0.5rem 0.75rem",
+              borderRadius: "0.5rem",
+              background: currentPage === page 
+                ? "linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)"
+                : "rgba(255,255,255,0.1)",
+              color: "white",
+              border: "1px solid rgba(255,255,255,0.2)",
+              cursor: "pointer",
+              fontSize: "0.9rem",
+              fontWeight: currentPage === page ? "600" : "400",
+              minWidth: "2.5rem",
+            }}
+          >
+            {page}
+          </button>
+        )
+      ))}
+      
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        style={{
+          padding: "0.5rem 1rem",
+          borderRadius: "0.5rem",
+          background: currentPage === totalPages ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.1)",
+          color: currentPage === totalPages ? "rgba(255,255,255,0.3)" : "white",
+          border: "1px solid rgba(255,255,255,0.2)",
+          cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+          fontSize: "0.9rem",
+        }}
+      >
+        Next →
+      </button>
+    </div>
   );
 }
 

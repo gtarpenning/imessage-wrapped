@@ -57,6 +57,7 @@ class ExportData:
     export_date: datetime
     year: int
     conversations: dict[str, Conversation]
+    user_name: str | None = None
     phrases: dict | None = None
     phrases_by_contact: list[dict] | None = None
     sentiment: dict | None = None

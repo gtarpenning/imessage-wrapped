@@ -696,6 +696,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "attachments_received": sum(1 for m in received_messages if m.has_attachment),
             "double_text_count": double_texts["count"],
             "double_text_percentage": double_texts["percentage"],
+            "quadruple_text_count": double_texts["quadruple_count"],
         }
 
         if sentiment_stats:
@@ -715,6 +716,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
     ) -> dict[str, Any]:
         total_sent = 0
         double_text_count = 0
+        quadruple_text_count = 0
 
         convs = conversations or data.conversations
 
@@ -747,12 +749,18 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
                 if run_length > 1:
                     double_text_count += 1
+                if run_length >= 4:
+                    quadruple_text_count += 1
 
                 i = j
 
         percentage = round(double_text_count / total_sent * 100, 2) if total_sent else 0.0
 
-        return {"count": double_text_count, "percentage": percentage}
+        return {
+            "count": double_text_count,
+            "percentage": percentage,
+            "quadruple_count": quadruple_text_count,
+        }
 
     def _analyze_phrases(
         self,
@@ -1138,6 +1146,9 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         convs = conversations or data.conversations
         for conv in convs.values():
+            # Skip group chats - response dynamics are different
+            if conv.is_group_chat:
+                continue
             messages = self._filter_conversation_messages(conv, data.year)
             if len(messages) < 2:
                 continue

@@ -1,10 +1,15 @@
 import StatCard from "./StatCard";
 
-export default function HeroSection({ year, volume, percentiles = {}, totalWraps = 0 }) {
+export default function HeroSection({ year, volume, percentiles = {}, totalWraps = 0, userName = null }) {
+  // Format the user's name for display (e.g., "Griffin" becomes "Griffin's")
+  const possessiveName = userName 
+    ? (userName.endsWith('s') ? `${userName}'` : `${userName}'s`)
+    : 'Your';
+
   return (
     <div className="hero">
       <h1>
-        Your <span className="gradient-text">{year}</span> in Messages
+        {possessiveName} <span className="gradient-text">{year}</span> in Messages
       </h1>
 
       <div className="stats-grid">

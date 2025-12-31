@@ -639,6 +639,7 @@ export async function GET(request) {
           total_sent: safeGet(stats, 'volume.total_sent', 0),
           total_received: safeGet(stats, 'volume.total_received', 0),
           total_messages: safeGet(stats, 'volume.total_messages', 0),
+          user_name: w.statistics?.user_name || null,
         };
       }),
       ...aggregates,
