@@ -1,9 +1,21 @@
 import StatCard from "./StatCard";
 
 export default function HeroSection({ year, volume, percentiles = {}, totalWraps = 0, userName = null }) {
+  // Capitalize each word in the name (e.g., "griffin tarpenning" → "Griffin Tarpenning")
+  const capitalizeWords = (str) => {
+    if (!str) return str;
+    return str
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
   // Format the user's name for display (e.g., "Griffin" becomes "Griffin's")
   const possessiveName = userName 
-    ? (userName.endsWith('s') ? `${userName}'` : `${userName}'s`)
+    ? (() => {
+        const capitalized = capitalizeWords(userName);
+        return capitalized.endsWith('s') ? `${capitalized}'` : `${capitalized}'s`;
+      })()
     : 'Your';
 
   return (

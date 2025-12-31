@@ -663,7 +663,7 @@ function WrapsTable({ wraps = [] }) {
   const [sortDesc, setSortDesc] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50;
+  const itemsPerPage = 10;
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -780,15 +780,28 @@ function WrapsTable({ wraps = [] }) {
             </tr>
           </thead>
           <tbody>
-            {displayWraps.map((wrap) => (
+            {displayWraps.map((wrap) => {
+              // Capitalize user name for display
+              const displayName = wrap.user_name 
+                ? wrap.user_name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+                : "—";
+              
+              return (
               <tr key={wrap.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
                 <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.85rem" }}>{wrap.id}</td>
                 <td style={{ padding: "1rem" }}>{wrap.year}</td>
                 <td style={{ padding: "1rem", opacity: wrap.user_name ? 1 : 0.4 }}>
-                  {wrap.user_name || "—"}
+                  {displayName}
                 </td>
                 <td style={{ padding: "1rem", fontSize: "0.9rem" }}>
-                  {new Date(wrap.created_at).toLocaleDateString()}
+                  {new Date(wrap.created_at).toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                  })}
                 </td>
                 <td style={{ padding: "1rem" }}>{formatNumber(wrap.views)}</td>
                 <td style={{ padding: "1rem" }}>{formatNumber(wrap.total_messages)}</td>
@@ -805,7 +818,8 @@ function WrapsTable({ wraps = [] }) {
                   </a>
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>
