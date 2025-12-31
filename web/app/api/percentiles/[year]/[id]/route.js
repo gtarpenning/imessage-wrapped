@@ -9,9 +9,15 @@ const pool = new Pool({
 });
 
 // Helper function to calculate percentile
-function calculatePercentile(value, allValues) {
+function calculatePercentile(value, allValues, lowerIsBetter = false) {
   if (!value || allValues.length === 0) return null;
-  const count = allValues.filter((v) => v < value).length;
+  
+  // For "lower is better" stats (like response time), count values GREATER than current
+  // For "higher is better" stats (like message count), count values LESS than current
+  const count = lowerIsBetter
+    ? allValues.filter((v) => v > value).length
+    : allValues.filter((v) => v < value).length;
+  
   return Math.round((count / allValues.length) * 100);
 }
 
@@ -74,6 +80,7 @@ export async function GET(request, { params }) {
       "conversations.group_chats",
       "conversations.one_on_one_chats",
       "content.double_text_count",
+      "content.quadruple_text_count",
       "response_times.avg_response_time_minutes",
       "response_times.median_response_time_you_seconds",
       "response_times.median_response_time_them_seconds",
@@ -86,6 +93,13 @@ export async function GET(request, { params }) {
       "ghosts.people_who_left_you_hanging",
       "ghosts.ghost_ratio",
     ];
+    
+    // Stats where lower values are better (e.g., faster response time)
+    const lowerIsBetterStats = new Set([
+      "response_times.avg_response_time_minutes",
+      "response_times.median_response_time_you_seconds",
+      "response_times.median_response_time_them_seconds",
+    ]);
 
     // Extract all values for each stat
     const statValues = {};
@@ -109,7 +123,8 @@ export async function GET(request, { params }) {
       if (currentValue !== null && statValues[stat].length > 1) {
         percentiles[stat] = calculatePercentile(
           currentValue,
-          statValues[stat]
+          statValues[stat],
+          lowerIsBetterStats.has(stat)
         );
       }
     });

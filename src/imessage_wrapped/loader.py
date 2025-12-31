@@ -106,6 +106,7 @@ class ExportLoader:
             export_date=export_date,
             year=year,
             conversations=conversations,
+            user_name=user_name,
             phrases=phrases,
             phrases_by_contact=phrases_by_contact,
             sentiment=sentiment,
