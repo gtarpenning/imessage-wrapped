@@ -27,6 +27,7 @@ from . import (
     TerminalDisplay,
     require_database_access,
 )
+from .phrases import PhraseExtractionConfig
 from .phrase_utils import compute_phrases_for_export
 from .sentiment_utils import compute_sentiment_for_export
 from .utils import sanitize_statistics_for_export
@@ -158,6 +159,28 @@ def parse_args():
         help="Days without a reply before someone counts as a ghost (default: 7)",
     )
 
+    parser.add_argument(
+        "--phrase-ngram-min",
+        type=int,
+        help="Minimum n-gram length for phrase extraction (default: 1)",
+    )
+    parser.add_argument(
+        "--phrase-ngram-max",
+        type=int,
+        help="Maximum n-gram length for phrase extraction (default: 5)",
+    )
+    parser.add_argument(
+        "--phrase-scorer",
+        type=str,
+        choices=["tfidf", "frequency"],
+        help="Phrase scoring strategy (tfidf or frequency; default: tfidf)",
+    )
+    parser.add_argument(
+        "--phrase-score-mult",
+        type=float,
+        help="Length bias multiplier for phrase ranking (default: 2.1)",
+    )
+
     args = parser.parse_args()
 
     if args.dev:
@@ -198,8 +221,39 @@ def export_command(args):
         service = MessageService(db_path=args.database)
         data = service.export_year(args.year)
 
+        # Build phrase extraction config (allows CLI overrides).
+        default_phrase_cfg = PhraseExtractionConfig()
+        ngram_min = args.phrase_ngram_min or default_phrase_cfg.ngram_range[0]
+        ngram_max = args.phrase_ngram_max or default_phrase_cfg.ngram_range[1]
+        if ngram_min <= 0 or ngram_max <= 0 or ngram_min > ngram_max:
+            console.print("[red]✗[/] Invalid phrase n-gram range")
+            sys.exit(1)
+        phrase_scorer = args.phrase_scorer or default_phrase_cfg.scoring
+        phrase_length_bias = (
+            args.phrase_score_mult
+            if args.phrase_score_mult is not None
+            else default_phrase_cfg.length_bias
+        )
+        phrase_config = PhraseExtractionConfig(
+            ngram_range=(ngram_min, ngram_max),
+            min_occurrences=default_phrase_cfg.min_occurrences,
+            min_characters=default_phrase_cfg.min_characters,
+            min_text_messages=default_phrase_cfg.min_text_messages,
+            per_contact_min_text_messages=default_phrase_cfg.per_contact_min_text_messages,
+            max_phrases=default_phrase_cfg.max_phrases,
+            per_contact_limit=default_phrase_cfg.per_contact_limit,
+            scoring=phrase_scorer,
+            dedupe_overlap=default_phrase_cfg.dedupe_overlap,
+            overlap_tolerance=default_phrase_cfg.overlap_tolerance,
+            contains_letters=default_phrase_cfg.contains_letters,
+            length_bias=phrase_length_bias,
+            phrase_filter_bank=default_phrase_cfg.phrase_filter_bank,
+        )
+
         # Precompute phrases while text is available; stored alongside export without raw text.
-        phrases, phrases_by_contact = compute_phrases_for_export(data)
+        phrases, phrases_by_contact = compute_phrases_for_export(
+            data, phrase_config=phrase_config
+        )
         data.phrases = phrases or None
         # Per-contact phrases are intentionally omitted from export for privacy.
         data.phrases_by_contact = None

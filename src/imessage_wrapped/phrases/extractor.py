@@ -46,7 +46,7 @@ class PhraseExtractionResult:
 
 @dataclass(frozen=True)
 class PhraseExtractionConfig:
-    ngram_range: tuple[int, int] = (2, 5)
+    ngram_range: tuple[int, int] = (1, 5)
     min_occurrences: int = 3
     min_characters: int = 4
     min_text_messages: int = 50
