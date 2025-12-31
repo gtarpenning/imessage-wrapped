@@ -116,21 +116,42 @@ export async function GET(request, { params }) {
       });
     });
 
-    // Calculate percentiles for current user
+    // Calculate percentiles and ranks for current user
     const percentiles = {};
+    const ranks = {};
+    const metricCounts = {};
+    
     statsToTrack.forEach((stat) => {
       const currentValue = extractStat(currentWrap.data, stat);
-      if (currentValue !== null && statValues[stat].length > 1) {
+      const allValuesForStat = statValues[stat];
+      
+      // Store the actual count of non-null values for this metric
+      metricCounts[stat] = allValuesForStat.length;
+      
+      if (currentValue !== null && allValuesForStat.length > 1) {
         percentiles[stat] = calculatePercentile(
           currentValue,
-          statValues[stat],
+          allValuesForStat,
           lowerIsBetterStats.has(stat)
         );
+        
+        // Calculate actual rank (1-based)
+        const sortedValues = [...allValuesForStat].sort((a, b) => {
+          // For lower is better stats, sort ascending (smallest = rank 1)
+          // For higher is better stats, sort descending (largest = rank 1)
+          return lowerIsBetterStats.has(stat) ? a - b : b - a;
+        });
+        
+        // Find rank - handle ties by giving them the same rank
+        const rank = sortedValues.findIndex(v => v === currentValue) + 1;
+        ranks[stat] = rank;
       }
     });
 
     return NextResponse.json({ 
       percentiles,
+      ranks,
+      metricCounts,
       total: result.rows.length 
     });
   } catch (error) {

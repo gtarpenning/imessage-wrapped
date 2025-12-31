@@ -1,7 +1,7 @@
 import { useEnhancement } from "@/hooks/useEnhancement";
 import EnhancedText from "./EnhancedText";
 
-export default function WrappedFooter({ views, volume, isComparison = false, percentiles = {}, totalWraps = 0 }) {
+export default function WrappedFooter({ views, volume, isComparison = false, percentiles = {}, ranks = {}, metricCounts = {}, totalWraps = 0 }) {
   const totalMessages = volume
     ? (volume.total_sent || 0) + (volume.total_received || 0)
     : 0;

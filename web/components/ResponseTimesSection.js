@@ -9,7 +9,7 @@ function buildPercentileContext(percentile, totalWraps) {
   return ` You're faster than ${percentile}% of ${totalWraps.toLocaleString()} users.`;
 }
 
-export default function ResponseTimesSection({ response_times, percentiles = {}, totalWraps = 0 }) {
+export default function ResponseTimesSection({ response_times, percentiles = {}, ranks = {}, metricCounts = {}, totalWraps = 0 }) {
   const hasData =
     response_times &&
     (response_times.total_responses_you > 0 ||
@@ -48,6 +48,8 @@ export default function ResponseTimesSection({ response_times, percentiles = {},
               label="Your Median Response Time"
               value={response_times.median_response_time_you_formatted}
               percentile={percentiles["response_times.median_response_time_you_seconds"]}
+              rank={ranks["response_times.median_response_time_you_seconds"]}
+              metricTotal={metricCounts["response_times.median_response_time_you_seconds"]}
               totalWraps={totalWraps}
               valueStyle={{ fontSize: "2rem", color: "#10b981" }}
             />
@@ -58,6 +60,8 @@ export default function ResponseTimesSection({ response_times, percentiles = {},
               label="Their Median Response Time"
               value={response_times.median_response_time_them_formatted}
               percentile={percentiles["response_times.median_response_time_them_seconds"]}
+              rank={ranks["response_times.median_response_time_them_seconds"]}
+              metricTotal={metricCounts["response_times.median_response_time_them_seconds"]}
               totalWraps={totalWraps}
               valueStyle={{ fontSize: "2rem", color: "#10b981" }}
             />

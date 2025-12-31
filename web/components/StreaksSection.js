@@ -9,7 +9,7 @@ function buildPercentileContext(percentile, totalWraps) {
   return ` That's better than ${percentile}% of ${totalWraps.toLocaleString()} users.`;
 }
 
-export default function StreaksSection({ streaks, percentiles = {}, totalWraps = 0 }) {
+export default function StreaksSection({ streaks, percentiles = {}, ranks = {}, metricCounts = {}, totalWraps = 0 }) {
   const hasStreak = !!streaks?.longest_streak_days;
   const streakPercentile = percentiles["streaks.longest_streak_days"];
   const percentileContext = buildPercentileContext(streakPercentile, totalWraps);
@@ -34,6 +34,8 @@ export default function StreaksSection({ streaks, percentiles = {}, totalWraps =
           label="Longest Streak"
           value={`${streaks.longest_streak_days} days`}
           percentile={percentiles["streaks.longest_streak_days"]}
+          rank={ranks["streaks.longest_streak_days"]}
+          metricTotal={metricCounts["streaks.longest_streak_days"]}
           totalWraps={totalWraps}
           valueStyle={{ fontSize: "3rem", color: "#f59e0b" }}
         />

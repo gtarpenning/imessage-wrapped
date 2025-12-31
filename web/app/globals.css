@@ -83,6 +83,28 @@ body {
   transform: scale(1.05);
 }
 
+.percentile-badge-top10 {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #fca5a5;
+}
+
+.percentile-badge-top10:hover {
+  background: rgba(239, 68, 68, 0.3) !important;
+  border-color: rgba(239, 68, 68, 0.6) !important;
+}
+
+.percentile-badge-first {
+  background: rgba(234, 179, 8, 0.2) !important;
+  border-color: rgba(234, 179, 8, 0.4) !important;
+  color: #fde047;
+}
+
+.percentile-badge-first:hover {
+  background: rgba(234, 179, 8, 0.3) !important;
+  border-color: rgba(234, 179, 8, 0.6) !important;
+}
+
 .percentile-tooltip {
   visibility: hidden;
   opacity: 0;

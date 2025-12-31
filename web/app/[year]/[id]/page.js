@@ -21,6 +21,8 @@ export default function WrappedPage() {
   const params = useParams();
   const [data, setData] = useState(null);
   const [percentiles, setPercentiles] = useState({});
+  const [ranks, setRanks] = useState({});
+  const [metricCounts, setMetricCounts] = useState({});
   const [totalWraps, setTotalWraps] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -49,6 +51,8 @@ export default function WrappedPage() {
         if (percentileResponse.ok) {
           const percentileData = await percentileResponse.json();
           setPercentiles(percentileData.percentiles || {});
+          setRanks(percentileData.ranks || {});
+          setMetricCounts(percentileData.metricCounts || {});
           setTotalWraps(percentileData.total || 0);
         }
       } catch (err) {
@@ -82,20 +86,20 @@ export default function WrappedPage() {
 
   return (
     <main className="container">
-      <HeroSection year={data.year} volume={stats.volume} percentiles={percentiles} totalWraps={totalWraps} userName={userName} />
+      <HeroSection year={data.year} volume={stats.volume} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} userName={userName} />
       <HeatmapSection volume={stats.volume} year={data.year} />
       <TemporalSection temporal={stats.temporal} />
-      <ContactsSection contacts={stats.contacts} percentiles={percentiles} totalWraps={totalWraps} />
-      <ContentSection content={stats.content} percentiles={percentiles} totalWraps={totalWraps} />
+      <ContactsSection contacts={stats.contacts} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+      <ContentSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
       <MessageAnalysisSection sentiment={stats.content?.sentiment} />
-      <MessageLengthSection content={stats.content} percentiles={percentiles} totalWraps={totalWraps} />
-      <ConversationsSection conversations={stats.conversations} percentiles={percentiles} totalWraps={totalWraps} />
-      <GhostSection ghosts={stats.ghosts} percentiles={percentiles} totalWraps={totalWraps} />
+      <MessageLengthSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+      <ConversationsSection conversations={stats.conversations} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+      <GhostSection ghosts={stats.ghosts} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
       {/* <CliffhangerSection cliffhangers={stats.cliffhangers} /> */}
-      <ResponseTimesSection response_times={stats.response_times} percentiles={percentiles} totalWraps={totalWraps} />
-      <TapbacksSection tapbacks={stats.tapbacks} percentiles={percentiles} totalWraps={totalWraps} />
-      <StreaksSection streaks={stats.streaks} percentiles={percentiles} totalWraps={totalWraps} />
-      <WrappedFooter views={data.views} volume={stats.volume} percentiles={percentiles} totalWraps={totalWraps} />
+      <ResponseTimesSection response_times={stats.response_times} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+      <TapbacksSection tapbacks={stats.tapbacks} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+      <StreaksSection streaks={stats.streaks} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+      <WrappedFooter views={data.views} volume={stats.volume} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
     </main>
   );
 }

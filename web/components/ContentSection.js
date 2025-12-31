@@ -3,7 +3,7 @@ import PhraseHighlights from "./PhraseHighlights";
 import EnhancedText from "./EnhancedText";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 
-export default function ContentSection({ content, percentiles = {}, totalWraps = 0 }) {
+export default function ContentSection({ content, percentiles = {}, ranks = {}, metricCounts = {}, totalWraps = 0 }) {
   if (!content) return null;
 
   return (
@@ -16,6 +16,8 @@ export default function ContentSection({ content, percentiles = {}, totalWraps =
             label="Avg Message Length (Sent)"
             value={`${Math.round(content.avg_message_length_sent)} chars`}
             percentile={percentiles["content.avg_message_length_sent"]}
+            rank={ranks["content.avg_message_length_sent"]}
+            metricTotal={metricCounts["content.avg_message_length_sent"]}
             totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
@@ -25,6 +27,8 @@ export default function ContentSection({ content, percentiles = {}, totalWraps =
             label="Avg Message Length (Received)"
             value={`${Math.round(content.avg_message_length_received)} chars`}
             percentile={percentiles["content.avg_message_length_received"]}
+            rank={ranks["content.avg_message_length_received"]}
+            metricTotal={metricCounts["content.avg_message_length_received"]}
             totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
@@ -34,6 +38,8 @@ export default function ContentSection({ content, percentiles = {}, totalWraps =
             label="❓ Questions Asked"
             value={`${content.questions_percentage}%`}
             percentile={percentiles["content.questions_percentage"]}
+            rank={ranks["content.questions_percentage"]}
+            metricTotal={metricCounts["content.questions_percentage"]}
             totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
@@ -43,6 +49,8 @@ export default function ContentSection({ content, percentiles = {}, totalWraps =
             label="❗ Enthusiasm Level"
             value={`${content.enthusiasm_percentage}%`}
             percentile={percentiles["content.enthusiasm_percentage"]}
+            rank={ranks["content.enthusiasm_percentage"]}
+            metricTotal={metricCounts["content.enthusiasm_percentage"]}
             totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
@@ -52,6 +60,8 @@ export default function ContentSection({ content, percentiles = {}, totalWraps =
             label="📎 Attachments Sent"
             value={content.attachments_sent.toLocaleString()}
             percentile={percentiles["content.attachments_sent"]}
+            rank={ranks["content.attachments_sent"]}
+            metricTotal={metricCounts["content.attachments_sent"]}
             totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
@@ -61,13 +71,15 @@ export default function ContentSection({ content, percentiles = {}, totalWraps =
             label="📎 Attachments Received"
             value={content.attachments_received.toLocaleString()}
             percentile={percentiles["content.attachments_received"]}
+            rank={ranks["content.attachments_received"]}
+            metricTotal={metricCounts["content.attachments_received"]}
             totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
         )}
       </div>
 
-      <DoubleTextSection content={content} percentiles={percentiles} totalWraps={totalWraps} />
+      <DoubleTextSection content={content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
 
       <EmojiSection content={content} percentiles={percentiles} totalWraps={totalWraps} />
 
@@ -79,7 +91,7 @@ export default function ContentSection({ content, percentiles = {}, totalWraps =
   );
 }
 
-function DoubleTextSection({ content, percentiles, totalWraps }) {
+function DoubleTextSection({ content, percentiles, ranks, metricCounts, totalWraps }) {
   const doubleTextPercentile = percentiles["content.double_text_count"];
   const percentileContext = doubleTextPercentile !== undefined && doubleTextPercentile !== null && totalWraps > 0
     ? ` That's more than ${doubleTextPercentile}% of ${totalWraps.toLocaleString()} users.`
@@ -120,6 +132,8 @@ function DoubleTextSection({ content, percentiles, totalWraps }) {
           label="Double Texts Sent"
           value={content.double_text_count.toLocaleString()}
           percentile={percentiles["content.double_text_count"]}
+          rank={ranks["content.double_text_count"]}
+          metricTotal={metricCounts["content.double_text_count"]}
           totalWraps={totalWraps}
           valueStyle={{ fontSize: "2.5rem", color: "#06b6d4" }}
         />
@@ -128,6 +142,8 @@ function DoubleTextSection({ content, percentiles, totalWraps }) {
             label="💥 Quadruple Texts (Crash Outs)"
             value={content.quadruple_text_count.toLocaleString()}
             percentile={percentiles["content.quadruple_text_count"]}
+            rank={ranks["content.quadruple_text_count"]}
+            metricTotal={metricCounts["content.quadruple_text_count"]}
             totalWraps={totalWraps}
             valueStyle={{ fontSize: "2.5rem", color: "#ef4444" }}
           />

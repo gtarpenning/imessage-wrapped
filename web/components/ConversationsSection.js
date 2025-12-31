@@ -1,6 +1,6 @@
 import StatCard from "./StatCard";
 
-export default function ConversationsSection({ conversations, percentiles = {}, totalWraps = 0 }) {
+export default function ConversationsSection({ conversations, percentiles = {}, ranks = {}, metricCounts = {}, totalWraps = 0 }) {
   if (!conversations) return null;
 
   return (
@@ -12,6 +12,8 @@ export default function ConversationsSection({ conversations, percentiles = {}, 
             label="Total Conversations"
             value={conversations.total_conversations}
             percentile={percentiles["conversations.total_conversations"]}
+            rank={ranks["conversations.total_conversations"]}
+            metricTotal={metricCounts["conversations.total_conversations"]}
             totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
@@ -21,6 +23,8 @@ export default function ConversationsSection({ conversations, percentiles = {}, 
             label="Group Chats"
             value={conversations.group_chats}
             percentile={percentiles["conversations.group_chats"]}
+            rank={ranks["conversations.group_chats"]}
+            metricTotal={metricCounts["conversations.group_chats"]}
             totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
@@ -30,6 +34,8 @@ export default function ConversationsSection({ conversations, percentiles = {}, 
             label="1-on-1 Chats"
             value={conversations.one_on_one_chats}
             percentile={percentiles["conversations.one_on_one_chats"]}
+            rank={ranks["conversations.one_on_one_chats"]}
+            metricTotal={metricCounts["conversations.one_on_one_chats"]}
             totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />
