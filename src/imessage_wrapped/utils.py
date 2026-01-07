@@ -37,24 +37,66 @@ EXCLUDED_EMOJIS = {
     "\ufe0f",
 }
 
+PLACEHOLDER_NAMES = {
+    "System Administrator",
+    "System Administrator's",
+    "System Administrator’s",
+    "Administrator",
+    "root",
+}
+
+
+def _gecos_or_username(username: str | None) -> str | None:
+    if not username:
+        return None
+
+    try:
+        info = pwd.getpwnam(username)
+        full_name = info.pw_gecos.split(",")[0].strip()
+        if full_name and full_name not in PLACEHOLDER_NAMES:
+            return full_name
+    except KeyError:
+        # No entry found for this username
+        pass
+    except Exception:
+        return None
+
+    if username not in PLACEHOLDER_NAMES:
+        return username
+    return None
+
 
 def get_user_full_name() -> str:
     """
-    Get the full name of the current macOS user.
-    Falls back to username if full name is not available.
+    Try multiple sources for a friendly user name, preferring the invoking user
+    when running under sudo.
     """
+    candidates: list[str | None] = [
+        os.environ.get("SUDO_USER"),
+        os.environ.get("LOGNAME"),
+        os.environ.get("USER"),
+        os.environ.get("USERNAME"),
+    ]
+
     try:
-        username = os.getlogin()
-        user_info = pwd.getpwnam(username)
-        # GECOS field format: full_name,room,work_phone,home_phone,other
-        full_name = user_info.pw_gecos.split(",")[0]
-        if full_name and full_name.strip():
-            return full_name.strip()
-        # Fallback to username
-        return username
+        candidates.append(os.getlogin())
     except Exception:
-        # If anything fails, return a generic fallback
-        return "User"
+        pass
+
+    try:
+        candidates.append(pwd.getpwuid(os.getuid()).pw_name)
+    except Exception:
+        pass
+
+    seen = set()
+    for candidate in candidates:
+        if candidate and candidate not in seen:
+            seen.add(candidate)
+            resolved = _gecos_or_username(candidate)
+            if resolved:
+                return resolved
+
+    return "User"
 
 
 def apple_timestamp_to_datetime(ns: int) -> datetime | None:

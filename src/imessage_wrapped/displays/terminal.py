@@ -14,12 +14,17 @@ class TerminalDisplay(Display):
     def __init__(self):
         self.console = Console()
 
-    def render(self, statistics: dict[str, Any], brief: bool = False) -> None:
+    def render(
+        self,
+        statistics: dict[str, Any],
+        brief: bool = False,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         if brief:
             self.render_brief(statistics)
         else:
             self.console.print()
-            self._render_header(statistics)
+            self._render_header(statistics, metadata)
 
             if "raw" in statistics:
                 self._render_raw_statistics(statistics["raw"])
@@ -71,8 +76,18 @@ class TerminalDisplay(Display):
         self.console.print(table)
         self.console.print()
 
-    def _render_header(self, statistics: dict[str, Any]) -> None:
-        title = Text("iMessage Year in Review 2025", style="bold magenta")
+    def _render_header(
+        self, statistics: dict[str, Any], metadata: dict[str, Any] | None = None
+    ) -> None:
+        year = (metadata or {}).get("year") or 2025
+        user_name = (metadata or {}).get("user_name")
+
+        if user_name:
+            title_text = f"{user_name}'s {year} in Messages"
+        else:
+            title_text = f"Your {year} in Messages"
+
+        title = Text(title_text, style="bold magenta")
         self.console.print(Panel(title, border_style="magenta"))
 
     def _render_raw_statistics(self, stats: dict[str, Any]) -> None:

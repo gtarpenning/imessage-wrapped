@@ -396,7 +396,14 @@ def analyze_command(args, input_path=None):
         console.print(f"\n[green]✓[/] Statistics saved to [cyan]{args.stats_output}[/]")
 
     display = TerminalDisplay()
-    display.render(statistics, brief=args.share)
+    display.render(
+        statistics,
+        brief=args.share,
+        metadata={
+            "user_name": data.user_name if hasattr(data, "user_name") else None,
+            "year": data.year if hasattr(data, "year") else None,
+        },
+    )
 
     if args.share:
         from .uploader import StatsUploader
