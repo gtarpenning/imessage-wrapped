@@ -94,6 +94,17 @@ body {
   border-color: rgba(239, 68, 68, 0.6) !important;
 }
 
+.percentile-badge-bottom10 {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  color: #bfdbfe;
+}
+
+.percentile-badge-bottom10:hover {
+  background: rgba(59, 130, 246, 0.3) !important;
+  border-color: rgba(59, 130, 246, 0.6) !important;
+}
+
 .percentile-badge-first {
   background: rgba(234, 179, 8, 0.2) !important;
   border-color: rgba(234, 179, 8, 0.4) !important;

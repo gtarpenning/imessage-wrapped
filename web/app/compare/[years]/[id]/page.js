@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   ComparisonHeroSection,
-  ComparisonContactsSection,
+  // ComparisonContactsSection,
   ComparisonTemporalSection,
   ComparisonContentSection,
   ComparisonSentimentSection,
@@ -15,8 +15,7 @@ import {
   ComparisonStreaksSection,
 } from "@/components/comparison";
 import WrappedFooter from "@/components/WrappedFooter";
-import UnlockButton from "@/components/UnlockButton";
-import { applyHydratedData } from "@/lib/hydration";
+// import UnlockButton from "@/components/UnlockButton";
 
 export default function ComparisonPage() {
   const params = useParams();
@@ -24,6 +23,7 @@ export default function ComparisonPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  /*
   // Unlock state for comparison
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [hydratedData1, setHydratedData1] = useState(null);
@@ -92,6 +92,7 @@ export default function ComparisonPage() {
     setHydratedData2(null);
     setUnlockError(null);
   }, []);
+  */
 
   useEffect(() => {
     async function fetchData() {
@@ -137,6 +138,7 @@ export default function ComparisonPage() {
   let stats1 = data.year1_statistics?.raw || data.year1_statistics;
   let stats2 = data.year2_statistics?.raw || data.year2_statistics;
   
+  /*
   if (isUnlocked) {
     if (hydratedData1) {
       stats1 = applyHydratedData(stats1, hydratedData1);
@@ -145,18 +147,15 @@ export default function ComparisonPage() {
       stats2 = applyHydratedData(stats2, hydratedData2);
     }
   }
+  */
   
   const year1 = data.year1;
   const year2 = data.year2;
   const userName = data.year1_user_name || data.year2_user_name || null;
   
-  // For comparison, we need to check if contact data is available
-  // This would need to be passed from the API, but for now we'll skip the banner on comparisons
-  const hasContactData = false; // TODO: Check if comparison has contact data
-
   return (
     <>
-      {hasContactData && (
+      {/* {hasContactData && (
         <UnlockButton 
           isUnlocked={isUnlocked}
           isUnlocking={isUnlocking}
@@ -165,7 +164,7 @@ export default function ComparisonPage() {
           onReset={reset}
           hasContactData={hasContactData}
         />
-      )}
+      )} */}
       <main className="container comparison-view">
         <ComparisonHeroSection
           year1={year1}
@@ -181,13 +180,12 @@ export default function ComparisonPage() {
           year1={year1}
           year2={year2}
         />
-        
-        <ComparisonContactsSection
+        {/* <ComparisonContactsSection
           contacts1={stats1.contacts}
           contacts2={stats2.contacts}
           year1={year1}
           year2={year2}
-        />
+        /> */}
         
         <ComparisonContentSection
           content1={stats1.content}
