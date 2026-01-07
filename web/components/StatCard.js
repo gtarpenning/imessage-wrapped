@@ -10,6 +10,7 @@ export default function StatCard({
   const total = metricTotal ?? totalWraps;
   const smallSampleThreshold = 25;
   const isBottom10 = percentile !== undefined && percentile !== null && percentile <= 10;
+  const isBottomHalf = percentile !== undefined && percentile !== null && percentile < 50;
 
   const getRankInfo = () => {
     if (rank !== undefined && rank !== null && total) {
@@ -29,6 +30,7 @@ export default function StatCard({
     if (rankInfo && rankInfo.rank === 1) return "first";
     if (percentile >= 90) return "top10";
     if (isBottom10) return "bottom10";
+    if (isBottomHalf) return "bottom";
     return "normal";
   };
 
@@ -37,7 +39,8 @@ export default function StatCard({
   const getBadgeClass = () => {
     if (badgeType === "first") return "percentile-badge percentile-badge-first";
     if (badgeType === "top10") return "percentile-badge percentile-badge-top10";
-    if (badgeType === "bottom10") return "percentile-badge percentile-badge-bottom10";
+    if (badgeType === "bottom10" || badgeType === "bottom")
+      return "percentile-badge percentile-badge-bottom10";
     return "percentile-badge";
   };
 
@@ -45,12 +48,13 @@ export default function StatCard({
     if (badgeType === "first") return "🏆 #1";
     if (badgeType === "top10") return `⭐ Top ${100 - percentile}%`;
     if (badgeType === "bottom10") return "🐌 Bottom 10%";
+    if (badgeType === "bottom") return `Top ${100 - percentile}%`;
     return `Top ${100 - percentile}%`;
   };
 
   const sampleSizeHint =
     total && total < smallSampleThreshold
-      ? `Small sample: fewer than ${smallSampleThreshold.toLocaleString()} people have this metric (n=${total.toLocaleString()}).`
+      ? `Small sample: fewer than ${smallSampleThreshold.toLocaleString()} people have this metric.`
       : null;
 
   const tooltipLines = () => {
