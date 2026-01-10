@@ -204,14 +204,16 @@ function EmojiSection({ content, percentiles, totalWraps }) {
 }
 
 function UniqueEmojiSection({ uniqueEmoji, totalWraps }) {
-  if (!uniqueEmoji) return null;
-
-  const uniquenessText = uniqueEmoji.percentOfUsers < 50
+  const uniquenessText = uniqueEmoji && uniqueEmoji.percentOfUsers < 50
     ? `Only ${uniqueEmoji.percentOfUsers}% of users use this emoji`
-    : `${uniqueEmoji.percentOfUsers}% of users use this emoji`;
+    : uniqueEmoji ? `${uniqueEmoji.percentOfUsers}% of users use this emoji` : "";
 
-  const prompt = `Your most unique emoji is ${uniqueEmoji.emoji}. You used it ${uniqueEmoji.count} times (${uniqueEmoji.percentOfYourEmojis}% of your emojis), but only ${uniqueEmoji.percentOfUsers}% of ${totalWraps.toLocaleString()} users use it. ${PLAYFUL_INSTRUCTION}`;
-  const { enhancement, loading } = useEnhancement(prompt, true);
+  const prompt = uniqueEmoji
+    ? `Your most unique emoji is ${uniqueEmoji.emoji}. You used it ${uniqueEmoji.count} times (${uniqueEmoji.percentOfYourEmojis}% of your emojis), but only ${uniqueEmoji.percentOfUsers}% of ${totalWraps.toLocaleString()} users use it. ${PLAYFUL_INSTRUCTION}`
+    : null;
+  const { enhancement, loading } = useEnhancement(prompt, !!uniqueEmoji);
+
+  if (!uniqueEmoji) return null;
 
   return (
     <div style={{ marginTop: "2rem" }}>
