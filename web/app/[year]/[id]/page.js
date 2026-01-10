@@ -27,6 +27,7 @@ export default function WrappedPage() {
   const [ranks, setRanks] = useState({});
   const [metricCounts, setMetricCounts] = useState({});
   const [totalWraps, setTotalWraps] = useState(0);
+  const [uniqueEmoji, setUniqueEmoji] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -60,6 +61,7 @@ export default function WrappedPage() {
           setRanks(percentileData.ranks || {});
           setMetricCounts(percentileData.metricCounts || {});
           setTotalWraps(percentileData.total || 0);
+          setUniqueEmoji(percentileData.uniqueEmoji || null);
         }
       } catch (err) {
         setError(err.message);
@@ -115,7 +117,7 @@ export default function WrappedPage() {
         <HeatmapSection volume={stats.volume} year={data.year} />
         <TemporalSection temporal={stats.temporal} />
         {/* <ContactsSection contacts={stats.contacts} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} /> */}
-        <ContentSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+        <ContentSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} uniqueEmoji={uniqueEmoji} />
         <MessageAnalysisSection sentiment={stats.content?.sentiment} />
         <MessageLengthSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
         <ConversationsSection conversations={stats.conversations} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />

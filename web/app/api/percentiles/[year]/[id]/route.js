@@ -149,11 +149,15 @@ export async function GET(request, { params }) {
       }
     });
 
+    // Calculate most unique emoji (TF-IDF style)
+    const uniqueEmojiData = calculateMostUniqueEmoji(currentWrap, result.rows);
+
     return NextResponse.json({ 
       percentiles,
       ranks,
       metricCounts,
-      total: result.rows.length 
+      total: result.rows.length,
+      uniqueEmoji: uniqueEmojiData
     });
   } catch (error) {
     console.error("Percentile calculation error:", error);
@@ -164,3 +168,95 @@ export async function GET(request, { params }) {
   }
 }
 
+// Calculate the most unique emoji for a user using TF-IDF scoring
+function calculateMostUniqueEmoji(currentWrap, allWraps) {
+  try {
+    // Get current user's emoji usage
+    const currentEmojis = currentWrap.data?.raw?.content?.most_used_emojis || 
+                          currentWrap.data?.content?.most_used_emojis || [];
+    
+    if (currentEmojis.length === 0) {
+      return null;
+    }
+
+    // Build emoji frequency maps for all users
+    const userEmojiMaps = [];
+    const globalEmojiDocCount = {}; // How many users use each emoji
+    
+    allWraps.forEach((wrap) => {
+      const emojis = wrap.data?.raw?.content?.most_used_emojis || 
+                     wrap.data?.content?.most_used_emojis || [];
+      
+      if (emojis.length > 0) {
+        const emojiMap = {};
+        emojis.forEach(({ emoji, count }) => {
+          if (emoji && count > 0) {
+            emojiMap[emoji] = count;
+            globalEmojiDocCount[emoji] = (globalEmojiDocCount[emoji] || 0) + 1;
+          }
+        });
+        userEmojiMaps.push(emojiMap);
+      }
+    });
+
+    const totalUsers = userEmojiMaps.length;
+    if (totalUsers === 0) return null;
+
+    // Calculate TF-IDF score for each of current user's emojis
+    const currentUserMap = {};
+    let totalEmojisForUser = 0;
+    
+    currentEmojis.forEach(({ emoji, count }) => {
+      if (emoji && count > 0) {
+        currentUserMap[emoji] = count;
+        totalEmojisForUser += count;
+      }
+    });
+
+    if (totalEmojisForUser === 0) return null;
+
+    // Calculate TF-IDF for each emoji
+    const emojiScores = [];
+    
+    Object.entries(currentUserMap).forEach(([emoji, count]) => {
+      // TF: frequency of emoji for this user (normalized)
+      const tf = count / totalEmojisForUser;
+      
+      // IDF: log(total users / users who use this emoji)
+      const usersWithEmoji = globalEmojiDocCount[emoji] || 1;
+      const idf = Math.log(totalUsers / usersWithEmoji);
+      
+      // TF-IDF score
+      const tfidf = tf * idf;
+      
+      // Calculate how much more this user uses this emoji compared to average
+      const avgUseByOthers = userEmojiMaps.reduce((sum, userMap) => {
+        const userTotal = Object.values(userMap).reduce((a, b) => a + b, 0);
+        return sum + ((userMap[emoji] || 0) / (userTotal || 1));
+      }, 0) / totalUsers;
+      
+      const uniquenessRatio = avgUseByOthers > 0 ? tf / avgUseByOthers : tf;
+      
+      emojiScores.push({
+        emoji,
+        count,
+        tfidf,
+        uniquenessRatio,
+        percentOfUsers: Math.round((usersWithEmoji / totalUsers) * 100),
+        percentOfYourEmojis: Math.round((count / totalEmojisForUser) * 100)
+      });
+    });
+
+    // Sort by TF-IDF score and get the top one
+    emojiScores.sort((a, b) => b.tfidf - a.tfidf);
+    
+    if (emojiScores.length > 0) {
+      return emojiScores[0];
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error calculating unique emoji:", error);
+    return null;
+  }
+}

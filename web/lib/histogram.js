@@ -365,15 +365,16 @@ export function Histogram({
 
   useEffect(() => {
     const threshold = 700;
+    const mobileThreshold = 640;
     const updateCompact = (width) => {
       if (typeof width === "number") {
-        setIsCompactAxis(width < threshold);
+        setIsCompactAxis(width < threshold && width >= mobileThreshold);
         return;
       }
       const measuredWidth =
         scrollContainerRef.current?.clientWidth ??
         (typeof window !== "undefined" ? window.innerWidth : threshold);
-      setIsCompactAxis(measuredWidth < threshold);
+      setIsCompactAxis(measuredWidth < threshold && measuredWidth >= mobileThreshold);
     };
 
     updateCompact();

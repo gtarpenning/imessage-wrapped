@@ -68,6 +68,8 @@ export default function TapbacksSection({ tapbacks, percentiles = {}, ranks = {}
           orderedTapbacks={orderedTapbacks}
           tapbackDistribution={tapbackDistribution}
           percentiles={percentiles}
+          ranks={ranks}
+          metricCounts={metricCounts}
           totalWraps={totalWraps}
         />
       )}
@@ -75,7 +77,7 @@ export default function TapbacksSection({ tapbacks, percentiles = {}, ranks = {}
   );
 }
 
-function TapbackReactionsSection({ orderedTapbacks, tapbackDistribution, percentiles, totalWraps }) {
+function TapbackReactionsSection({ orderedTapbacks, tapbackDistribution, percentiles, ranks, metricCounts, totalWraps }) {
   const tapbackPercentile = percentiles ? percentiles["tapbacks.total_tapbacks_given"] : undefined;
   const percentileContext = tapbackPercentile !== undefined && tapbackPercentile !== null && totalWraps > 0
     ? ` More than ${tapbackPercentile}% of ${totalWraps.toLocaleString()} users.`
@@ -86,6 +88,24 @@ function TapbackReactionsSection({ orderedTapbacks, tapbackDistribution, percent
     : null;
 
   const { enhancement } = useEnhancement(prompt, !!prompt);
+  
+  const calculateRatioDisplay = (likes, dislikes) => {
+    if (dislikes === 0) return `${likes}:0`;
+    
+    const ratio = likes / dislikes;
+    if (ratio >= 1) {
+      return `${Math.round(ratio)}:1`;
+    } else {
+      return `1:${Math.round(1 / ratio)}`;
+    }
+  };
+  
+  const getRatioColor = (likes, dislikes) => {
+    const netScore = likes - dislikes;
+    if (netScore > 0) return "#10b981";
+    if (netScore < 0) return "#ef4444";
+    return "#6b7280";
+  };
 
   return (
     <div style={{ marginTop: "2rem" }}>
@@ -150,42 +170,43 @@ function TapbackReactionsSection({ orderedTapbacks, tapbackDistribution, percent
         ))}
       </div>
 
-      {tapbackDistribution.like > 0 && tapbackDistribution.dislike > 0 && (
-        <div
-          style={{
-            marginTop: "2rem",
-            textAlign: "center",
-            background: "rgba(255, 255, 255, 0.05)",
-            borderRadius: "16px",
-            padding: "2rem",
-            maxWidth: "400px",
-            margin: "2rem auto 0",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-          }}
-        >
+      {(tapbackDistribution.like > 0 || tapbackDistribution.dislike > 0) && (
+        <div style={{ marginTop: "2rem" }}>
+          <StatCard
+            label={
+              <div>
+                <div>👍 / 👎</div>
+                <div style={{ fontSize: "0.75rem", marginTop: "0.25rem" }}>
+                  Like to Dislike Ratio
+                </div>
+              </div>
+            }
+            value={calculateRatioDisplay(
+              tapbackDistribution.like || 0,
+              tapbackDistribution.dislike || 0
+            )}
+            valueStyle={{
+              fontSize: "2.5rem",
+              color: getRatioColor(
+                tapbackDistribution.like || 0,
+                tapbackDistribution.dislike || 0
+              ),
+            }}
+            percentile={percentiles["tapbacks.like_to_dislike_ratio"]}
+            rank={ranks["tapbacks.like_to_dislike_ratio"]}
+            metricTotal={metricCounts["tapbacks.like_to_dislike_ratio"]}
+            totalWraps={totalWraps}
+          />
           <div
             style={{
-              fontSize: "0.9rem",
-              opacity: 0.7,
-              marginBottom: "0.75rem",
+              textAlign: "center",
+              fontSize: "0.85rem",
+              opacity: 0.6,
+              marginTop: "0.5rem",
             }}
           >
-            Like to Dislike Ratio
-          </div>
-          <div style={{ fontSize: "3rem", marginBottom: "0.5rem" }}>
-            👍 / 👎
-          </div>
-          <div
-            style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#10b981" }}
-          >
-            {Math.round(tapbackDistribution.like / tapbackDistribution.dislike)}
-            :1
-          </div>
-          <div
-            style={{ fontSize: "0.85rem", opacity: 0.6, marginTop: "0.5rem" }}
-          >
-            {tapbackDistribution.like.toLocaleString()} likes vs{" "}
-            {tapbackDistribution.dislike.toLocaleString()} dislikes
+            {(tapbackDistribution.like || 0).toLocaleString()} likes vs{" "}
+            {(tapbackDistribution.dislike || 0).toLocaleString()} dislikes
           </div>
         </div>
       )}

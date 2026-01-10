@@ -3,7 +3,7 @@ import PhraseHighlights from "./PhraseHighlights";
 import EnhancedText from "./EnhancedText";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 
-export default function ContentSection({ content, percentiles = {}, ranks = {}, metricCounts = {}, totalWraps = 0 }) {
+export default function ContentSection({ content, percentiles = {}, ranks = {}, metricCounts = {}, totalWraps = 0, uniqueEmoji = null }) {
   if (!content) return null;
 
   return (
@@ -82,6 +82,8 @@ export default function ContentSection({ content, percentiles = {}, ranks = {}, 
       <DoubleTextSection content={content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
 
       <EmojiSection content={content} percentiles={percentiles} totalWraps={totalWraps} />
+
+      <UniqueEmojiSection uniqueEmoji={uniqueEmoji} totalWraps={totalWraps} />
 
       <PhraseHighlights
         overall={content.phrases?.overall}
@@ -196,6 +198,81 @@ function EmojiSection({ content, percentiles, totalWraps }) {
             <div className="count">{emoji.count}</div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function UniqueEmojiSection({ uniqueEmoji, totalWraps }) {
+  if (!uniqueEmoji) return null;
+
+  const uniquenessText = uniqueEmoji.percentOfUsers < 50
+    ? `Only ${uniqueEmoji.percentOfUsers}% of users use this emoji`
+    : `${uniqueEmoji.percentOfUsers}% of users use this emoji`;
+
+  const prompt = `Your most unique emoji is ${uniqueEmoji.emoji}. You used it ${uniqueEmoji.count} times (${uniqueEmoji.percentOfYourEmojis}% of your emojis), but only ${uniqueEmoji.percentOfUsers}% of ${totalWraps.toLocaleString()} users use it. ${PLAYFUL_INSTRUCTION}`;
+  const { enhancement, loading } = useEnhancement(prompt, true);
+
+  return (
+    <div style={{ marginTop: "2rem" }}>
+      <h3
+        style={{
+          fontSize: "1.5rem",
+          fontWeight: "500",
+          marginBottom: enhancement ? "0.5rem" : "1rem",
+          opacity: 0.85,
+          textAlign: "center",
+        }}
+      >
+        Your Most Unique Emoji
+      </h3>
+      {enhancement && <EnhancedText>{enhancement}</EnhancedText>}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          padding: "2rem",
+          background: "rgba(255, 255, 255, 0.03)",
+          borderRadius: "1rem",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+        }}
+      >
+        <div
+          style={{
+            fontSize: "4rem",
+            marginBottom: "1rem",
+          }}
+        >
+          {uniqueEmoji.emoji}
+        </div>
+        <div
+          style={{
+            fontSize: "1.2rem",
+            marginBottom: "0.5rem",
+            opacity: 0.9,
+          }}
+        >
+          Used {uniqueEmoji.count} times
+        </div>
+        <div
+          style={{
+            fontSize: "0.95rem",
+            opacity: 0.7,
+            textAlign: "center",
+            maxWidth: "600px",
+          }}
+        >
+          This emoji makes up {uniqueEmoji.percentOfYourEmojis}% of your emoji usage.
+          <br />
+          {uniquenessText}, making it uniquely yours!
+          {uniqueEmoji.uniquenessRatio > 2 && (
+            <>
+              <br />
+              You use it {uniqueEmoji.uniquenessRatio.toFixed(1)}x more than the average user.
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
