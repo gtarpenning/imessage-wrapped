@@ -334,7 +334,7 @@ function createPieChartConfig(distribution, onSegmentHover, hoveredSegmentKey) {
                   <div style={{ opacity: 0.6, fontSize: "0.8rem" }}>
                     {segment.messageCount.toLocaleString()} msgs
                   </div>
-                  <div style={{ width: "210px" }}>
+                  <div style={{ width: "210px" }} className="hide-on-mobile">
                     {renderSentReceivedBar(segment, { receivedColor: "rgba(255,255,255,0.7)" })}
                   </div>
                 </div>

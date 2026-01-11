@@ -24,7 +24,7 @@ export default function ResponseTimesSection({ response_times, percentiles = {},
   const percentileContext = buildPercentileContext(yourPercentile, totalWraps);
 
   const prompt = hasBoth
-    ? `Our median response time is ${response_times.median_response_time_you_formatted}, theirs is ${response_times.median_response_time_them_formatted}.${percentileContext} ${PLAYFUL_INSTRUCTION}`
+    ? `Your median response time is ${response_times.median_response_time_you_formatted}, and the other person's is ${response_times.median_response_time_them_formatted}.${percentileContext} ${PLAYFUL_INSTRUCTION}`
     : null;
 
   const { enhancement, loading } = useEnhancement(prompt, hasBoth);

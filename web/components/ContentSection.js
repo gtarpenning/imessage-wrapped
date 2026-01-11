@@ -11,28 +11,6 @@ export default function ContentSection({ content, percentiles = {}, ranks = {}, 
       <h2 className="section-title">💬 Message Content</h2>
 
       <div className="stats-grid">
-        {content.avg_message_length_sent !== undefined && (
-          <StatCard
-            label="Avg Message Length (Sent)"
-            value={`${Math.round(content.avg_message_length_sent)} chars`}
-            percentile={percentiles["content.avg_message_length_sent"]}
-            rank={ranks["content.avg_message_length_sent"]}
-            metricTotal={metricCounts["content.avg_message_length_sent"]}
-            totalWraps={totalWraps}
-            valueStyle={{ fontSize: "2rem" }}
-          />
-        )}
-        {content.avg_message_length_received !== undefined && (
-          <StatCard
-            label="Avg Message Length (Received)"
-            value={`${Math.round(content.avg_message_length_received)} chars`}
-            percentile={percentiles["content.avg_message_length_received"]}
-            rank={ranks["content.avg_message_length_received"]}
-            metricTotal={metricCounts["content.avg_message_length_received"]}
-            totalWraps={totalWraps}
-            valueStyle={{ fontSize: "2rem" }}
-          />
-        )}
         {content.questions_percentage !== undefined && (
           <StatCard
             label="❓ Questions Asked"
@@ -46,7 +24,7 @@ export default function ContentSection({ content, percentiles = {}, ranks = {}, 
         )}
         {content.enthusiasm_percentage !== undefined && (
           <StatCard
-            label="❗ Enthusiasm Level"
+            label="❗ Exclamations Sent"
             value={`${content.enthusiasm_percentage}%`}
             percentile={percentiles["content.enthusiasm_percentage"]}
             rank={ranks["content.enthusiasm_percentage"]}
@@ -57,22 +35,11 @@ export default function ContentSection({ content, percentiles = {}, ranks = {}, 
         )}
         {content.attachments_sent !== undefined && (
           <StatCard
-            label="📎 Attachments Sent"
+            label="📸 Photos Sent"
             value={content.attachments_sent.toLocaleString()}
             percentile={percentiles["content.attachments_sent"]}
             rank={ranks["content.attachments_sent"]}
             metricTotal={metricCounts["content.attachments_sent"]}
-            totalWraps={totalWraps}
-            valueStyle={{ fontSize: "2rem" }}
-          />
-        )}
-        {content.attachments_received !== undefined && (
-          <StatCard
-            label="📎 Attachments Received"
-            value={content.attachments_received.toLocaleString()}
-            percentile={percentiles["content.attachments_received"]}
-            rank={ranks["content.attachments_received"]}
-            metricTotal={metricCounts["content.attachments_received"]}
             totalWraps={totalWraps}
             valueStyle={{ fontSize: "2rem" }}
           />

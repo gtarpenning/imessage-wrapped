@@ -84,7 +84,7 @@ function TapbackReactionsSection({ orderedTapbacks, tapbackDistribution, percent
     : "";
   
   const prompt = orderedTapbacks[0]
-    ? `Your friend's favorite tapback reaction is ${TAPBACK_LABELS[orderedTapbacks[0]]} ${TAPBACK_EMOJIS[orderedTapbacks[0]]} which they used ${tapbackDistribution[orderedTapbacks[0]]} times.${percentileContext} ${PLAYFUL_INSTRUCTION}`
+    ? `Your favorite tapback reaction is ${TAPBACK_LABELS[orderedTapbacks[0]]} ${TAPBACK_EMOJIS[orderedTapbacks[0]]} which you used ${tapbackDistribution[orderedTapbacks[0]]} times.${percentileContext} ${PLAYFUL_INSTRUCTION}`
     : null;
 
   const { enhancement } = useEnhancement(prompt, !!prompt);

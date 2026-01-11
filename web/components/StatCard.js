@@ -6,6 +6,7 @@ export default function StatCard({
   totalWraps,
   rank,
   metricTotal,
+  helperText,
 }) {
   const total = metricTotal ?? totalWraps;
   const smallSampleThreshold = 25;
@@ -96,6 +97,11 @@ export default function StatCard({
         </div>
       )}
       <div className="stat-label">{label}</div>
+      {helperText && (
+        <div style={{ fontSize: "0.75rem", opacity: 0.6, marginTop: "0.25rem" }}>
+          {helperText}
+        </div>
+      )}
       <div className="stat-value" style={valueStyle}>
         {value}
       </div>

@@ -552,6 +552,10 @@ footer {
     width: 130px;
     height: 130px;
   }
+
+  .hide-on-mobile {
+    display: none;
+  }
 }
 
 /* ============================================

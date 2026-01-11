@@ -51,13 +51,13 @@ class PhraseExtractionConfig:
     min_characters: int = 4
     min_text_messages: int = 50
     per_contact_min_text_messages: int | None = 20
-    max_phrases: int = 10  # number of phrases to return
+    max_phrases: int = 12  # number of phrases to return
     per_contact_limit: int = 500
     scoring: str = "tfidf"  # or "tfidf" / "frequency"
     dedupe_overlap: bool = True
-    overlap_tolerance: float = 0.1
+    overlap_tolerance: float = 0.2
     contains_letters: bool = True
-    length_bias: float = 2.1
+    length_bias: float = 2.0
     phrase_filter_bank: list[str] = field(default_factory=lambda: ["http", "https"])
 
     def __post_init__(self) -> None:

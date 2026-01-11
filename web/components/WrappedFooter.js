@@ -8,13 +8,13 @@ export default function WrappedFooter({ views, volume, isComparison = false, per
 
   const volumePercentile = percentiles["volume.total_sent"];
   const percentileContext = volumePercentile !== undefined && volumePercentile !== null && totalWraps > 0
-    ? ` They're more active than ${volumePercentile}% of ${totalWraps.toLocaleString()} users.`
+    ? ` This person is more active than ${volumePercentile}% of ${totalWraps.toLocaleString()} users.`
     : "";
 
   const enhancementPrompt = !isComparison && totalMessages > 0
-      ? `Their friend sent ${totalMessages.toLocaleString()} messages this year.${percentileContext} Write a spicy, provocative, ` +
-        `attention-grabbing call-to-action (under 15 words) encouraging the viewer to click the button to see ` +
-        `their own analysis. Be bold and playful. Use past tense example: Think you topped <number> texts?`
+      ? `You just saw someone send ${totalMessages.toLocaleString()} messages this year.${percentileContext} Write a spicy, provocative, ` +
+        `attention-grabbing call-to-action (under 15 words) encouraging the viewer to click the button to create ` +
+        `their own analysis. Be bold and playful. Use past tense example: Think you topped ${totalMessages.toLocaleString()} texts?`
       : null;
 
   const { enhancement, loading } = useEnhancement(
