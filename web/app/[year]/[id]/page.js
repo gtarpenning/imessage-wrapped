@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import HeroSection from "@/components/HeroSection";
 import HeatmapSection from "@/components/HeatmapSection";
-// import ContactsSection from "@/components/ContactsSection";
+import ContactsSection from "@/components/ContactsSection";
 import TemporalSection from "@/components/TemporalSection";
 import ContentSection from "@/components/ContentSection";
 import MessageAnalysisSection from "@/components/MessageAnalysisSection";
@@ -16,8 +16,6 @@ import ResponseTimesSection from "@/components/ResponseTimesSection";
 import TapbacksSection from "@/components/TapbacksSection";
 import StreaksSection from "@/components/StreaksSection";
 import WrappedFooter from "@/components/WrappedFooter";
-// import UnlockButton from "@/components/UnlockButton";
-import { useUnlock } from "@/hooks/useUnlock";
 import { applyHydratedData } from "@/lib/hydration";
 
 export default function WrappedPage() {
@@ -30,9 +28,6 @@ export default function WrappedPage() {
   const [uniqueEmoji, setUniqueEmoji] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Initialize unlock functionality
-  const { isUnlocked, hydratedData, isUnlocking, error: unlockError, unlock, reset, checkStoredUnlock } = useUnlock(params.year, params.id);
 
   useEffect(() => {
     async function fetchData() {
@@ -71,9 +66,7 @@ export default function WrappedPage() {
     }
 
     fetchData();
-    // Check if already unlocked in sessionStorage
-    checkStoredUnlock();
-  }, [params.year, params.id, checkStoredUnlock]);
+  }, [params.year, params.id]);
 
   if (loading) {
     return <div className="loading">Loading your Wrapped...</div>;
@@ -91,32 +84,21 @@ export default function WrappedPage() {
     );
   }
 
-  // Apply hydrated data if unlocked
+  // Automatically apply hydrated data if it exists (user analyzed with contacts)
   let stats = data.statistics?.raw || data.statistics;
-  if (isUnlocked && hydratedData) {
-    stats = applyHydratedData(stats, hydratedData);
+  if (data.hydrated_data) {
+    stats = applyHydratedData(stats, data.hydrated_data);
   }
   
   const userName = data.user_name || null;
-  
-  // Check if this wrapped has contact data available (has unlock_code in metadata)
-  // const hasContactData = data.metadata?.unlock_code ? true : false;
 
   return (
     <>
-      {/* <UnlockButton 
-        isUnlocked={isUnlocked}
-        isUnlocking={isUnlocking}
-        error={unlockError}
-        onUnlock={unlock}
-        onReset={reset}
-        hasContactData={hasContactData}
-      /> */}
       <main className="container">
         <HeroSection year={data.year} volume={stats.volume} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} userName={userName} />
         <HeatmapSection volume={stats.volume} year={data.year} />
         <TemporalSection temporal={stats.temporal} />
-        {/* <ContactsSection contacts={stats.contacts} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} /> */}
+        <ContactsSection contacts={stats.contacts} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
         <ContentSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} uniqueEmoji={uniqueEmoji} />
         <MessageAnalysisSection sentiment={stats.content?.sentiment} />
         <MessageLengthSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />

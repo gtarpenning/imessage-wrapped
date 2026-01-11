@@ -24,6 +24,24 @@ function calculatePercentile(value, allValues, lowerIsBetter = false) {
 
 // Helper to extract stat from data JSON
 function extractStat(data, path) {
+  // Handle special computed metrics
+  if (path === "tapbacks.like_to_dislike_ratio") {
+    const tapbacks = data?.raw?.tapbacks || data?.tapbacks;
+    if (!tapbacks?.tapback_distribution_given) return null;
+    
+    const likes = tapbacks.tapback_distribution_given.like || 0;
+    const dislikes = tapbacks.tapback_distribution_given.dislike || 0;
+    
+    // Need both likes and dislikes to calculate ratio
+    if (likes === 0 && dislikes === 0) return null;
+    
+    // Calculate normalized score: (likes - dislikes) / (likes + dislikes)
+    // Range: -1 (all dislikes) to 1 (all likes)
+    // This handles negative cases and works well for percentile comparisons
+    const total = likes + dislikes;
+    return (likes - dislikes) / total;
+  }
+  
   // Handle both data.raw.X and data.X structures
   let value = data?.raw || data;
   
@@ -87,6 +105,7 @@ export async function GET(request, { params }) {
       "response_times.median_response_time_them_seconds",
       "tapbacks.total_tapbacks_given",
       "tapbacks.total_tapbacks_received",
+      "tapbacks.like_to_dislike_ratio",
       "streaks.longest_streak_days",
       "contacts.unique_contacts_messaged",
       "contacts.unique_contacts_received_from",

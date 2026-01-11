@@ -197,7 +197,7 @@ export async function createWrapped(year, data, userName = null, metadata = null
 // Get wrapped statistics by ID and year
 export async function getWrapped(year, id) {
   const sql = `
-    SELECT id, year, data, created_at, updated_at, views, metadata
+    SELECT id, year, data, created_at, updated_at, views, metadata, hydrated_data
     FROM wrapped_stats
     WHERE id = $1 AND year = $2
   `;
@@ -224,6 +224,7 @@ export async function getWrapped(year, id) {
     updated_at: wrapped.updated_at,
     views: wrapped.views + 1,
     metadata: wrapped.metadata || {},
+    hydrated_data: wrapped.hydrated_data || null,
   };
 }
 
@@ -291,7 +292,9 @@ export async function getComparison(year1, year2, id) {
       c.created_at, 
       c.views,
       w1.data as year1_data,
-      w2.data as year2_data
+      w2.data as year2_data,
+      w1.hydrated_data as year1_hydrated_data,
+      w2.hydrated_data as year2_hydrated_data
     FROM wrapped_comparisons c
     JOIN wrapped_stats w1 ON c.year1_id = w1.id
     JOIN wrapped_stats w2 ON c.year2_id = w2.id
@@ -322,6 +325,8 @@ export async function getComparison(year1, year2, id) {
     year2_statistics: comparison.year2_data,
     year1_user_name: comparison.year1_data.user_name || null,
     year2_user_name: comparison.year2_data.user_name || null,
+    year1_hydrated_data: comparison.year1_hydrated_data || null,
+    year2_hydrated_data: comparison.year2_hydrated_data || null,
     created_at: comparison.created_at,
     views: comparison.views + 1,
   };
