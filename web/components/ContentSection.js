@@ -35,7 +35,7 @@ export default function ContentSection({ content, percentiles = {}, ranks = {}, 
         )}
         {content.attachments_sent !== undefined && (
           <StatCard
-            label="📸 Photos Sent"
+            label="📸 Photos Sent!"
             value={content.attachments_sent.toLocaleString()}
             percentile={percentiles["content.attachments_sent"]}
             rank={ranks["content.attachments_sent"]}
