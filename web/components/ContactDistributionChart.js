@@ -15,8 +15,8 @@ function getCoolColorGradient(value) {
 }
 
 function createPieChartConfig(distribution, onSegmentHover, hoveredSegmentKey) {
-  const top20 = distribution.slice(0, 20);
-  const rest = distribution.slice(20);
+  const top50 = distribution.slice(0, 50);
+  const rest = distribution.slice(50);
   const restCount = rest.reduce((sum, entry) => sum + (entry.count ?? 0), 0);
   const restSent = rest.reduce((sum, entry) => sum + (entry.sent_count ?? 0), 0);
   const restReceived = rest.reduce(
@@ -168,7 +168,7 @@ function createPieChartConfig(distribution, onSegmentHover, hoveredSegmentKey) {
   
   return {
     processData: () => {
-      const segments = top20.map((entry, index) => {
+      const segments = top50.map((entry, index) => {
         const share = entry.share ?? 0;
         const messageCount = entry.count ?? 0;
         const { sentCount, receivedCount, sentRatio, receivedRatio } = normalizeRatios(
@@ -188,17 +188,17 @@ function createPieChartConfig(distribution, onSegmentHover, hoveredSegmentKey) {
         };
       });
       
-      let top20TotalShare = segments.reduce((sum, s) => sum + (s.share ?? 0), 0);
+      let top50TotalShare = segments.reduce((sum, s) => sum + (s.share ?? 0), 0);
       
-      if (top20TotalShare > 1) {
-        const scaleFactor = 1 / top20TotalShare;
+      if (top50TotalShare > 1) {
+        const scaleFactor = 1 / top50TotalShare;
         segments.forEach(s => {
           s.share = s.share * scaleFactor;
         });
-        top20TotalShare = 1;
+        top50TotalShare = 1;
       }
       
-      const normalizedRestShare = Math.max(0, 1 - top20TotalShare);
+      const normalizedRestShare = Math.max(0, 1 - top50TotalShare);
       
       if (normalizedRestShare > 0 && restCount > 0) {
         const { sentCount, receivedCount, sentRatio, receivedRatio } = normalizeRatios(

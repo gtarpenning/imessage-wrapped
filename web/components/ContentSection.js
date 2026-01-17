@@ -171,9 +171,27 @@ function EmojiSection({ content, percentiles, totalWraps }) {
 }
 
 function UniqueEmojiSection({ uniqueEmoji, totalWraps }) {
-  const uniquenessText = uniqueEmoji && uniqueEmoji.percentOfUsers < 50
-    ? `Only ${uniqueEmoji.percentOfUsers}% of users use this emoji`
-    : uniqueEmoji ? `${uniqueEmoji.percentOfUsers}% of users use this emoji` : "";
+  const percentOfUsers = uniqueEmoji ? uniqueEmoji.percentOfUsers : 0;
+  const isActuallyUnique = percentOfUsers <= 30;
+  const uniquenessText = uniqueEmoji
+    ? (() => {
+        if (percentOfUsers <= 10) return `Super rare: only ${percentOfUsers}% of users use this emoji`;
+        if (percentOfUsers <= 30) return `Pretty rare: ${percentOfUsers}% of users use this emoji`;
+        if (percentOfUsers <= 60) return `Somewhat uncommon: ${percentOfUsers}% of users use this emoji`;
+        if (percentOfUsers <= 80) return `Fairly common: ${percentOfUsers}% of users use this emoji`;
+        return `Very common: ${percentOfUsers}% of users use this emoji`;
+      })()
+    : "";
+
+  const ratioText = uniqueEmoji
+    ? (() => {
+        const ratio = uniqueEmoji.uniquenessRatio;
+        if (ratio >= 3 && percentOfUsers <= 60) {
+          return `You use it ${ratio.toFixed(1)}x more than the average user.`;
+        }
+        return "";
+      })()
+    : "";
 
   const prompt = uniqueEmoji
     ? `Your most unique emoji is ${uniqueEmoji.emoji}. You used it ${uniqueEmoji.count} times (${uniqueEmoji.percentOfYourEmojis}% of your emojis), but only ${uniqueEmoji.percentOfUsers}% of ${totalWraps.toLocaleString()} users use it. ${PLAYFUL_INSTRUCTION}`
@@ -234,11 +252,12 @@ function UniqueEmojiSection({ uniqueEmoji, totalWraps }) {
         >
           This emoji makes up {uniqueEmoji.percentOfYourEmojis}% of your emoji usage.
           <br />
-          {uniquenessText}, making it uniquely yours!
-          {uniqueEmoji.uniquenessRatio > 2 && (
+          {uniquenessText}
+          {isActuallyUnique ? ", making it uniquely yours!" : "."}
+          {ratioText && (
             <>
               <br />
-              You use it {uniqueEmoji.uniquenessRatio.toFixed(1)}x more than the average user.
+              {ratioText}
             </>
           )}
         </div>

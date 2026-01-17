@@ -22,7 +22,6 @@ from imessage_wrapped import (
     MessageService,
     RawStatisticsAnalyzer,
 )
-from imessage_wrapped.metadata import collect_metadata
 from imessage_wrapped.uploader import StatsUploader
 from imessage_wrapped.utils import sanitize_statistics_for_export
 
@@ -54,11 +53,6 @@ class IMessageWrappedApp(rumps.App):
         self.copy_link_item = rumps.MenuItem("Copy link", callback=self.copy_link)
         self.copy_link_item.set_callback(self.copy_link)
 
-        self.copy_unlock_code_item = rumps.MenuItem(
-            "Copy unlock code", callback=self.copy_unlock_code
-        )
-        self.copy_unlock_code_item.set_callback(self.copy_unlock_code)
-
         self.view_logs_item = rumps.MenuItem("View logs", callback=self.view_logs)
         self.view_logs_item.set_callback(self.view_logs)
 
@@ -67,7 +61,6 @@ class IMessageWrappedApp(rumps.App):
             rumps.MenuItem("Analyze with contacts", callback=self.analyze_with_contacts),
             rumps.separator,
             self.copy_link_item,
-            self.copy_unlock_code_item,
             self.view_logs_item,
             rumps.separator,
             rumps.MenuItem("About", callback=self.show_about),
@@ -76,7 +69,6 @@ class IMessageWrappedApp(rumps.App):
 
         self.running = False
         self.current_url = None
-        self.unlock_code = None
         self.has_error = False
 
         self._update_menu_states()
@@ -90,30 +82,12 @@ class IMessageWrappedApp(rumps.App):
             self.copy_link_item.title = "📋 Copy link (not available)"
             self.copy_link_item.set_callback(None)
 
-        if self.unlock_code:
-            self.copy_unlock_code_item.title = f"🔐 Copy unlock code ({self.unlock_code})"
-            self.copy_unlock_code_item.set_callback(self.copy_unlock_code)
-        else:
-            self.copy_unlock_code_item.title = "🔐 Copy unlock code (not available)"
-            self.copy_unlock_code_item.set_callback(None)
-
         if self.has_error:
             self.view_logs_item.title = "📄 View logs"
             self.view_logs_item.set_callback(self.view_logs)
         else:
             self.view_logs_item.title = "📄 View logs (no errors)"
             self.view_logs_item.set_callback(None)
-
-    @rumps.clicked("Copy unlock code")
-    def copy_unlock_code(self, _):
-        """Copy the unlock code to clipboard"""
-        if self.unlock_code:
-            subprocess.run("pbcopy", text=True, input=self.unlock_code)
-            rumps.notification(
-                title="Copied!",
-                subtitle="Unlock code copied to clipboard",
-                message=f"Code: {self.unlock_code}",
-            )
 
     @rumps.clicked("Copy link")
     def copy_link(self, _):
@@ -219,7 +193,8 @@ class IMessageWrappedApp(rumps.App):
             exports_dir = Path("exports")
             exports_dir.mkdir(exist_ok=True)
 
-            export_path = exports_dir / f"imessage_export_{year}.jsonl"
+            export_suffix = "_with_contacts" if with_contacts else ""
+            export_path = exports_dir / f"imessage_export_{year}{export_suffix}.jsonl"
             self.logger.info(f"Export path: {export_path}")
 
             if not export_path.exists():
@@ -263,10 +238,7 @@ class IMessageWrappedApp(rumps.App):
                 title="Uploading", subtitle="Creating shareable link...", message="Final step"
             )
 
-            # Collect metadata to get unlock code (only if with_contacts is enabled)
             user_name = data.user_name if hasattr(data, "user_name") else None
-            metadata = collect_metadata(user_name, with_contacts=with_contacts)
-            unlock_code = metadata.get("unlock_code")
 
             uploader = StatsUploader(base_url="https://imessage-wrapped.fly.dev")
             share_url = uploader.upload(
@@ -280,13 +252,9 @@ class IMessageWrappedApp(rumps.App):
             if share_url:
                 self.logger.info(f"Upload successful: {share_url}")
                 self.current_url = share_url
-                # Only set unlock code if with_contacts was enabled
-                self.unlock_code = unlock_code if with_contacts else None
                 self._update_menu_states()
 
                 notification_message = "Click 'Copy Link' to share!"
-                if with_contacts and unlock_code:
-                    notification_message += f"\nUnlock code: {unlock_code}"
 
                 rumps.notification(
                     title="Success! 🎉",
