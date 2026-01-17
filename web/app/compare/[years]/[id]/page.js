@@ -63,16 +63,29 @@ export default function ComparisonPage() {
     );
   }
 
-  // Automatically apply hydrated data if it exists (user analyzed with contacts)
-  let stats1 = data.year1_statistics?.raw || data.year1_statistics;
-  let stats2 = data.year2_statistics?.raw || data.year2_statistics;
-  
-  if (data.year1_hydrated_data) {
-    stats1 = applyHydratedData(stats1, data.year1_hydrated_data);
-  }
-  if (data.year2_hydrated_data) {
-    stats2 = applyHydratedData(stats2, data.year2_hydrated_data);
-  }
+  const hydrateStatistics = (statistics, hydratedData) => {
+    if (!hydratedData || !statistics) return statistics;
+    const hasRaw = typeof statistics === "object" && "raw" in statistics;
+    const hasRawPaths = Object.keys(hydratedData).some((path) => path.startsWith("raw."));
+    if (hasRaw && !hasRawPaths) {
+      return { ...statistics, raw: applyHydratedData(statistics.raw, hydratedData) };
+    }
+    if (!hasRaw && hasRawPaths) {
+      return applyHydratedData({ raw: statistics }, hydratedData);
+    }
+    return applyHydratedData(statistics, hydratedData);
+  };
+
+  const hydratedYear1 = hydrateStatistics(
+    data.year1_statistics,
+    data.year1_hydrated_data,
+  );
+  const hydratedYear2 = hydrateStatistics(
+    data.year2_statistics,
+    data.year2_hydrated_data,
+  );
+  const stats1 = hydratedYear1?.raw || hydratedYear1;
+  const stats2 = hydratedYear2?.raw || hydratedYear2;
   
   const year1 = data.year1;
   const year2 = data.year2;

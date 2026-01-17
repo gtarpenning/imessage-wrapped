@@ -1,5 +1,73 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
+function ScrollHint() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.scrollY > 0) return;
+
+    let timeoutId = null;
+    const onScroll = () => {
+      if (window.scrollY > 0) setVisible(false);
+    };
+
+    timeoutId = window.setTimeout(() => {
+      if (window.scrollY === 0) setVisible(true);
+    }, 2000);
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <>
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          right: "1.25rem",
+          bottom: "1.25rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          padding: "0.6rem 0.9rem",
+          borderRadius: "999px",
+          background: "rgba(0,0,0,0.4)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          color: "white",
+          fontSize: "0.9rem",
+          letterSpacing: "0.02em",
+          animation: "scroll-hint-bob 1.6s ease-in-out infinite",
+          zIndex: 20,
+        }}
+      >
+        <span style={{ opacity: 0.8 }}>Scroll</span>
+        <span style={{ fontSize: "1.1rem" }}>↓</span>
+      </div>
+      <style jsx global>{`
+        @keyframes scroll-hint-bob {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-6px);
+          }
+        }
+      `}</style>
+    </>
+  );
+}
+
 export default function Home() {
   return (
     <main className="container">
@@ -80,6 +148,7 @@ export default function Home() {
           </p>
         </div>
       </div>
+      <ScrollHint />
     </main>
   );
 }

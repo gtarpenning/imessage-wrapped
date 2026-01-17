@@ -84,11 +84,21 @@ export default function WrappedPage() {
     );
   }
 
-  // Automatically apply hydrated data if it exists (user analyzed with contacts)
-  let stats = data.statistics?.raw || data.statistics;
-  if (data.hydrated_data) {
-    stats = applyHydratedData(stats, data.hydrated_data);
-  }
+  const hydrateStatistics = (statistics, hydratedData) => {
+    if (!hydratedData || !statistics) return statistics;
+    const hasRaw = typeof statistics === "object" && "raw" in statistics;
+    const hasRawPaths = Object.keys(hydratedData).some((path) => path.startsWith("raw."));
+    if (hasRaw && !hasRawPaths) {
+      return { ...statistics, raw: applyHydratedData(statistics.raw, hydratedData) };
+    }
+    if (!hasRaw && hasRawPaths) {
+      return applyHydratedData({ raw: statistics }, hydratedData);
+    }
+    return applyHydratedData(statistics, hydratedData);
+  };
+
+  const hydratedStatistics = hydrateStatistics(data.statistics, data.hydrated_data);
+  const stats = hydratedStatistics?.raw || hydratedStatistics;
   
   const userName = data.user_name || null;
 
