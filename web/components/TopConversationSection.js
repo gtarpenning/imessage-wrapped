@@ -1,0 +1,447 @@
+import { useMemo } from "react";
+import EnhancedText from "./EnhancedText";
+import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
+
+const RADIAL_SIZE = 360;
+const RADIAL_CENTER = RADIAL_SIZE / 2;
+const RADIAL_BASE_RADIUS = 40;
+const RADIAL_MAX_RADIUS = RADIAL_CENTER - 30;
+const HOUR_LABELS = [
+  "12a",
+  "1a",
+  "2a",
+  "3a",
+  "4a",
+  "5a",
+  "6a",
+  "7a",
+  "8a",
+  "9a",
+  "10a",
+  "11a",
+  "12p",
+  "1p",
+  "2p",
+  "3p",
+  "4p",
+  "5p",
+  "6p",
+  "7p",
+  "8p",
+  "9p",
+  "10p",
+  "11p",
+];
+
+function formatHourLabel(hour) {
+  if (hour === null || hour === undefined || hour < 0) return "—";
+  const period = hour >= 12 ? "PM" : "AM";
+  const display = hour % 12 === 0 ? 12 : hour % 12;
+  return `${display} ${period}`;
+}
+
+export default function TopConversationSection({ deepDive }) {
+  const hasDeepDive = Boolean(deepDive);
+  const prompt = hasDeepDive
+    ? `My top conversation (${deepDive.message_count} messages) is ${
+        deepDive.is_group ? "a group chat" : "a one-on-one"
+      }. ${PLAYFUL_INSTRUCTION}`
+    : null;
+  const { enhancement } = useEnhancement(prompt, hasDeepDive);
+
+  if (!hasDeepDive) return null;
+
+  const subtitle = deepDive.name
+    ? `All stats below use the #1 thread: ${deepDive.name}`
+    : "All stats below use your #1 conversation.";
+
+  return (
+    <div className="section">
+      <h2 className="section-title">💬 Deep Dive: #1 Conversation</h2>
+      <p className="section-subtitle">{subtitle}</p>
+      {enhancement && (
+        <EnhancedText style={{ marginTop: "0.5rem" }}>{enhancement}</EnhancedText>
+      )}
+
+      <ConversationSummary deepDive={deepDive} />
+      <WordUsageBreakdown usage={deepDive.word_usage} />
+      <div className="top-convo-grid">
+        <RadialHourChart hourly={deepDive.hourly_distribution} />
+        <StarterCard stats={deepDive.starter_analysis} />
+      </div>
+      <DailyTrendChart activity={deepDive.daily_activity} />
+    </div>
+  );
+}
+
+function ConversationSummary({ deepDive }) {
+  const typeLabel = deepDive.is_group ? "Group chat" : "1-on-1 chat";
+  const totalDays = deepDive.daily_activity?.total_days || 0;
+  const busiestDay = deepDive.daily_activity?.busiest_day;
+
+  return (
+    <div className="top-convo-summary">
+      <div>
+        <p className="top-convo-summary__label">Conversation Type</p>
+        <p className="top-convo-summary__value">{typeLabel}</p>
+        <p className="top-convo-summary__meta">
+          {deepDive.participant_count} participant{deepDive.participant_count === 1 ? "" : "s"}
+        </p>
+      </div>
+      <div>
+        <p className="top-convo-summary__label">Messages Counted</p>
+        <p className="top-convo-summary__value">
+          {deepDive.message_count.toLocaleString()}
+        </p>
+        <p className="top-convo-summary__meta">
+          {deepDive.date_range?.start} → {deepDive.date_range?.end}
+        </p>
+      </div>
+      <div>
+        <p className="top-convo-summary__label">Days Active</p>
+        <p className="top-convo-summary__value">{totalDays.toLocaleString()}</p>
+        <p className="top-convo-summary__meta">
+          {busiestDay
+            ? `Busiest: ${busiestDay.date} (${busiestDay.total.toLocaleString()} msgs)`
+            : "Evenly spread"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function WordUsageBreakdown({ usage }) {
+  if (!usage) return null;
+
+  const columns = [
+    { label: "You", data: usage.sent, color: "#a855f7", total: usage.total_sent_tokens },
+    {
+      label: "Them",
+      data: usage.received,
+      color: "#ec4899",
+      total: usage.total_received_tokens,
+    },
+  ];
+
+  const hasData = columns.some((column) => Array.isArray(column.data) && column.data.length > 0);
+  if (!hasData) return null;
+
+  return (
+    <div className="word-usage-grid">
+      {columns.map((column) => (
+        <div className="word-usage-column" key={column.label}>
+          <div className="word-usage-column__header">
+            <h3>{column.label}</h3>
+            <span>{column.total?.toLocaleString() || 0} tokens</span>
+          </div>
+          {column.data && column.data.length > 0 ? (
+            <ul>
+              {column.data.map((item) => (
+                <li key={`${column.label}-${item.word}`} className="word-usage-row">
+                  <div className="word-usage-row__word">
+                    <span>{item.word}</span>
+                    <span className="word-usage-row__count">{item.count.toLocaleString()}</span>
+                  </div>
+                  <div className="word-usage-row__bar">
+                    <span
+                      style={{
+                        width: `${Math.min(100, Math.max(2, (item.share || 0) * 100))}%`,
+                        background: column.color,
+                      }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="word-usage-empty">No words detected for this side.</p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RadialHourChart({ hourly }) {
+  const { sentPoints, receivedPoints, sentPath, receivedPath, busiestYou, busiestThem, maxValue } =
+    useMemo(() => {
+      const hours = Array.from({ length: 24 }, (_, hour) => hour);
+      const sent = hourly?.sent || Array(24).fill(0);
+      const received = hourly?.received || Array(24).fill(0);
+      const maxFromPayload = hourly?.max_value;
+      const computedMax = Math.max(
+        ...(sent.concat(received).map((value) => Number(value) || 0)),
+        0,
+      );
+      const scaleMax = Math.max(maxFromPayload || 0, computedMax, 1);
+      const buildPoints = (values) =>
+        hours.map((hour) => {
+          const angle = (hour / 24) * Math.PI * 2 - Math.PI / 2;
+          const magnitude = Number(values[hour]) || 0;
+          const ratio = scaleMax ? magnitude / scaleMax : 0;
+          const radius = RADIAL_BASE_RADIUS + ratio * (RADIAL_MAX_RADIUS - RADIAL_BASE_RADIUS);
+          const x = RADIAL_CENTER + Math.cos(angle) * radius;
+          const y = RADIAL_CENTER + Math.sin(angle) * radius;
+          return { hour, x, y, value: magnitude };
+        });
+      const formatPath = (points) =>
+        points
+          .map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(2)},${point.y.toFixed(2)}`)
+          .join(" ") + " Z";
+      return {
+        sentPoints: buildPoints(sent),
+        receivedPoints: buildPoints(received),
+        sentPath: formatPath(buildPoints(sent)),
+        receivedPath: formatPath(buildPoints(received)),
+        busiestYou: hourly?.busiest_hour_you ?? null,
+        busiestThem: hourly?.busiest_hour_them ?? null,
+        maxValue: scaleMax,
+      };
+    }, [hourly]);
+
+  if (!hourly || maxValue === 0) return null;
+
+  return (
+    <div className="radial-hour-card">
+      <h3>Messages by Hour</h3>
+      <svg
+        viewBox={`0 0 ${RADIAL_SIZE} ${RADIAL_SIZE}`}
+        width="100%"
+        height={RADIAL_SIZE}
+        role="img"
+        aria-label="Hourly distribution"
+      >
+        {[0.25, 0.5, 0.75, 1].map((level) => (
+          <circle
+            key={level}
+            cx={RADIAL_CENTER}
+            cy={RADIAL_CENTER}
+            r={RADIAL_BASE_RADIUS + level * (RADIAL_MAX_RADIUS - RADIAL_BASE_RADIUS)}
+            fill="none"
+            stroke="rgba(255,255,255,0.08)"
+            strokeDasharray="4 6"
+          />
+        ))}
+        <path d={receivedPath} fill="rgba(236, 72, 153, 0.18)" stroke="rgba(236,72,153,0.8)" strokeWidth="2" />
+        <path d={sentPath} fill="rgba(168, 85, 247, 0.18)" stroke="rgba(168,85,247,0.9)" strokeWidth="2" />
+        {receivedPoints.map((point) => (
+          <circle
+            key={`recv-${point.hour}`}
+            cx={point.x}
+            cy={point.y}
+            r={3}
+            fill="#ec4899"
+            opacity={0.8}
+            aria-label={`Hour ${HOUR_LABELS[point.hour]} them`}
+          />
+        ))}
+        {sentPoints.map((point) => (
+          <circle
+            key={`sent-${point.hour}`}
+            cx={point.x}
+            cy={point.y}
+            r={3}
+            fill="#a855f7"
+            opacity={0.9}
+            aria-label={`Hour ${HOUR_LABELS[point.hour]} you`}
+          />
+        ))}
+        {HOUR_LABELS.map((label, index) => {
+          const angle = (index / 24) * Math.PI * 2 - Math.PI / 2;
+          const radius = RADIAL_MAX_RADIUS + 14;
+          const x = RADIAL_CENTER + Math.cos(angle) * radius;
+          const y = RADIAL_CENTER + Math.sin(angle) * radius + 4;
+          return (
+            <text
+              key={label}
+              x={x}
+              y={y}
+              textAnchor="middle"
+              fontSize="10"
+              fill="rgba(255,255,255,0.45)"
+            >
+              {label}
+            </text>
+          );
+        })}
+      </svg>
+      <div className="radial-hour-legend">
+        <span>
+          <span className="legend-dot legend-dot--you" />
+          You peak: {formatHourLabel(busiestYou)}
+        </span>
+        <span>
+          <span className="legend-dot legend-dot--them" />
+          They peak: {formatHourLabel(busiestThem)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function DailyTrendChart({ activity }) {
+  const series = useMemo(() => activity?.series || [], [activity]);
+
+  const width = 900;
+  const height = 240;
+  const padding = 32;
+
+  const { sentPath, receivedPath, ticks } = useMemo(() => {
+    const maxVal = Math.max(
+      ...series.map((entry) => Math.max(entry.sent, entry.received)),
+      1,
+    );
+    const buildPath = (key) =>
+      series
+        .map((entry, index) => {
+          const x =
+            padding +
+            (index / Math.max(series.length - 1, 1)) *
+              (width - padding * 2);
+          const y =
+            height -
+            padding -
+            (entry[key] / maxVal) * (height - padding * 2);
+          return `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
+        })
+        .join(" ");
+    const tickCount = Math.min(6, series.length);
+    const step = Math.max(1, Math.floor(series.length / tickCount));
+    const tickEntries = series.filter((_, idx) => idx % step === 0);
+    return {
+      sentPath: buildPath("sent"),
+      receivedPath: buildPath("received"),
+      ticks: tickEntries,
+    };
+  }, [series]);
+
+  if (!series.length) return null;
+
+  const busiest = activity?.busiest_day;
+
+  return (
+    <div className="daily-trend-card">
+      <div className="daily-trend-card__header">
+        <div>
+          <h3>Daily Messages Across the Year</h3>
+          <p>
+            Shows relative sent (purple) vs received (pink) volume. Peak total:{" "}
+            {busiest
+              ? `${busiest.date} (${busiest.total.toLocaleString()} total)`
+              : "no spikes"}
+            .
+          </p>
+        </div>
+        <div className="daily-trend-card__legend">
+          <span>
+            <span className="legend-dot legend-dot--you" />
+            You
+          </span>
+          <span>
+            <span className="legend-dot legend-dot--them" />
+            Them
+          </span>
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img">
+        <rect
+          x={padding}
+          y={padding}
+          width={width - padding * 2}
+          height={height - padding * 2}
+          fill="none"
+          stroke="rgba(255,255,255,0.08)"
+        />
+        <path d={receivedPath} fill="none" stroke="#ec4899" strokeWidth="2" strokeLinejoin="round" />
+        <path d={sentPath} fill="none" stroke="#a855f7" strokeWidth="2" strokeLinejoin="round" />
+        {ticks.map((entry, index) => {
+          const x =
+            padding +
+            (series.indexOf(entry) / Math.max(series.length - 1, 1)) *
+              (width - padding * 2);
+          return (
+            <g key={entry.date || index}>
+              <line
+                x1={x}
+                y1={height - padding}
+                x2={x}
+                y2={height - padding + 8}
+                stroke="rgba(255,255,255,0.2)"
+              />
+              <text
+                x={x}
+                y={height - padding + 22}
+                textAnchor="middle"
+                fontSize="10"
+                fill="rgba(255,255,255,0.6)"
+              >
+                {(entry.date || "").slice(5)}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+function StarterCard({ stats }) {
+  const hasStats = Boolean(stats && stats.total_sessions);
+  const youRate = hasStats ? Math.round((stats.you_start_rate || 0) * 100) : 0;
+  const themRate = 100 - youRate;
+  const prompt = hasStats
+    ? `We start ${youRate}% of conversations (gap ${stats.silence_threshold_hours}h). ${PLAYFUL_INSTRUCTION}`
+    : null;
+  const { enhancement } = useEnhancement(prompt, hasStats);
+
+  if (!hasStats) {
+    return (
+      <div className="starter-card">
+        <h3>Who Starts It?</h3>
+        <p style={{ opacity: 0.7 }}>Not enough conversation breaks to score this.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="starter-card">
+      <h3>Who Starts It?</h3>
+      {enhancement && <EnhancedText style={{ marginTop: "0.25rem" }}>{enhancement}</EnhancedText>}
+      <div className="starter-card__meter">
+        <div
+          className="starter-card__meter-fill"
+          style={{ width: `${Math.min(100, Math.max(0, youRate))}%` }}
+        />
+      </div>
+      <div className="starter-card__stats">
+        <div>
+          <p className="starter-card__label">You</p>
+          <p className="starter-card__value">
+            {stats.you_started.toLocaleString()} ({youRate}%)
+          </p>
+        </div>
+        <div>
+          <p className="starter-card__label">Them</p>
+          <p className="starter-card__value">
+            {stats.they_started.toLocaleString()} ({themRate}%)
+          </p>
+        </div>
+      </div>
+      <ul className="starter-card__details">
+        <li>
+          Silence threshold: {stats.silence_threshold_hours}h gap → new session
+        </li>
+        <li>
+          Longest you-start streak: {stats.longest_you_streak || 0} sessions
+        </li>
+        <li>Longest them-start streak: {stats.longest_they_streak || 0}</li>
+        <li>
+          Avg downtime between chats: {stats.avg_gap_hours?.toLocaleString(undefined, {
+            maximumFractionDigits: 1,
+          })}{" "}
+          h
+        </li>
+      </ul>
+    </div>
+  );
+}

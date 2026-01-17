@@ -297,6 +297,14 @@ def extract_hydrated_contact_data(statistics: dict[str, Any]) -> dict[str, Any]:
                     if contacts:
                         hydrated_data[f"{path}.ghosts.top_left_you_hanging"] = contacts
 
+            # Extract top conversation metadata
+            if "top_conversation_deep_dive" in node and isinstance(
+                node["top_conversation_deep_dive"], dict
+            ):
+                top_convo = node["top_conversation_deep_dive"]
+                if top_convo.get("name"):
+                    hydrated_data[f"{path}.top_conversation_deep_dive.name"] = top_convo["name"]
+
             # Recursively process nested dicts
             for key, value in node.items():
                 if isinstance(value, (dict, list)) and key not in [
@@ -342,6 +350,11 @@ def sanitize_statistics_for_export(statistics: dict[str, Any]) -> dict[str, Any]
             if "temporal" in node and isinstance(node["temporal"], dict):
                 node["temporal"].pop("weekday_mvp", None)
                 node["temporal"].pop("weekend_mvp", None)
+            if (
+                "top_conversation_deep_dive" in node
+                and isinstance(node["top_conversation_deep_dive"], dict)
+            ):
+                node["top_conversation_deep_dive"].pop("name", None)
             for value in node.values():
                 _strip_private_fields(value)
         elif isinstance(node, list):

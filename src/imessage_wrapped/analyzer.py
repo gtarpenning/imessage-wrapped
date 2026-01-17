@@ -15,6 +15,7 @@ from .ghost import (
 )
 from .models import Conversation, ExportData, Message
 from .phrases import PhraseExtractionConfig, PhraseExtractor
+from .phrases.tokenizer import SimpleTokenizer
 from .sentiment import LexicalSentimentAnalyzer, SentimentResult
 from .utils import count_emojis
 
@@ -43,6 +44,13 @@ CLIFFHANGER_PATTERNS = [
     "ill explain later",
 ]
 CLIFFHANGER_TIMEOUT = timedelta(hours=12)
+CRASHOUT_MIN_STREAK = 3
+CRASHOUT_MAX_WINDOW = timedelta(hours=1)
+CRASHOUT_SCORE_MULTIPLIER = 4.0
+TOP_CONVERSATION_WORD_LIMIT = 10
+TOP_CONVERSATION_MIN_TOKEN_LENGTH = 2
+CONVERSATION_SESSION_GAP_HOURS = 6
+MAX_STARTER_EXAMPLES = 8
 
 
 class RawStatisticsAnalyzer(StatisticsAnalyzer):
@@ -61,6 +69,8 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         self._sentiment_progress = sentiment_progress
         self._sentiment_model_info = getattr(self._sentiment_analyzer, "model_info", None)
         self._phrase_extractor = PhraseExtractor(config=phrase_config)
+        self._word_tokenizer = SimpleTokenizer()
+        self._word_stopwords = getattr(self._phrase_extractor, "_stopwords", set())
 
         if ghost_timeline_days <= 0:
             raise ValueError("ghost_timeline_days must be a positive integer")
@@ -116,10 +126,14 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 data, sent_messages, received_messages, conversations=conversations
             ),
             "conversations": self._analyze_conversations(data, conversations=conversations),
+            "top_conversation_deep_dive": self._analyze_top_conversation(
+                data, conversations=conversations
+            ),
             "response_times": self._analyze_response_times(data, conversations=conversations),
             "tapbacks": self._analyze_tapbacks(
                 all_messages_with_context, sent_messages, received_messages
             ),
+            "crashout": self._analyze_crashout(data, conversations=conversations),
             "streaks": self._analyze_streaks(data, conversations=conversations),
             "ghosts": self._analyze_ghosts(conversations, data),
             "cliffhangers": self._analyze_cliffhangers(data, conversations),
@@ -1066,6 +1080,244 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         return dict(histogram)
 
+    def _analyze_top_conversation(
+        self,
+        data: ExportData,
+        conversations: dict[str, Conversation] | None = None,
+        word_limit: int = TOP_CONVERSATION_WORD_LIMIT,
+    ) -> dict[str, Any] | None:
+        convs = conversations or data.conversations
+        if not convs:
+            return None
+
+        top_conversation = max(convs.values(), key=lambda c: c.message_count, default=None)
+        if top_conversation is None or top_conversation.message_count == 0:
+            return None
+
+        messages = self._filter_conversation_messages(top_conversation, data.year)
+        if not messages:
+            return None
+        messages = sorted(messages, key=lambda msg: msg.timestamp)
+
+        word_usage = self._build_word_usage_breakdown(messages, top_n=word_limit)
+        hourly = self._build_hourly_distribution(messages)
+        daily = self._build_daily_activity(messages)
+        starters = self._compute_conversation_starters(messages)
+
+        first_ts = self._to_local_time(messages[0].timestamp)
+        last_ts = self._to_local_time(messages[-1].timestamp)
+
+        return {
+            "name": top_conversation.display_name or top_conversation.chat_identifier,
+            "is_group": top_conversation.is_group_chat,
+            "participant_count": len(top_conversation.participants),
+            "message_count": len(messages),
+            "date_range": {
+                "start": first_ts.date().isoformat(),
+                "end": last_ts.date().isoformat(),
+            },
+            "word_usage": word_usage,
+            "hourly_distribution": hourly,
+            "daily_activity": daily,
+            "starter_analysis": starters,
+        }
+
+    def _build_word_usage_breakdown(
+        self,
+        messages: list[Message],
+        top_n: int,
+    ) -> dict[str, Any]:
+        sent_counter: Counter[str] = Counter()
+        received_counter: Counter[str] = Counter()
+        total_sent = 0
+        total_received = 0
+
+        for message in messages:
+            tokens = self._tokenize_words(message.text or "")
+            if not tokens:
+                continue
+            if message.is_from_me:
+                sent_counter.update(tokens)
+                total_sent += len(tokens)
+            else:
+                received_counter.update(tokens)
+                total_received += len(tokens)
+
+        return {
+            "sent": self._format_word_counter(sent_counter, total_sent, top_n),
+            "received": self._format_word_counter(received_counter, total_received, top_n),
+            "total_sent_tokens": total_sent,
+            "total_received_tokens": total_received,
+        }
+
+    def _tokenize_words(self, text: str) -> list[str]:
+        if not text:
+            return []
+        tokens = self._word_tokenizer.tokenize(text)
+        filtered: list[str] = []
+        for token in tokens:
+            if len(token) < TOP_CONVERSATION_MIN_TOKEN_LENGTH:
+                continue
+            if token.isdigit():
+                continue
+            if token in self._word_stopwords:
+                continue
+            filtered.append(token)
+        return filtered
+
+    def _format_word_counter(
+        self, counter: Counter[str], total: int, top_n: int
+    ) -> list[dict[str, Any]]:
+        if not counter or total <= 0:
+            return []
+        most_common = counter.most_common(top_n)
+        formatted = []
+        for word, count in most_common:
+            share = count / total if total else 0
+            formatted.append({"word": word, "count": count, "share": round(share, 4)})
+        return formatted
+
+    def _build_hourly_distribution(self, messages: list[Message]) -> dict[str, Any]:
+        sent = [0 for _ in range(24)]
+        received = [0 for _ in range(24)]
+
+        for message in messages:
+            local_time = self._to_local_time(message.timestamp)
+            hour = local_time.hour
+            if message.is_from_me:
+                sent[hour] += 1
+            else:
+                received[hour] += 1
+
+        total = [sent[i] + received[i] for i in range(24)]
+        max_value = max(total) if total else 0
+
+        def _busiest_hour(counts: list[int]) -> int | None:
+            if not counts:
+                return None
+            peak = max(counts)
+            if peak == 0:
+                return None
+            return max(range(len(counts)), key=lambda idx: counts[idx])
+
+        return {
+            "sent": sent,
+            "received": received,
+            "total": total,
+            "max_value": max_value,
+            "busiest_hour_you": _busiest_hour(sent),
+            "busiest_hour_them": _busiest_hour(received),
+        }
+
+    def _build_daily_activity(self, messages: list[Message]) -> dict[str, Any]:
+        daily_totals: dict[str, dict[str, int]] = defaultdict(lambda: {"sent": 0, "received": 0})
+
+        for message in messages:
+            local_date = self._to_local_time(message.timestamp).date().isoformat()
+            if message.is_from_me:
+                daily_totals[local_date]["sent"] += 1
+            else:
+                daily_totals[local_date]["received"] += 1
+
+        series = []
+        for date in sorted(daily_totals.keys()):
+            counts = daily_totals[date]
+            entry = {
+                "date": date,
+                "sent": counts["sent"],
+                "received": counts["received"],
+                "total": counts["sent"] + counts["received"],
+            }
+            series.append(entry)
+
+        busiest = max(series, key=lambda item: item["total"], default=None) if series else None
+
+        return {
+            "series": series,
+            "busiest_day": busiest,
+            "total_days": len(series),
+        }
+
+    def _compute_conversation_starters(self, messages: list[Message]) -> dict[str, Any]:
+        if not messages:
+            return {
+                "silence_threshold_hours": CONVERSATION_SESSION_GAP_HOURS,
+                "total_sessions": 0,
+                "you_started": 0,
+                "they_started": 0,
+                "you_start_rate": 0,
+                "avg_gap_hours": 0,
+            }
+
+        threshold = timedelta(hours=CONVERSATION_SESSION_GAP_HOURS)
+        total_sessions = 0
+        you_started = 0
+        they_started = 0
+        you_streak = 0
+        they_streak = 0
+        longest_you_streak = 0
+        longest_they_streak = 0
+        session_gaps: list[float] = []
+        last_message_time: datetime | None = None
+        last_session_end: datetime | None = None
+        session_examples: list[dict[str, Any]] = []
+
+        for message in messages:
+            timestamp = message.timestamp
+            is_new_session = False
+            if last_message_time is None:
+                is_new_session = True
+            else:
+                delta = timestamp - last_message_time
+                if delta >= threshold or timestamp.date() != last_message_time.date():
+                    is_new_session = True
+
+            if is_new_session:
+                if last_session_end is not None:
+                    gap_hours = (timestamp - last_session_end).total_seconds() / 3600
+                    if gap_hours > 0:
+                        session_gaps.append(gap_hours)
+                total_sessions += 1
+                if message.is_from_me:
+                    you_started += 1
+                    you_streak += 1
+                    they_streak = 0
+                    longest_you_streak = max(longest_you_streak, you_streak)
+                else:
+                    they_started += 1
+                    they_streak += 1
+                    you_streak = 0
+                    longest_they_streak = max(longest_they_streak, they_streak)
+
+                local_time = self._to_local_time(timestamp)
+                if len(session_examples) < MAX_STARTER_EXAMPLES:
+                    session_examples.append(
+                        {
+                            "started_at": local_time.isoformat(),
+                            "started_by_you": message.is_from_me,
+                            "hour": local_time.hour,
+                            "weekday": local_time.strftime("%a"),
+                        }
+                    )
+
+            last_message_time = timestamp
+            last_session_end = timestamp
+
+        you_rate = you_started / total_sessions if total_sessions else 0
+        avg_gap = sum(session_gaps) / len(session_gaps) if session_gaps else 0
+
+        return {
+            "silence_threshold_hours": CONVERSATION_SESSION_GAP_HOURS,
+            "total_sessions": total_sessions,
+            "you_started": you_started,
+            "they_started": they_started,
+            "you_start_rate": round(you_rate, 3),
+            "avg_gap_hours": round(avg_gap, 2),
+            "longest_you_streak": longest_you_streak,
+            "longest_they_streak": longest_they_streak,
+            "session_examples": session_examples,
+        }
+
     def _analyze_conversations(
         self,
         data: ExportData,
@@ -1205,6 +1457,80 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "total_responses_them": len(response_times_them),
         }
 
+    def _analyze_crashout(
+        self,
+        data: ExportData,
+        conversations: dict[str, Conversation] | None = None,
+    ) -> dict[str, Any]:
+        best_streak: dict[str, Any] | None = None
+        total_streaks = 0
+        total_length = 0
+        total_score = 0.0
+
+        convs = conversations or data.conversations
+        for conv in convs.values():
+            if conv.is_group_chat:
+                continue
+            messages = self._filter_conversation_messages(conv, data.year)
+            if len(messages) < CRASHOUT_MIN_STREAK:
+                continue
+            messages = sorted(messages, key=lambda m: m.timestamp)
+            current_streak: list[Message] = []
+
+            def finalize_streak(streak: list[Message]) -> None:
+                nonlocal best_streak, total_streaks, total_length, total_score
+                stats = self._score_crashout_streak(streak)
+                if not stats:
+                    return
+                total_streaks += 1
+                total_length += stats["streak_length"]
+                total_score += stats["score"]
+                if best_streak is None or stats["score"] > best_streak["score"]:
+                    best_streak = stats
+
+            for msg in messages:
+                if msg.is_from_me:
+                    current_streak.append(msg)
+                else:
+                    finalize_streak(current_streak)
+                    current_streak = []
+
+            finalize_streak(current_streak)
+
+        if total_streaks == 0 or best_streak is None:
+            return {
+                "min_streak": CRASHOUT_MIN_STREAK,
+                "max_window_minutes": int(CRASHOUT_MAX_WINDOW.total_seconds() // 60),
+                "streaks_count": 0,
+                "avg_streak_length": 0,
+                "avg_score": 0.0,
+                "peak_score": 0.0,
+                "meter": 0,
+                "peak_streak_length": 0,
+                "peak_streak_window_minutes": 0.0,
+                "peak_negative_ratio": 0.0,
+                "peak_exclamation_ratio": 0.0,
+                "peak_avg_sentiment": 0.0,
+            }
+
+        peak_score = best_streak["score"]
+        meter = min(100, int(round(peak_score * CRASHOUT_SCORE_MULTIPLIER)))
+
+        return {
+            "min_streak": CRASHOUT_MIN_STREAK,
+            "max_window_minutes": int(CRASHOUT_MAX_WINDOW.total_seconds() // 60),
+            "streaks_count": total_streaks,
+            "avg_streak_length": round(total_length / total_streaks, 1),
+            "avg_score": round(total_score / total_streaks, 2),
+            "peak_score": round(peak_score, 2),
+            "meter": meter,
+            "peak_streak_length": best_streak["streak_length"],
+            "peak_streak_window_minutes": round(best_streak["duration_minutes"], 1),
+            "peak_negative_ratio": round(best_streak["negative_ratio"], 2),
+            "peak_exclamation_ratio": round(best_streak["exclamation_ratio"], 2),
+            "peak_avg_sentiment": round(best_streak["avg_sentiment_score"], 3),
+        }
+
     def _analyze_tapbacks(
         self,
         all_messages: list[Message],
@@ -1241,6 +1567,56 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             else (None, 0),
             "tapback_distribution_given": tapback_distribution_given,
             "tapback_distribution_received": tapback_distribution_received,
+        }
+
+    def _score_crashout_streak(self, streak: list[Message]) -> dict[str, Any] | None:
+        if len(streak) < CRASHOUT_MIN_STREAK:
+            return None
+
+        start = streak[0].timestamp
+        end = streak[-1].timestamp
+        duration_seconds = max((end - start).total_seconds(), 0.0)
+
+        negative_count = 0
+        exclamation_count = 0
+        sentiment_total = 0.0
+        sentiment_scored = 0
+
+        for msg in streak:
+            if msg.has_exclamation:
+                exclamation_count += 1
+            text = (msg.text or "").strip()
+            if text:
+                result = self._sentiment_analyzer.analyze(text)
+                if result.label == "negative":
+                    negative_count += 1
+                sentiment_total += result.score
+                sentiment_scored += 1
+
+        streak_length = len(streak)
+        negative_ratio = negative_count / streak_length if streak_length else 0.0
+        exclamation_ratio = exclamation_count / streak_length if streak_length else 0.0
+        avg_sentiment = sentiment_total / sentiment_scored if sentiment_scored else 0.0
+
+        window_seconds = CRASHOUT_MAX_WINDOW.total_seconds()
+        if duration_seconds <= window_seconds:
+            time_factor = 1.0 + (window_seconds - duration_seconds) / window_seconds
+        else:
+            time_factor = 1.0
+
+        negative_weight = 1.0 + min(1.5, negative_ratio * 1.5)
+        exclamation_weight = 1.0 + min(0.5, exclamation_ratio * 0.5)
+
+        score = streak_length * negative_weight * exclamation_weight * time_factor
+
+        return {
+            "streak_length": streak_length,
+            "duration_seconds": duration_seconds,
+            "duration_minutes": duration_seconds / 60.0,
+            "negative_ratio": negative_ratio,
+            "exclamation_ratio": exclamation_ratio,
+            "avg_sentiment_score": avg_sentiment,
+            "score": score,
         }
 
 

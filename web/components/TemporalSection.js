@@ -8,21 +8,33 @@ function formatHour(hour) {
   return `${displayHour} ${period}`;
 }
 
-function HourHistogram({ histogram }) {
+function HourHistogram({ histogram, daysSent }) {
   // Note: histogram contains hours (0-23) in local timezone, already converted from UTC by analyzer
   const { enhancement } = useEnhancement(null, false);
+  const hasAverageDays = Number.isFinite(daysSent) && daysSent > 0;
+
+  const formatAverageValue = (value) => {
+    const digits = value >= 10 ? 0 : 1;
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
+  };
 
   const hourHistogramConfig = {
     processData: (histogram) => {
       const buckets = [];
-      const maxCount = Math.max(...Object.values(histogram).map(v => parseInt(v, 10)), 0);
+      let maxCount = 0;
 
       for (let hour = 0; hour < 24; hour++) {
-        const count = parseInt(histogram[hour] || histogram[String(hour)] || 0, 10);
+        const rawCount = parseInt(histogram[hour] || histogram[String(hour)] || 0, 10);
+        const normalizedCount = hasAverageDays ? rawCount / daysSent : rawCount;
+        maxCount = Math.max(maxCount, normalizedCount);
         buckets.push({
           hour,
           range: formatHour(hour),
-          count,
+          count: normalizedCount,
+          total: rawCount,
         });
       }
 
@@ -37,23 +49,34 @@ function HourHistogram({ histogram }) {
       return ticks;
     },
     formatLabel: (bucket) => bucket.range,
-    formatValue: (bucket) => `${bucket.count.toLocaleString()} messages`,
+    formatValue: (bucket) =>
+      hasAverageDays
+        ? `${formatAverageValue(bucket.count)} avg msgs/day`
+        : `${bucket.count.toLocaleString()} messages`,
     formatTick: formatHour,
     getBucketKey: (bucket) => bucket.hour,
-    formatLargestLabel: (bucket) => `Busiest: ${bucket.range} (${bucket.count.toLocaleString()} messages)`,
+    formatLargestLabel: (bucket) =>
+      hasAverageDays
+        ? `Busiest: ${bucket.range} (${formatAverageValue(bucket.count)} avg msgs/day)`
+        : `Busiest: ${bucket.range} (${bucket.count.toLocaleString()} messages)`,
   };
 
   return (
     <Histogram
       histogram={histogram}
       config={hourHistogramConfig}
-      title="Messages by Hour"
+      title={hasAverageDays ? "Average Messages by Hour" : "Messages by Hour"}
       enhancement={enhancement}
+      xAxisLabel={
+        hasAverageDays
+          ? `Average per day across ${daysSent.toLocaleString()} days you sent messages`
+          : undefined
+      }
     />
   );
 }
 
-export default function TemporalSection({ temporal }) {
+export default function TemporalSection({ temporal, daysSent }) {
   if (!temporal) return null;
 
   return (
@@ -61,7 +84,7 @@ export default function TemporalSection({ temporal }) {
       <h2 className="section-title">⏰ When You Text</h2>
       <WeekdayRadialPlot temporal={temporal} />
       {temporal.hour_distribution && Object.keys(temporal.hour_distribution).length > 0 && (
-        <HourHistogram histogram={temporal.hour_distribution} />
+        <HourHistogram histogram={temporal.hour_distribution} daysSent={daysSent} />
       )}
     </div>
   );

@@ -10,7 +10,9 @@ import ContentSection from "@/components/ContentSection";
 import MessageAnalysisSection from "@/components/MessageAnalysisSection";
 import MessageLengthSection from "@/components/MessageLengthSection";
 import ConversationsSection from "@/components/ConversationsSection";
+import TopConversationSection from "@/components/TopConversationSection";
 import GhostSection from "@/components/GhostSection";
+import CrashoutSection from "@/components/CrashoutSection";
 // import CliffhangerSection from "@/components/CliffhangerSection";
 import ResponseTimesSection from "@/components/ResponseTimesSection";
 import TapbacksSection from "@/components/TapbacksSection";
@@ -107,12 +109,14 @@ export default function WrappedPage() {
       <main className="container">
         <HeroSection year={data.year} volume={stats.volume} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} userName={userName} />
         <HeatmapSection volume={stats.volume} year={data.year} />
-        <TemporalSection temporal={stats.temporal} />
+        <TemporalSection temporal={stats.temporal} daysSent={stats.volume?.days_sent} />
         <ContactsSection contacts={stats.contacts} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
         <ContentSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} uniqueEmoji={uniqueEmoji} />
         <MessageAnalysisSection sentiment={stats.content?.sentiment} />
+        <CrashoutSection crashout={stats.crashout} />
         <MessageLengthSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
         <ConversationsSection conversations={stats.conversations} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
+        <TopConversationSection deepDive={stats.top_conversation_deep_dive} />
         <GhostSection ghosts={stats.ghosts} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
         {/* <CliffhangerSection cliffhangers={stats.cliffhangers} /> */}
         <ResponseTimesSection response_times={stats.response_times} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />

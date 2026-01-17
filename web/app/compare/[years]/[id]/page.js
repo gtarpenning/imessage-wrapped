@@ -107,6 +107,8 @@ export default function ComparisonPage() {
           temporal2={stats2.temporal}
           year1={year1}
           year2={year2}
+          daysSent1={stats1.volume?.days_sent}
+          daysSent2={stats2.volume?.days_sent}
         />
         <ComparisonContactsSection
           contacts1={stats1.contacts}
@@ -169,4 +171,3 @@ export default function ComparisonPage() {
     </>
   );
 }
-
