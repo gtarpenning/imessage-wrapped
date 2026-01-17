@@ -3,7 +3,7 @@
 
 set -e
 
-VERSION="1.0.35"
+VERSION="1.0.36"
 
 echo "🏗️  Building iMessage Wrapped v${VERSION} (Production)..."
 echo ""
