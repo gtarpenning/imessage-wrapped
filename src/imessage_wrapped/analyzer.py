@@ -1335,6 +1335,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 "they_started": 0,
                 "you_start_rate": 0,
                 "avg_gap_hours": 0,
+                "max_gap_hours": 0,
             }
 
         threshold = timedelta(hours=CONVERSATION_SESSION_GAP_HOURS)
@@ -1349,6 +1350,8 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         last_message_time: datetime | None = None
         last_session_end: datetime | None = None
         session_examples: list[dict[str, Any]] = []
+        max_gap_hours = 0.0
+        max_gap_window: dict[str, Any] | None = None
 
         for message in messages:
             timestamp = message.timestamp
@@ -1365,6 +1368,12 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                     gap_hours = (timestamp - last_session_end).total_seconds() / 3600
                     if gap_hours > 0:
                         session_gaps.append(gap_hours)
+                        if gap_hours > max_gap_hours:
+                            max_gap_hours = gap_hours
+                            max_gap_window = {
+                                "ended_at": self._to_local_time(last_session_end).isoformat(),
+                                "next_started_at": self._to_local_time(timestamp).isoformat(),
+                            }
                 total_sessions += 1
                 if message.is_from_me:
                     you_started += 1
@@ -1401,9 +1410,11 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "they_started": they_started,
             "you_start_rate": round(you_rate, 3),
             "avg_gap_hours": round(avg_gap, 2),
+            "max_gap_hours": round(max_gap_hours, 2),
             "longest_you_streak": longest_you_streak,
             "longest_they_streak": longest_they_streak,
             "session_examples": session_examples,
+            "max_gap_window": max_gap_window,
         }
 
     def _compute_conversation_enders(self, messages: list[Message]) -> dict[str, Any]:

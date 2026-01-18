@@ -76,10 +76,14 @@ export default function TopConversationSection({ deepDive }) {
   );
 }
 
-function InfoTooltip({ label }) {
+function InlineHelp({ children, label }) {
+  if (!label) return children;
   return (
-    <span className="inline-tooltip" title={label} aria-label={label} tabIndex={0}>
-      ⓘ
+    <span className="inline-help" tabIndex={0}>
+      <span className="inline-help__trigger">{children}</span>
+      <span className="inline-help__tooltip" role="tooltip">
+        {label}
+      </span>
     </span>
   );
 }
@@ -185,7 +189,11 @@ function UniqueWordsBreakdown({ uniqueWords }) {
     <div style={{ marginTop: "2rem" }}>
       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
         <h3 style={{ marginBottom: 0 }}>Signature Words</h3>
-        <InfoTooltip label="TF-IDF here is computed across two docs: your messages vs their messages in this conversation. Higher = more characteristic of that speaker." />
+        <InlineHelp label="TF‑IDF here uses 2 docs: your messages vs their messages in this conversation. Higher means more characteristic of that speaker.">
+          <span style={{ opacity: 0.7, textDecoration: "underline dotted", cursor: "help" }}>
+            What’s this?
+          </span>
+        </InlineHelp>
       </div>
       <p style={{ marginTop: "0.5rem", opacity: 0.7 }}>{description}</p>
       <div className="word-usage-grid">
@@ -480,10 +488,18 @@ function StarterCard({ stats }) {
     );
   }
 
+  const maxGap = Number(stats.max_gap_hours || 0);
+  const maxGapLabel =
+    maxGap >= 24 ? `${(maxGap / 24).toFixed(1)} days` : `${maxGap.toFixed(1)} hours`;
+
   return (
     <div className="starter-card">
       <h3>Who Starts It?</h3>
       {enhancement && <EnhancedText style={{ marginTop: "0.25rem" }}>{enhancement}</EnhancedText>}
+      <p style={{ marginTop: "0.75rem", opacity: 0.7, fontSize: "0.95rem" }}>
+        A “session” starts after a long quiet gap (or a day boundary). Whoever sends the first
+        message in that session “started” it.
+      </p>
       <div className="starter-card__meter">
         <div
           className="starter-card__meter-fill"
@@ -506,8 +522,7 @@ function StarterCard({ stats }) {
       </div>
       <ul className="starter-card__details">
         <li>
-          Silence threshold: {stats.silence_threshold_hours}h gap → new session{" "}
-          <InfoTooltip label="A 'conversation' is split into sessions. If there's a gap of this many hours (or a day boundary), the next message counts as a new session." />
+          Session break rule: {stats.silence_threshold_hours}h gap or day boundary
         </li>
         <li>
           Longest you-start streak: {stats.longest_you_streak || 0} sessions
@@ -518,6 +533,18 @@ function StarterCard({ stats }) {
             maximumFractionDigits: 1,
           })}{" "}
           h
+        </li>
+        <li>
+          Longest downtime:{" "}
+          <InlineHelp
+            label={
+              stats.max_gap_window
+                ? `From ${stats.max_gap_window.ended_at} → ${stats.max_gap_window.next_started_at}`
+                : "Longest gap between the end of one session and the start of the next."
+            }
+          >
+            <span style={{ textDecoration: "underline dotted", cursor: "help" }}>{maxGapLabel}</span>
+          </InlineHelp>
         </li>
       </ul>
     </div>
@@ -544,11 +571,12 @@ function EnderCard({ stats }) {
 
   return (
     <div className="starter-card">
-      <h3>
-        Who Ends It?{" "}
-        <InfoTooltip label="An 'end' is the last message before a new session starts (i.e., before a long gap or day boundary)." />
-      </h3>
+      <h3>Who Ends It?</h3>
       {enhancement && <EnhancedText style={{ marginTop: "0.25rem" }}>{enhancement}</EnhancedText>}
+      <p style={{ marginTop: "0.75rem", opacity: 0.7, fontSize: "0.95rem" }}>
+        A session “ends” at the last message before the next session begins. Whoever sent that last
+        message gets credit for ending it.
+      </p>
       <div className="starter-card__meter">
         <div
           className="starter-card__meter-fill"
@@ -571,8 +599,7 @@ function EnderCard({ stats }) {
       </div>
       <ul className="starter-card__details">
         <li>
-          Same session rules as starts: {stats.silence_threshold_hours}h gap or day boundary{" "}
-          <InfoTooltip label="We detect session breaks using the same rule as 'Who Starts It?'. The last message before the break gets credit for ending the session." />
+          Same session break rule: {stats.silence_threshold_hours}h gap or day boundary
         </li>
       </ul>
     </div>

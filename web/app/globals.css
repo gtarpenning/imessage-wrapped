@@ -1139,25 +1139,42 @@ footer {
   font-size: 0.85rem;
 }
 
-.inline-tooltip {
+.inline-help {
+  position: relative;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  margin-left: 0.35rem;
-  font-size: 0.8rem;
-  line-height: 1;
-  cursor: help;
-  opacity: 0.75;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  align-items: baseline;
+  gap: 0.25rem;
 }
 
-.inline-tooltip:focus {
-  outline: 2px solid rgba(168, 85, 247, 0.6);
-  outline-offset: 2px;
+.inline-help__trigger {
+  display: inline;
+}
+
+.inline-help__tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.5rem);
+  background: rgba(30, 30, 40, 0.98);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  max-width: 340px;
+  width: max-content;
+  z-index: 1000;
+  pointer-events: none;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.inline-help:hover .inline-help__tooltip,
+.inline-help:focus-within .inline-help__tooltip {
+  visibility: visible;
+  opacity: 1;
 }
 
 .top-convo-grid {
