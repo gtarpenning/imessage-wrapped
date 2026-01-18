@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 
 export const PLAYFUL_INSTRUCTION =
-  "Write a short, witty, playful one-liner about this in under 10 words. Its a header for a section with the stat.";
+  "Write a snappy, funny, mildly sarcastic one-liner (<=10 words). It's a section header for this stat. No emojis, no quotes.";
 
 let sessionId = null;
 
