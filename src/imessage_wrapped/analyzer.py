@@ -498,6 +498,9 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         is_group_chat_by_contact = {
             conv.chat_identifier: conv.is_group_chat for conv in convs.values()
         }
+        participant_count_by_contact = {
+            conv.chat_identifier: len(conv.participants or []) for conv in convs.values()
+        }
 
         distribution = self._build_chat_concentration(
             total_messages=total_messages_considered,
@@ -506,6 +509,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             sent_by_contact=sent_by_contact,
             received_by_contact=received_by_contact,
             is_group_chat_by_contact=is_group_chat_by_contact,
+            participant_count_by_contact=participant_count_by_contact,
             top_n=100,
         )
 
@@ -534,6 +538,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         sent_by_contact: dict[str, int] | None,
         received_by_contact: dict[str, int] | None,
         is_group_chat_by_contact: dict[str, bool] | None,
+        participant_count_by_contact: dict[str, int] | None,
         top_n: int,
     ) -> list[dict[str, Any]]:
         if not totals_by_contact:
@@ -557,6 +562,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             sent_ratio = round(sent_count / max(count, 1), 4)
             received_ratio = round(received_count / max(count, 1), 4)
             is_group_chat = (is_group_chat_by_contact or {}).get(contact_id, False)
+            participant_count = (participant_count_by_contact or {}).get(contact_id)
             distribution.append(
                 {
                     "rank": rank,
@@ -570,6 +576,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                     "received_ratio": received_ratio,
                     "cumulative_share": min(cumulative, 1.0),
                     "is_group_chat": is_group_chat,
+                    "participant_count": participant_count,
                 }
             )
 
