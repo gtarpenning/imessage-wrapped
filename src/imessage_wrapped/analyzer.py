@@ -3,6 +3,7 @@ import re
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
+from math import log
 from typing import Any, Callable, Optional, Sequence
 
 from .ghost import (
@@ -1103,6 +1104,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         hourly = self._build_hourly_distribution(messages)
         daily = self._build_daily_activity(messages)
         starters = self._compute_conversation_starters(messages)
+        enders = self._compute_conversation_enders(messages)
 
         first_ts = self._to_local_time(messages[0].timestamp)
         last_ts = self._to_local_time(messages[-1].timestamp)
@@ -1120,6 +1122,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "hourly_distribution": hourly,
             "daily_activity": daily,
             "starter_analysis": starters,
+            "ender_analysis": enders,
         }
 
     def _build_word_usage_breakdown(
@@ -1143,11 +1146,24 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 received_counter.update(tokens)
                 total_received += len(tokens)
 
+        unique_you, unique_them = self._compute_unique_words_tfidf(
+            you_counter=sent_counter,
+            them_counter=received_counter,
+            total_you=total_sent,
+            total_them=total_received,
+            top_n=max(12, top_n),
+        )
+
         return {
             "sent": self._format_word_counter(sent_counter, total_sent, top_n),
             "received": self._format_word_counter(received_counter, total_received, top_n),
             "total_sent_tokens": total_sent,
             "total_received_tokens": total_received,
+            "unique_words": {
+                "you": unique_you,
+                "them": unique_them,
+                "method": "tfidf-2doc",
+            },
         }
 
     def _tokenize_words(self, text: str) -> list[str]:
@@ -1176,6 +1192,78 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             share = count / total if total else 0
             formatted.append({"word": word, "count": count, "share": round(share, 4)})
         return formatted
+
+    def _compute_unique_words_tfidf(
+        self,
+        you_counter: Counter[str],
+        them_counter: Counter[str],
+        total_you: int,
+        total_them: int,
+        top_n: int,
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        if total_you <= 0 and total_them <= 0:
+            return ([], [])
+
+        total_docs = 2
+
+        def _idf(df: int) -> float:
+            return log((total_docs + 1) / (df + 1)) + 1.0
+
+        vocabulary = set(you_counter) | set(them_counter)
+        you_scored: list[dict[str, Any]] = []
+        them_scored: list[dict[str, Any]] = []
+
+        for word in vocabulary:
+            you_count = int(you_counter.get(word, 0))
+            them_count = int(them_counter.get(word, 0))
+            df = (1 if you_count > 0 else 0) + (1 if them_count > 0 else 0)
+            if df == 0:
+                continue
+            idf = _idf(df)
+
+            if you_count > 0 and total_you > 0:
+                tf = you_count / total_you
+                you_scored.append(
+                    {
+                        "word": word,
+                        "count": you_count,
+                        "score": tf * idf,
+                        "other_count": them_count,
+                    }
+                )
+            if them_count > 0 and total_them > 0:
+                tf = them_count / total_them
+                them_scored.append(
+                    {
+                        "word": word,
+                        "count": them_count,
+                        "score": tf * idf,
+                        "other_count": you_count,
+                    }
+                )
+
+        # Prefer terms that are both frequent for that speaker and rarer for the other.
+        def _sort_key(entry: dict[str, Any]) -> tuple[float, int, str]:
+            return (float(entry.get("score") or 0), -(int(entry.get("other_count") or 0)), entry["word"])
+
+        you_scored.sort(key=_sort_key, reverse=True)
+        them_scored.sort(key=_sort_key, reverse=True)
+
+        you_filtered = [e for e in you_scored if (e.get("count") or 0) > (e.get("other_count") or 0)]
+        them_filtered = [e for e in them_scored if (e.get("count") or 0) > (e.get("other_count") or 0)]
+
+        def _trim(entry: dict[str, Any]) -> dict[str, Any]:
+            return {
+                "word": entry["word"],
+                "count": entry["count"],
+                "other_count": entry.get("other_count") or 0,
+                "score": round(float(entry["score"]), 6),
+            }
+
+        return (
+            [_trim(e) for e in you_filtered[:top_n]],
+            [_trim(e) for e in them_filtered[:top_n]],
+        )
 
     def _build_hourly_distribution(self, messages: list[Message]) -> dict[str, Any]:
         sent = [0 for _ in range(24)]
@@ -1316,6 +1404,65 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             "longest_you_streak": longest_you_streak,
             "longest_they_streak": longest_they_streak,
             "session_examples": session_examples,
+        }
+
+    def _compute_conversation_enders(self, messages: list[Message]) -> dict[str, Any]:
+        if not messages:
+            return {
+                "silence_threshold_hours": CONVERSATION_SESSION_GAP_HOURS,
+                "total_sessions": 0,
+                "you_ended": 0,
+                "they_ended": 0,
+                "you_end_rate": 0,
+            }
+
+        threshold = timedelta(hours=CONVERSATION_SESSION_GAP_HOURS)
+        total_sessions = 0
+        you_ended = 0
+        they_ended = 0
+        end_examples: list[dict[str, Any]] = []
+
+        def _is_session_break(prev: datetime, nxt: datetime) -> bool:
+            if nxt - prev >= threshold:
+                return True
+            if nxt.date() != prev.date():
+                return True
+            return False
+
+        for idx, message in enumerate(messages):
+            is_last_message = idx == len(messages) - 1
+            ended_here = True if is_last_message else _is_session_break(
+                message.timestamp, messages[idx + 1].timestamp
+            )
+
+            if not ended_here:
+                continue
+
+            total_sessions += 1
+            if message.is_from_me:
+                you_ended += 1
+            else:
+                they_ended += 1
+
+            if len(end_examples) < MAX_STARTER_EXAMPLES:
+                local_time = self._to_local_time(message.timestamp)
+                end_examples.append(
+                    {
+                        "ended_at": local_time.isoformat(),
+                        "ended_by_you": message.is_from_me,
+                        "hour": local_time.hour,
+                        "weekday": local_time.strftime("%a"),
+                    }
+                )
+
+        you_rate = you_ended / total_sessions if total_sessions else 0
+        return {
+            "silence_threshold_hours": CONVERSATION_SESSION_GAP_HOURS,
+            "total_sessions": total_sessions,
+            "you_ended": you_ended,
+            "they_ended": they_ended,
+            "you_end_rate": round(you_rate, 3),
+            "end_examples": end_examples,
         }
 
     def _analyze_conversations(

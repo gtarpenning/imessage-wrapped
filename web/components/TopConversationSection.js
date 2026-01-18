@@ -65,12 +65,22 @@ export default function TopConversationSection({ deepDive }) {
 
       <ConversationSummary deepDive={deepDive} />
       <WordUsageBreakdown usage={deepDive.word_usage} />
+      <UniqueWordsBreakdown uniqueWords={deepDive.word_usage?.unique_words} />
       <div className="top-convo-grid">
         <RadialHourChart hourly={deepDive.hourly_distribution} />
         <StarterCard stats={deepDive.starter_analysis} />
+        <EnderCard stats={deepDive.ender_analysis} />
       </div>
       <DailyTrendChart activity={deepDive.daily_activity} />
     </div>
+  );
+}
+
+function InfoTooltip({ label }) {
+  return (
+    <span className="inline-tooltip" title={label} aria-label={label} tabIndex={0}>
+      ⓘ
+    </span>
   );
 }
 
@@ -158,6 +168,73 @@ function WordUsageBreakdown({ usage }) {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+function UniqueWordsBreakdown({ uniqueWords }) {
+  const you = uniqueWords?.you || [];
+  const them = uniqueWords?.them || [];
+  const has = you.length > 0 || them.length > 0;
+  if (!has) return null;
+
+  const description =
+    "Words you use more (weighted by TF-IDF across you vs them in this thread).";
+
+  return (
+    <div style={{ marginTop: "2rem" }}>
+      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+        <h3 style={{ marginBottom: 0 }}>Signature Words</h3>
+        <InfoTooltip label="TF-IDF here is computed across two docs: your messages vs their messages in this conversation. Higher = more characteristic of that speaker." />
+      </div>
+      <p style={{ marginTop: "0.5rem", opacity: 0.7 }}>{description}</p>
+      <div className="word-usage-grid">
+        <UniqueWordColumn label="You" color="#a855f7" items={you} />
+        <UniqueWordColumn label="Them" color="#ec4899" items={them} />
+      </div>
+    </div>
+  );
+}
+
+function UniqueWordColumn({ label, color, items }) {
+  const maxScore =
+    items && items.length > 0 ? Math.max(...items.map((item) => Number(item.score) || 0), 0) : 0;
+  const safeMax = maxScore > 0 ? maxScore : 1;
+
+  return (
+    <div className="word-usage-column">
+      <div className="word-usage-column__header">
+        <h3>{label}</h3>
+        <span>{items?.length || 0} picks</span>
+      </div>
+      {items && items.length > 0 ? (
+        <ul>
+          {items.map((item) => (
+            <li key={`${label}-${item.word}`} className="word-usage-row">
+              <div className="word-usage-row__word">
+                <span
+                  title={`TF-IDF score: ${Number(item.score || 0).toFixed(4)} · ${item.count} vs ${item.other_count}`}
+                >
+                  {item.word}
+                </span>
+                <span className="word-usage-row__count">
+                  {item.count.toLocaleString()} vs {item.other_count.toLocaleString()}
+                </span>
+              </div>
+              <div className="word-usage-row__bar">
+                <span
+                  style={{
+                    width: `${Math.min(100, Math.max(2, ((Number(item.score) || 0) / safeMax) * 100))}%`,
+                    background: color,
+                  }}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="word-usage-empty">No distinctive words detected.</p>
+      )}
     </div>
   );
 }
@@ -429,7 +506,8 @@ function StarterCard({ stats }) {
       </div>
       <ul className="starter-card__details">
         <li>
-          Silence threshold: {stats.silence_threshold_hours}h gap → new session
+          Silence threshold: {stats.silence_threshold_hours}h gap → new session{" "}
+          <InfoTooltip label="A 'conversation' is split into sessions. If there's a gap of this many hours (or a day boundary), the next message counts as a new session." />
         </li>
         <li>
           Longest you-start streak: {stats.longest_you_streak || 0} sessions
@@ -440,6 +518,61 @@ function StarterCard({ stats }) {
             maximumFractionDigits: 1,
           })}{" "}
           h
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+function EnderCard({ stats }) {
+  const hasStats = Boolean(stats && stats.total_sessions);
+  const youRate = hasStats ? Math.round((stats.you_end_rate || 0) * 100) : 0;
+  const themRate = 100 - youRate;
+  const prompt = hasStats
+    ? `We end ${youRate}% of conversations (gap ${stats.silence_threshold_hours}h). ${PLAYFUL_INSTRUCTION}`
+    : null;
+  const { enhancement } = useEnhancement(prompt, hasStats);
+
+  if (!hasStats) {
+    return (
+      <div className="starter-card">
+        <h3>Who Ends It?</h3>
+        <p style={{ opacity: 0.7 }}>Not enough conversation breaks to score this.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="starter-card">
+      <h3>
+        Who Ends It?{" "}
+        <InfoTooltip label="An 'end' is the last message before a new session starts (i.e., before a long gap or day boundary)." />
+      </h3>
+      {enhancement && <EnhancedText style={{ marginTop: "0.25rem" }}>{enhancement}</EnhancedText>}
+      <div className="starter-card__meter">
+        <div
+          className="starter-card__meter-fill"
+          style={{ width: `${Math.min(100, Math.max(0, youRate))}%` }}
+        />
+      </div>
+      <div className="starter-card__stats">
+        <div>
+          <p className="starter-card__label">You</p>
+          <p className="starter-card__value">
+            {stats.you_ended.toLocaleString()} ({youRate}%)
+          </p>
+        </div>
+        <div>
+          <p className="starter-card__label">Them</p>
+          <p className="starter-card__value">
+            {stats.they_ended.toLocaleString()} ({themRate}%)
+          </p>
+        </div>
+      </div>
+      <ul className="starter-card__details">
+        <li>
+          Same session rules as starts: {stats.silence_threshold_hours}h gap or day boundary{" "}
+          <InfoTooltip label="We detect session breaks using the same rule as 'Who Starts It?'. The last message before the break gets credit for ending the session." />
         </li>
       </ul>
     </div>

@@ -1139,6 +1139,27 @@ footer {
   font-size: 0.85rem;
 }
 
+.inline-tooltip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  margin-left: 0.35rem;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: help;
+  opacity: 0.75;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.inline-tooltip:focus {
+  outline: 2px solid rgba(168, 85, 247, 0.6);
+  outline-offset: 2px;
+}
+
 .top-convo-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
