@@ -18,6 +18,12 @@ function labelForScore(score) {
   return "Chill";
 }
 
+function meterFill(score) {
+  const clamped = Math.max(0, Math.min(100, score));
+  const hue = 120 - (clamped / 100) * 120; // 120=green -> 0=red
+  return `linear-gradient(90deg, hsl(${hue} 90% 45%) 0%, hsl(${hue} 90% 55%) 100%)`;
+}
+
 export default function CrashoutSection({ crashout }) {
   if (!crashout) return null;
 
@@ -66,8 +72,7 @@ export default function CrashoutSection({ crashout }) {
             style={{
               width: `${meter}%`,
               height: "100%",
-              background:
-                "linear-gradient(90deg, #22c55e 0%, #f59e0b 55%, #ef4444 100%)",
+              background: meterFill(meter),
               transition: "width 0.6s ease",
             }}
           />

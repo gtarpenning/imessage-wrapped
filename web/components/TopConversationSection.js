@@ -40,6 +40,14 @@ function formatHourLabel(hour) {
   return `${display} ${period}`;
 }
 
+function shortDate(value) {
+  if (!value) return "—";
+  const raw = String(value);
+  if (raw.includes("T")) return raw.split("T")[0];
+  if (raw.includes(" ")) return raw.split(" ")[0];
+  return raw;
+}
+
 export default function TopConversationSection({ deepDive }) {
   const hasDeepDive = Boolean(deepDive);
   const prompt = hasDeepDive
@@ -51,9 +59,7 @@ export default function TopConversationSection({ deepDive }) {
 
   if (!hasDeepDive) return null;
 
-  const subtitle = deepDive.name
-    ? `All stats below use the #1 thread: ${deepDive.name}`
-    : "All stats below use your #1 conversation.";
+  const subtitle = deepDive.name ? `Thread: ${deepDive.name}` : "Thread: your #1 conversation";
 
   return (
     <div className="section">
@@ -68,8 +74,7 @@ export default function TopConversationSection({ deepDive }) {
       <UniqueWordsBreakdown uniqueWords={deepDive.word_usage?.unique_words} />
       <div className="top-convo-grid">
         <RadialHourChart hourly={deepDive.hourly_distribution} />
-        <StarterCard stats={deepDive.starter_analysis} />
-        <EnderCard stats={deepDive.ender_analysis} />
+        <SessionStartsEndsCard starters={deepDive.starter_analysis} enders={deepDive.ender_analysis} />
       </div>
       <DailyTrendChart activity={deepDive.daily_activity} />
     </div>
@@ -85,6 +90,18 @@ function InlineHelp({ children, label }) {
         {label}
       </span>
     </span>
+  );
+}
+
+function HoverHelp({ children, label }) {
+  if (!label) return children;
+  return (
+    <div className="hover-help" tabIndex={0}>
+      <div className="hover-help__trigger">{children}</div>
+      <div className="hover-help__tooltip" role="tooltip">
+        {label}
+      </div>
+    </div>
   );
 }
 
@@ -108,7 +125,7 @@ function ConversationSummary({ deepDive }) {
           {deepDive.message_count.toLocaleString()}
         </p>
         <p className="top-convo-summary__meta">
-          {deepDive.date_range?.start} → {deepDive.date_range?.end}
+          {shortDate(deepDive.date_range?.start)} – {shortDate(deepDive.date_range?.end)}
         </p>
       </div>
       <div>
@@ -182,20 +199,16 @@ function UniqueWordsBreakdown({ uniqueWords }) {
   const has = you.length > 0 || them.length > 0;
   if (!has) return null;
 
-  const description =
-    "Words you use more (weighted by TF-IDF across you vs them in this thread).";
-
   return (
     <div style={{ marginTop: "2rem" }}>
       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
         <h3 style={{ marginBottom: 0 }}>Signature Words</h3>
-        <InlineHelp label="TF‑IDF here uses 2 docs: your messages vs their messages in this conversation. Higher means more characteristic of that speaker.">
+        <InlineHelp label="Words that show up more for each side within this thread.">
           <span style={{ opacity: 0.7, textDecoration: "underline dotted", cursor: "help" }}>
             What’s this?
           </span>
         </InlineHelp>
       </div>
-      <p style={{ marginTop: "0.5rem", opacity: 0.7 }}>{description}</p>
       <div className="word-usage-grid">
         <UniqueWordColumn label="You" color="#a855f7" items={you} />
         <UniqueWordColumn label="Them" color="#ec4899" items={them} />
@@ -221,7 +234,7 @@ function UniqueWordColumn({ label, color, items }) {
             <li key={`${label}-${item.word}`} className="word-usage-row">
               <div className="word-usage-row__word">
                 <span
-                  title={`TF-IDF score: ${Number(item.score || 0).toFixed(4)} · ${item.count} vs ${item.other_count}`}
+                  title={`Score: ${Number(item.score || 0).toFixed(4)} · ${item.count} vs ${item.other_count}`}
                 >
                   {item.word}
                 </span>
@@ -470,138 +483,94 @@ function DailyTrendChart({ activity }) {
   );
 }
 
-function StarterCard({ stats }) {
-  const hasStats = Boolean(stats && stats.total_sessions);
-  const youRate = hasStats ? Math.round((stats.you_start_rate || 0) * 100) : 0;
-  const themRate = 100 - youRate;
-  const prompt = hasStats
-    ? `We start ${youRate}% of conversations (gap ${stats.silence_threshold_hours}h). ${PLAYFUL_INSTRUCTION}`
-    : null;
-  const { enhancement } = useEnhancement(prompt, hasStats);
+function SessionStartsEndsCard({ starters, enders }) {
+  const hasStarters = Boolean(starters && starters.total_sessions);
+  const hasEnders = Boolean(enders && enders.total_sessions);
+  const hasStats = hasStarters || hasEnders;
 
   if (!hasStats) {
     return (
       <div className="starter-card">
-        <h3>Who Starts It?</h3>
+        <h3>Session Starts & Ends</h3>
         <p style={{ opacity: 0.7 }}>Not enough conversation breaks to score this.</p>
       </div>
     );
   }
 
-  const maxGap = Number(stats.max_gap_hours || 0);
-  const maxGapLabel =
-    maxGap >= 24 ? `${(maxGap / 24).toFixed(1)} days` : `${maxGap.toFixed(1)} hours`;
+  const ruleHours = Number(
+    starters?.silence_threshold_hours ?? enders?.silence_threshold_hours ?? 0,
+  );
+  const maxGap = Number(starters?.max_gap_hours || 0);
+  const maxGapLabel = maxGap >= 24 ? `${(maxGap / 24).toFixed(1)} days` : `${maxGap.toFixed(1)} hours`;
+  const maxGapWindow = starters?.max_gap_window;
+
+  const description = `We split this thread into “sessions” using a ${ruleHours}h quiet gap (or a day boundary). Start = first message in a session. End = last message before the next session.`;
 
   return (
     <div className="starter-card">
-      <h3>Who Starts It?</h3>
-      {enhancement && <EnhancedText style={{ marginTop: "0.25rem" }}>{enhancement}</EnhancedText>}
-      <p style={{ marginTop: "0.75rem", opacity: 0.7, fontSize: "0.95rem" }}>
-        A “session” starts after a long quiet gap (or a day boundary). Whoever sends the first
-        message in that session “started” it.
-      </p>
-      <div className="starter-card__meter">
-        <div
-          className="starter-card__meter-fill"
-          style={{ width: `${Math.min(100, Math.max(0, youRate))}%` }}
+      <h3>Session Starts & Ends</h3>
+      <p style={{ marginTop: "0.5rem", opacity: 0.7, fontSize: "0.95rem" }}>{description}</p>
+
+      <div className="session-bars">
+        <SessionBarRow
+          label="Starts"
+          youCount={starters?.you_started || 0}
+          themCount={starters?.they_started || 0}
+          youRate={Math.round((starters?.you_start_rate || 0) * 100)}
+        />
+        <SessionBarRow
+          label="Ends"
+          youCount={enders?.you_ended || 0}
+          themCount={enders?.they_ended || 0}
+          youRate={Math.round((enders?.you_end_rate || 0) * 100)}
         />
       </div>
-      <div className="starter-card__stats">
-        <div>
-          <p className="starter-card__label">You</p>
-          <p className="starter-card__value">
-            {stats.you_started.toLocaleString()} ({youRate}%)
-          </p>
-        </div>
-        <div>
-          <p className="starter-card__label">Them</p>
-          <p className="starter-card__value">
-            {stats.they_started.toLocaleString()} ({themRate}%)
-          </p>
-        </div>
-      </div>
-      <ul className="starter-card__details">
-        <li>
-          Session break rule: {stats.silence_threshold_hours}h gap or day boundary
-        </li>
-        <li>
-          Longest you-start streak: {stats.longest_you_streak || 0} sessions
-        </li>
-        <li>Longest them-start streak: {stats.longest_they_streak || 0}</li>
-        <li>
-          Avg downtime between chats: {stats.avg_gap_hours?.toLocaleString(undefined, {
-            maximumFractionDigits: 1,
-          })}{" "}
-          h
-        </li>
-        <li>
-          Longest downtime:{" "}
+
+      {maxGap > 0 && (
+        <p style={{ marginTop: "0.75rem", opacity: 0.65, fontSize: "0.9rem" }}>
+          Biggest gap:{" "}
           <InlineHelp
             label={
-              stats.max_gap_window
-                ? `From ${stats.max_gap_window.ended_at} → ${stats.max_gap_window.next_started_at}`
-                : "Longest gap between the end of one session and the start of the next."
+              maxGapWindow
+                ? `From ${maxGapWindow.ended_at} → ${maxGapWindow.next_started_at}`
+                : "Longest gap between sessions."
             }
           >
             <span style={{ textDecoration: "underline dotted", cursor: "help" }}>{maxGapLabel}</span>
           </InlineHelp>
-        </li>
-      </ul>
+        </p>
+      )}
     </div>
   );
 }
 
-function EnderCard({ stats }) {
-  const hasStats = Boolean(stats && stats.total_sessions);
-  const youRate = hasStats ? Math.round((stats.you_end_rate || 0) * 100) : 0;
-  const themRate = 100 - youRate;
-  const prompt = hasStats
-    ? `We end ${youRate}% of conversations (gap ${stats.silence_threshold_hours}h). ${PLAYFUL_INSTRUCTION}`
-    : null;
-  const { enhancement } = useEnhancement(prompt, hasStats);
-
-  if (!hasStats) {
-    return (
-      <div className="starter-card">
-        <h3>Who Ends It?</h3>
-        <p style={{ opacity: 0.7 }}>Not enough conversation breaks to score this.</p>
-      </div>
-    );
-  }
+function SessionBarRow({ label, youCount, themCount, youRate }) {
+  const safeYouRate = Math.min(100, Math.max(0, Number.isFinite(youRate) ? youRate : 0));
+  const safeThemRate = 100 - safeYouRate;
+  const tooltip = `You: ${Number(youCount || 0).toLocaleString()} (${safeYouRate}%) · Them: ${Number(
+    themCount || 0,
+  ).toLocaleString()} (${safeThemRate}%)`;
 
   return (
-    <div className="starter-card">
-      <h3>Who Ends It?</h3>
-      {enhancement && <EnhancedText style={{ marginTop: "0.25rem" }}>{enhancement}</EnhancedText>}
-      <p style={{ marginTop: "0.75rem", opacity: 0.7, fontSize: "0.95rem" }}>
-        A session “ends” at the last message before the next session begins. Whoever sent that last
-        message gets credit for ending it.
-      </p>
-      <div className="starter-card__meter">
-        <div
-          className="starter-card__meter-fill"
-          style={{ width: `${Math.min(100, Math.max(0, youRate))}%` }}
-        />
-      </div>
-      <div className="starter-card__stats">
-        <div>
-          <p className="starter-card__label">You</p>
-          <p className="starter-card__value">
-            {stats.you_ended.toLocaleString()} ({youRate}%)
-          </p>
-        </div>
-        <div>
-          <p className="starter-card__label">Them</p>
-          <p className="starter-card__value">
-            {stats.they_ended.toLocaleString()} ({themRate}%)
-          </p>
+    <div className="session-bars__row">
+      <div className="session-bars__header">
+        <div className="session-bars__label">{label}</div>
+        <div className="session-bars__numbers">
+          You {Number(youCount || 0).toLocaleString()} · Them {Number(themCount || 0).toLocaleString()}
         </div>
       </div>
-      <ul className="starter-card__details">
-        <li>
-          Same session break rule: {stats.silence_threshold_hours}h gap or day boundary
-        </li>
-      </ul>
+      <HoverHelp label={tooltip}>
+        <div className="starter-card__meter session-bars__meter" aria-label={tooltip} role="img">
+          <div
+            className="session-bars__segment session-bars__segment--you"
+            style={{ width: `${safeYouRate}%` }}
+          />
+          <div
+            className="session-bars__segment session-bars__segment--them"
+            style={{ width: `${safeThemRate}%` }}
+          />
+        </div>
+      </HoverHelp>
     </div>
   );
 }
