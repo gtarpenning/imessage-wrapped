@@ -71,7 +71,9 @@ export default function TopConversationSection({ deepDive }) {
 
       <ConversationSummary deepDive={deepDive} />
       <WordUsageBreakdown usage={deepDive.word_usage} />
-      <UniqueWordsBreakdown uniqueWords={deepDive.word_usage?.unique_words} />
+      <UniqueWordsBreakdown
+        uniqueWords={deepDive.word_usage?.unique_words || deepDive.unique_words}
+      />
       <div className="top-convo-grid">
         <RadialHourChart hourly={deepDive.hourly_distribution} />
         <SessionStartsEndsCard starters={deepDive.starter_analysis} enders={deepDive.ender_analysis} />
@@ -194,10 +196,10 @@ function WordUsageBreakdown({ usage }) {
 }
 
 function UniqueWordsBreakdown({ uniqueWords }) {
-  const you = uniqueWords?.you || [];
-  const them = uniqueWords?.them || [];
-  const has = you.length > 0 || them.length > 0;
-  if (!has) return null;
+  if (!uniqueWords) return null;
+
+  const you = Array.isArray(uniqueWords.you) ? uniqueWords.you : [];
+  const them = Array.isArray(uniqueWords.them) ? uniqueWords.them : [];
 
   return (
     <div style={{ marginTop: "2rem" }}>
