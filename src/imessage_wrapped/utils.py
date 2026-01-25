@@ -350,9 +350,8 @@ def sanitize_statistics_for_export(statistics: dict[str, Any]) -> dict[str, Any]
             if "temporal" in node and isinstance(node["temporal"], dict):
                 node["temporal"].pop("weekday_mvp", None)
                 node["temporal"].pop("weekend_mvp", None)
-            if (
-                "top_conversation_deep_dive" in node
-                and isinstance(node["top_conversation_deep_dive"], dict)
+            if "top_conversation_deep_dive" in node and isinstance(
+                node["top_conversation_deep_dive"], dict
             ):
                 node["top_conversation_deep_dive"].pop("name", None)
             for value in node.values():

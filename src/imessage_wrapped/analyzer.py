@@ -1244,13 +1244,21 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         # Prefer terms that are both frequent for that speaker and rarer for the other.
         def _sort_key(entry: dict[str, Any]) -> tuple[float, int, str]:
-            return (float(entry.get("score") or 0), -(int(entry.get("other_count") or 0)), entry["word"])
+            return (
+                float(entry.get("score") or 0),
+                -(int(entry.get("other_count") or 0)),
+                entry["word"],
+            )
 
         you_scored.sort(key=_sort_key, reverse=True)
         them_scored.sort(key=_sort_key, reverse=True)
 
-        you_filtered = [e for e in you_scored if (e.get("count") or 0) > (e.get("other_count") or 0)]
-        them_filtered = [e for e in them_scored if (e.get("count") or 0) > (e.get("other_count") or 0)]
+        you_filtered = [
+            e for e in you_scored if (e.get("count") or 0) > (e.get("other_count") or 0)
+        ]
+        them_filtered = [
+            e for e in them_scored if (e.get("count") or 0) > (e.get("other_count") or 0)
+        ]
 
         def _trim(entry: dict[str, Any]) -> dict[str, Any]:
             return {
@@ -1442,8 +1450,10 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
 
         for idx, message in enumerate(messages):
             is_last_message = idx == len(messages) - 1
-            ended_here = True if is_last_message else _is_session_break(
-                message.timestamp, messages[idx + 1].timestamp
+            ended_here = (
+                True
+                if is_last_message
+                else _is_session_break(message.timestamp, messages[idx + 1].timestamp)
             )
 
             if not ended_here:
