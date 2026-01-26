@@ -1,3 +1,5 @@
+.venv/
+.zwarm/
 # Python
 __pycache__/
 *.py[cod]

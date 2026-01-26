@@ -10,11 +10,40 @@ const pool = new Pool({
 
 const USE_CACHE = true;
 
-const MAX_TOKENS = 100;
+const STYLE_VERSION = "v2-snappy-sarcastic";
+const MAX_TOKENS = 60;
 const MODEL = "gpt-4o-mini";
 
 function hashPrompt(prompt) {
   return crypto.createHash("sha256").update(prompt).digest("hex");
+}
+
+function withStyleVersion(prompt) {
+  return `${STYLE_VERSION}\n${prompt}`;
+}
+
+function clampOneLiner(text) {
+  if (typeof text !== "string") return "";
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+
+  // Prefer the first sentence-ish chunk.
+  const firstChunk =
+    trimmed.split(/\n|[.!?](?:\s|$)/)[0]?.trim() ||
+    trimmed.split(/\n/)[0]?.trim() ||
+    trimmed;
+
+  // Hard cap for UI headers.
+  const MAX_CHARS = 90;
+  let capped = firstChunk.replace(/\s+/g, " ").trim();
+  if (capped.length > MAX_CHARS) capped = `${capped.slice(0, MAX_CHARS - 1).trim()}…`;
+
+  // Soft cap by word count (keeps it pithy even if the model ignores instructions).
+  const words = capped.split(/\s+/).filter(Boolean);
+  const MAX_WORDS = 12;
+  if (words.length > MAX_WORDS) capped = `${words.slice(0, MAX_WORDS).join(" ")}…`;
+
+  return capped;
 }
 
 function extractTextFromResponse(data) {
@@ -45,7 +74,8 @@ function extractTextFromResponse(data) {
 }
 
 export async function getCachedCompletion(prompt) {
-  const hash = hashPrompt(prompt);
+  const cachePrompt = withStyleVersion(prompt);
+  const hash = hashPrompt(cachePrompt);
 
   const result = await pool.query(
     "SELECT completion, created_at FROM llm_cache WHERE prompt_hash = $1",
@@ -58,14 +88,15 @@ export async function getCachedCompletion(prompt) {
     if (typeof completion === "string") {
       completion = completion.replace(/^["']+|["']+$/g, '').trim();
     }
-    return completion;
+    return clampOneLiner(completion);
   }
 
   return null;
 }
 
 export async function cacheCompletion(prompt, completion) {
-  const hash = hashPrompt(prompt);
+  const cachePrompt = withStyleVersion(prompt);
+  const hash = hashPrompt(cachePrompt);
 
   await pool.query(
     `INSERT INTO llm_cache (prompt_hash, prompt, completion, created_at)
@@ -73,7 +104,7 @@ export async function cacheCompletion(prompt, completion) {
      ON CONFLICT (prompt_hash) DO UPDATE SET 
        completion = EXCLUDED.completion,
        created_at = NOW()`,
-    [hash, prompt, completion],
+    [hash, cachePrompt, completion],
   );
 }
 
@@ -101,8 +132,14 @@ export async function getCompletion(prompt) {
         {
           type: "message",
           role: "system",
-          content:
-            "You are a witty, playful assistant that enhances statistics with short, fun commentary. Keep responses under 15 words. Be clever and conversational. Do not wrap your response in quotes.",
+          content: [
+            "Write one snappy, funny, mildly sarcastic one-liner for a stats dashboard header.",
+            "Keep it short: <= 10 words.",
+            "No emojis. No hashtags. No quotes. No second sentence.",
+            "Be punchy, not mean: no slurs, profanity, or personal attacks.",
+            "Avoid sensitive targets (race, religion, gender, sexuality, disability).",
+            "Output text only.",
+          ].join(" "),
         },
         {
           type: "message",
@@ -140,6 +177,8 @@ export async function getCompletion(prompt) {
     );
     completion = "";
   }
+
+  completion = clampOneLiner(completion);
 
   if (USE_CACHE) {
     await cacheCompletion(prompt, completion);

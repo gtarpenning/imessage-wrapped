@@ -199,7 +199,7 @@ def export_command(args):
     if output_file.exists() and not args.replace_cache:
         console.print(f"\n[yellow]ℹ[/] Export file already exists: [cyan]{output_path}[/]")
         console.print("[dim]Use --replace-cache to regenerate[/]")
-        return output_path
+        return output_path, None
 
     with_contacts = getattr(args, "with_contacts", False)
 
@@ -226,6 +226,7 @@ def export_command(args):
 
         from .exporter import JSONLSerializer, JSONSerializer
 
+        # Keep exports lightweight; analysis can reuse in-memory data without persisting message text.
         if args.format == "json":
             serializer = JSONSerializer(indent=args.indent if args.indent > 0 else None)
         else:
@@ -238,10 +239,10 @@ def export_command(args):
     )
     console.print(f"[dim]Conversations: {len(data.conversations)}[/]")
 
-    return output_path
+    return output_path, data
 
 
-def analyze_command(args, input_path=None):
+def analyze_command(args, input_path=None, preloaded_data=None):
     console = Console()
 
     if args.ghost_timeline <= 0:
@@ -330,7 +331,7 @@ def analyze_command(args, input_path=None):
         load_task = progress.add_task("Loading export data...", total=1)
 
         try:
-            data = ExportLoader.load(input_path)
+            data = preloaded_data or ExportLoader.load(input_path)
         except Exception as e:
             console.print(f"[red]✗[/] Failed to load export data: {e}")
             sys.exit(1)
@@ -448,7 +449,7 @@ def compare_command(args):
     args_year1 = argparse.Namespace(**vars(args))
     args_year1.year = year1
     args_year1.share = False  # Don't upload individual years yet
-    export_path1 = export_command(args_year1)
+    export_path1, export_data1 = export_command(args_year1)
 
     if not export_path1:
         console.print(f"[red]✗[/] Failed to export {year1}")
@@ -463,7 +464,7 @@ def compare_command(args):
         transient=True,
     ) as progress:
         load_task = progress.add_task(f"Loading {year1} export data...", total=1)
-        data1 = ExportLoader.load(export_path1)
+        data1 = export_data1 or ExportLoader.load(export_path1)
         progress.update(load_task, advance=1)
 
         analyzer = RawStatisticsAnalyzer(ghost_timeline_days=args.ghost_timeline)
@@ -476,7 +477,7 @@ def compare_command(args):
     args_year2 = argparse.Namespace(**vars(args))
     args_year2.year = year2
     args_year2.share = False
-    export_path2 = export_command(args_year2)
+    export_path2, export_data2 = export_command(args_year2)
 
     if not export_path2:
         console.print(f"[red]✗[/] Failed to export {year2}")
@@ -490,7 +491,7 @@ def compare_command(args):
         transient=True,
     ) as progress:
         load_task = progress.add_task(f"Loading {year2} export data...", total=1)
-        data2 = ExportLoader.load(export_path2)
+        data2 = export_data2 or ExportLoader.load(export_path2)
         progress.update(load_task, advance=1)
 
         analyzer = RawStatisticsAnalyzer(ghost_timeline_days=args.ghost_timeline)
@@ -553,9 +554,9 @@ def main():
     if args.input:
         analyze_command(args)
     else:
-        export_path = export_command(args)
+        export_path, export_data = export_command(args)
         if export_path and not args.no_analyze:
-            analyze_command(args, input_path=export_path)
+            analyze_command(args, input_path=export_path, preloaded_data=export_data)
 
 
 if __name__ == "__main__":

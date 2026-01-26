@@ -14,6 +14,8 @@ export default function ComparisonTemporalSection({
   temporal2,
   year1,
   year2,
+  daysSent1,
+  daysSent2,
 }) {
   // Calculate weekday/weekend averages
   const getWeekdayWeekendStats = (temporal) => {
@@ -35,6 +37,17 @@ export default function ComparisonTemporalSection({
 
   const stats1 = getWeekdayWeekendStats(temporal1);
   const stats2 = getWeekdayWeekendStats(temporal2);
+  const canAverage1 = Number.isFinite(daysSent1) && daysSent1 > 0;
+  const canAverage2 = Number.isFinite(daysSent2) && daysSent2 > 0;
+  const useAverage = canAverage1 && canAverage2;
+
+  const formatAverageValue = (value) => {
+    const digits = value >= 10 ? 0 : 1;
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
+  };
 
   // Get overlaid hour distribution data
   const hourData = useMemo(() => {
@@ -44,19 +57,25 @@ export default function ComparisonTemporalSection({
 
     const data = [];
     for (let hour = 0; hour < 24; hour++) {
+      const raw1 = parseInt(dist1[hour] || dist1[String(hour)] || 0, 10);
+      const raw2 = parseInt(dist2[hour] || dist2[String(hour)] || 0, 10);
       data.push({
         hour,
         label: formatHour(hour),
-        value1: parseInt(dist1[hour] || 0, 10),
-        value2: parseInt(dist2[hour] || 0, 10),
+        value1: useAverage ? raw1 / daysSent1 : raw1,
+        value2: useAverage ? raw2 / daysSent2 : raw2,
+        total1: raw1,
+        total2: raw2,
       });
     }
     return data;
-  }, [temporal1, temporal2]);
+  }, [temporal1, temporal2, useAverage, daysSent1, daysSent2]);
 
-  const maxHourValue = Math.max(
-    ...hourData.map((d) => Math.max(d.value1, d.value2))
-  );
+  const maxHourValue =
+    hourData.length > 0
+      ? Math.max(...hourData.map((d) => Math.max(d.value1, d.value2)))
+      : 0;
+  const safeMaxHourValue = maxHourValue > 0 ? maxHourValue : 1;
 
   if (!temporal1 || !temporal2) return null;
 
@@ -85,7 +104,22 @@ export default function ComparisonTemporalSection({
 
       {/* Overlaid Hour Distribution */}
       <div className="comparison-chart-container">
-        <h3 className="chart-title">Messages by Hour of Day</h3>
+        <h3 className="chart-title">
+          {useAverage ? "Average Messages by Hour of Day" : "Messages by Hour of Day"}
+        </h3>
+        {useAverage && (
+          <p
+            style={{
+              margin: "0.25rem 0 1rem",
+              fontSize: "0.9rem",
+              opacity: 0.7,
+            }}
+          >
+            Averaged per day across{" "}
+            {daysSent1.toLocaleString()} days you sent messages in {year1} and{" "}
+            {daysSent2.toLocaleString()} days in {year2}.
+          </p>
+        )}
         <div className="comparison-legend">
           <span className="legend-item year1">
             <span className="legend-color"></span>
@@ -103,16 +137,24 @@ export default function ComparisonTemporalSection({
                 <div
                   className="hour-bar year1-bar"
                   style={{
-                    height: `${(item.value1 / maxHourValue) * 100}%`,
+                    height: `${(item.value1 / safeMaxHourValue) * 100}%`,
                   }}
-                  title={`${year1}: ${item.value1.toLocaleString()} messages at ${item.label}`}
+                  title={
+                    useAverage
+                      ? `${year1}: ${formatAverageValue(item.value1)} avg msgs/day at ${item.label} (${item.total1.toLocaleString()} total)`
+                      : `${year1}: ${item.value1.toLocaleString()} messages at ${item.label}`
+                  }
                 />
                 <div
                   className="hour-bar year2-bar"
                   style={{
-                    height: `${(item.value2 / maxHourValue) * 100}%`,
+                    height: `${(item.value2 / safeMaxHourValue) * 100}%`,
                   }}
-                  title={`${year2}: ${item.value2.toLocaleString()} messages at ${item.label}`}
+                  title={
+                    useAverage
+                      ? `${year2}: ${formatAverageValue(item.value2)} avg msgs/day at ${item.label} (${item.total2.toLocaleString()} total)`
+                      : `${year2}: ${item.value2.toLocaleString()} messages at ${item.label}`
+                  }
                 />
               </div>
               {item.hour % 4 === 0 && (
@@ -148,4 +190,3 @@ export default function ComparisonTemporalSection({
     </div>
   );
 }
-
