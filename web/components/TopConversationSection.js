@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import EnhancedText from "./EnhancedText";
 import { useEnhancement, PLAYFUL_INSTRUCTION } from "@/hooks/useEnhancement";
 
@@ -71,9 +71,7 @@ export default function TopConversationSection({ deepDive }) {
 
       <ConversationSummary deepDive={deepDive} />
       <WordUsageBreakdown usage={deepDive.word_usage} />
-      <UniqueWordsBreakdown
-        uniqueWords={deepDive.word_usage?.unique_words || deepDive.unique_words}
-      />
+      <UniquePhrasesBreakdown uniquePhrases={deepDive.unique_phrases} />
       <div className="top-convo-grid">
         <RadialHourChart hourly={deepDive.hourly_distribution} />
         <SessionStartsEndsCard starters={deepDive.starter_analysis} enders={deepDive.ender_analysis} />
@@ -195,31 +193,31 @@ function WordUsageBreakdown({ usage }) {
   );
 }
 
-function UniqueWordsBreakdown({ uniqueWords }) {
-  if (!uniqueWords) return null;
+function UniquePhrasesBreakdown({ uniquePhrases }) {
+  if (!uniquePhrases) return null;
 
-  const you = Array.isArray(uniqueWords.you) ? uniqueWords.you : [];
-  const them = Array.isArray(uniqueWords.them) ? uniqueWords.them : [];
+  const you = Array.isArray(uniquePhrases.you) ? uniquePhrases.you : [];
+  const them = Array.isArray(uniquePhrases.them) ? uniquePhrases.them : [];
 
   return (
     <div style={{ marginTop: "2rem" }}>
       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-        <h3 style={{ marginBottom: 0 }}>Signature Words</h3>
-        <InlineHelp label="Words that show up more for each side within this thread.">
+        <h3 style={{ marginBottom: 0 }}>Signature Phrases</h3>
+        <InlineHelp label="Multi-word phrases that show up more for each side within this thread.">
           <span style={{ opacity: 0.7, textDecoration: "underline dotted", cursor: "help" }}>
             What’s this?
           </span>
         </InlineHelp>
       </div>
       <div className="word-usage-grid">
-        <UniqueWordColumn label="You" color="#a855f7" items={you} />
-        <UniqueWordColumn label="Them" color="#ec4899" items={them} />
+        <UniquePhraseColumn label="You" color="#a855f7" items={you} />
+        <UniquePhraseColumn label="Them" color="#ec4899" items={them} />
       </div>
     </div>
   );
 }
 
-function UniqueWordColumn({ label, color, items }) {
+function UniquePhraseColumn({ label, color, items }) {
   const maxScore =
     items && items.length > 0 ? Math.max(...items.map((item) => Number(item.score) || 0), 0) : 0;
   const safeMax = maxScore > 0 ? maxScore : 1;
@@ -233,12 +231,12 @@ function UniqueWordColumn({ label, color, items }) {
       {items && items.length > 0 ? (
         <ul>
           {items.map((item) => (
-            <li key={`${label}-${item.word}`} className="word-usage-row">
+            <li key={`${label}-${item.phrase}`} className="word-usage-row">
               <div className="word-usage-row__word">
                 <span
                   title={`Score: ${Number(item.score || 0).toFixed(4)} · ${item.count} vs ${item.other_count}`}
                 >
-                  {item.word}
+                  {item.phrase}
                 </span>
                 <span className="word-usage-row__count">
                   {item.count.toLocaleString()} vs {item.other_count.toLocaleString()}
@@ -256,7 +254,7 @@ function UniqueWordColumn({ label, color, items }) {
           ))}
         </ul>
       ) : (
-        <p className="word-usage-empty">No distinctive words detected.</p>
+        <p className="word-usage-empty">No distinctive phrases detected.</p>
       )}
     </div>
   );
@@ -380,6 +378,7 @@ function RadialHourChart({ hourly }) {
 }
 
 function DailyTrendChart({ activity }) {
+  const [hover, setHover] = useState(null);
   const series = useMemo(() => activity?.series || [], [activity]);
 
   const width = 900;
@@ -406,7 +405,7 @@ function DailyTrendChart({ activity }) {
         })
         .join(" ");
     const tickCount = Math.min(6, series.length);
-    const step = Math.max(1, Math.floor(series.length / tickCount));
+    const step = Math.max(1, Math.floor(series.length / Math.max(tickCount, 1)));
     const tickEntries = series.filter((_, idx) => idx % step === 0);
     return {
       sentPath: buildPath("sent"),
@@ -418,6 +417,7 @@ function DailyTrendChart({ activity }) {
   if (!series.length) return null;
 
   const busiest = activity?.busiest_day;
+  const slotWidth = (width - padding * 2) / Math.max(series.length, 1);
 
   return (
     <div className="daily-trend-card">
@@ -443,44 +443,110 @@ function DailyTrendChart({ activity }) {
           </span>
         </div>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img">
-        <rect
-          x={padding}
-          y={padding}
-          width={width - padding * 2}
-          height={height - padding * 2}
-          fill="none"
-          stroke="rgba(255,255,255,0.08)"
-        />
-        <path d={receivedPath} fill="none" stroke="#ec4899" strokeWidth="2" strokeLinejoin="round" />
-        <path d={sentPath} fill="none" stroke="#a855f7" strokeWidth="2" strokeLinejoin="round" />
-        {ticks.map((entry, index) => {
-          const x =
-            padding +
-            (series.indexOf(entry) / Math.max(series.length - 1, 1)) *
-              (width - padding * 2);
-          return (
-            <g key={entry.date || index}>
-              <line
-                x1={x}
-                y1={height - padding}
-                x2={x}
-                y2={height - padding + 8}
-                stroke="rgba(255,255,255,0.2)"
+      <div style={{ position: "relative" }}>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          width="100%"
+          role="img"
+          onMouseLeave={() => setHover(null)}
+        >
+          <rect
+            x={padding}
+            y={padding}
+            width={width - padding * 2}
+            height={height - padding * 2}
+            fill="none"
+            stroke="rgba(255,255,255,0.08)"
+          />
+          <path d={receivedPath} fill="none" stroke="#ec4899" strokeWidth="2" strokeLinejoin="round" />
+          <path d={sentPath} fill="none" stroke="#a855f7" strokeWidth="2" strokeLinejoin="round" />
+          {hover && (
+            <line
+              x1={hover.x}
+              y1={padding}
+              x2={hover.x}
+              y2={height - padding}
+              stroke="rgba(255,255,255,0.35)"
+              strokeDasharray="4 6"
+            />
+          )}
+          {ticks.map((entry, index) => {
+            const x =
+              padding +
+              (series.indexOf(entry) / Math.max(series.length - 1, 1)) *
+                (width - padding * 2);
+            return (
+              <g key={entry.date || index}>
+                <line
+                  x1={x}
+                  y1={height - padding}
+                  x2={x}
+                  y2={height - padding + 8}
+                  stroke="rgba(255,255,255,0.2)"
+                />
+                <text
+                  x={x}
+                  y={height - padding + 22}
+                  textAnchor="middle"
+                  fontSize="10"
+                  fill="rgba(255,255,255,0.6)"
+                >
+                  {(entry.date || "").slice(5)}
+                </text>
+              </g>
+            );
+          })}
+          {series.map((entry, idx) => {
+            const x =
+              padding +
+              (idx / Math.max(series.length - 1, 1)) * (width - padding * 2);
+            return (
+              <rect
+                key={`hover-${entry.date || idx}`}
+                x={x - slotWidth / 2}
+                y={padding}
+                width={Math.max(slotWidth, 4)}
+                height={height - padding * 2}
+                fill="transparent"
+                onMouseEnter={() =>
+                  setHover({
+                    x,
+                    date: entry.date,
+                    sent: entry.sent,
+                    received: entry.received,
+                    total: entry.total,
+                  })
+                }
               />
-              <text
-                x={x}
-                y={height - padding + 22}
-                textAnchor="middle"
-                fontSize="10"
-                fill="rgba(255,255,255,0.6)"
-              >
-                {(entry.date || "").slice(5)}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
+            );
+          })}
+        </svg>
+        {hover && (
+          <div
+            style={{
+              position: "absolute",
+              left: Math.min(Math.max(hover.x - 70, 0), width - 160),
+              top: 8,
+              background: "rgba(0,0,0,0.85)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: "10px",
+              padding: "0.6rem 0.8rem",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+              pointerEvents: "none",
+              zIndex: 2,
+            }}
+          >
+            <div style={{ fontSize: "0.8rem", opacity: 0.7 }}>{hover.date}</div>
+            <div style={{ fontWeight: 600, marginTop: "0.15rem" }}>
+              Total: {hover.total?.toLocaleString() ?? 0}
+            </div>
+            <div style={{ fontSize: "0.9rem", marginTop: "0.15rem" }}>
+              You: {hover.sent?.toLocaleString() ?? 0} · Them:{" "}
+              {hover.received?.toLocaleString() ?? 0}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -506,7 +572,7 @@ function SessionStartsEndsCard({ starters, enders }) {
   const maxGapLabel = maxGap >= 24 ? `${(maxGap / 24).toFixed(1)} days` : `${maxGap.toFixed(1)} hours`;
   const maxGapWindow = starters?.max_gap_window;
 
-  const description = `We split this thread into “sessions” using a ${ruleHours}h quiet gap (or a day boundary). Start = first message in a session. End = last message before the next session.`;
+  const description = `After a ${ruleHours}h quiet gap (or a new day), whoever sends the first message starts the session, and whoever sends the last message before the next gap ends it.`;
 
   return (
     <div className="starter-card">

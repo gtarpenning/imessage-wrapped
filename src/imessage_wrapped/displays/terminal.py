@@ -98,7 +98,6 @@ class TerminalDisplay(Display):
         self._render_content_section(stats.get("content", {}))
         self._render_conversations_section(stats.get("conversations", {}))
         self._render_response_times_section(stats.get("response_times", {}))
-        self._render_crashout_section(stats.get("crashout", {}))
         self._render_tapbacks_section(stats.get("tapbacks", {}))
         self._render_ghosts_section(stats.get("ghosts", {}))
         self._render_cliffhangers_section(stats.get("cliffhangers"))
@@ -478,53 +477,6 @@ class TerminalDisplay(Display):
                 "Their Median Response Time",
                 response_times.get("median_response_time_them_formatted", "N/A"),
             )
-
-        self.console.print(table)
-
-    def _render_crashout_section(self, crashout: dict[str, Any]) -> None:
-        if not crashout:
-            return
-
-        min_streak = crashout.get("min_streak", 3)
-        peak_streak = crashout.get("peak_streak_length", 0) or 0
-        if peak_streak < min_streak:
-            return
-
-        def format_window(minutes: float) -> str:
-            if minutes < 1:
-                return "<1m"
-            if minutes < 60:
-                return f"{int(round(minutes))}m"
-            hours = int(minutes // 60)
-            remaining = int(round(minutes % 60))
-            return f"{hours}h {remaining}m" if remaining else f"{hours}h"
-
-        meter = crashout.get("meter", 0)
-        if meter >= 85:
-            label = "Nuclear"
-        elif meter >= 70:
-            label = "Meltdown"
-        elif meter >= 50:
-            label = "Spiraling"
-        elif meter >= 30:
-            label = "Heated"
-        else:
-            label = "Chill"
-
-        self.console.print("\n[bold cyan]💥 Crashout Meter[/]")
-
-        table = Table(show_header=False, box=None, padding=(0, 2))
-        table.add_column("Metric", style="dim")
-        table.add_column("Value", style="yellow")
-
-        table.add_row("Crashout Score", f"{meter}/100 ({label})")
-        table.add_row("Peak Streak", f"{peak_streak} messages")
-        table.add_row(
-            "Peak Window",
-            format_window(float(crashout.get("peak_streak_window_minutes", 0.0))),
-        )
-        negative_share = int(round((crashout.get("peak_negative_ratio", 0.0) or 0.0) * 100))
-        table.add_row("Negative Share", f"{negative_share}%")
 
         self.console.print(table)
 

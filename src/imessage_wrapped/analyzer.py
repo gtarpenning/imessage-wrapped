@@ -50,6 +50,11 @@ CRASHOUT_MAX_WINDOW = timedelta(hours=1)
 CRASHOUT_SCORE_MULTIPLIER = 4.0
 TOP_CONVERSATION_WORD_LIMIT = 10
 TOP_CONVERSATION_MIN_TOKEN_LENGTH = 2
+TOP_CONVERSATION_PHRASE_NGRAM_RANGE = (2, 5)
+TOP_CONVERSATION_PHRASE_LIMIT = 5
+TOP_CONVERSATION_PHRASE_MIN_OCCURRENCES = 1
+TOP_CONVERSATION_PHRASE_MIN_CHARACTERS = 4
+TOP_CONVERSATION_PHRASE_FILTER_BANK = {"http", "https"}
 CONVERSATION_SESSION_GAP_HOURS = 6
 MAX_STARTER_EXAMPLES = 8
 
@@ -1101,6 +1106,9 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         messages = sorted(messages, key=lambda msg: msg.timestamp)
 
         word_usage = self._build_word_usage_breakdown(messages, top_n=word_limit)
+        unique_phrases = self._build_unique_phrase_breakdown(
+            messages, top_n=TOP_CONVERSATION_PHRASE_LIMIT
+        )
         hourly = self._build_hourly_distribution(messages)
         daily = self._build_daily_activity(messages)
         starters = self._compute_conversation_starters(messages)
@@ -1119,6 +1127,7 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 "end": last_ts.date().isoformat(),
             },
             "word_usage": word_usage,
+            "unique_phrases": unique_phrases,
             "hourly_distribution": hourly,
             "daily_activity": daily,
             "starter_analysis": starters,
@@ -1166,6 +1175,35 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
             },
         }
 
+    def _build_unique_phrase_breakdown(
+        self,
+        messages: list[Message],
+        top_n: int,
+    ) -> dict[str, Any] | None:
+        you_counter, total_you = self._count_phrase_ngrams(messages, is_from_me=True)
+        them_counter, total_them = self._count_phrase_ngrams(messages, is_from_me=False)
+        unique_you, unique_them = self._compute_unique_phrases_tfidf(
+            you_counter=you_counter,
+            them_counter=them_counter,
+            total_you=total_you,
+            total_them=total_them,
+            top_n=top_n,
+        )
+
+        if not unique_you and not unique_them:
+            return None
+
+        return {
+            "you": unique_you,
+            "them": unique_them,
+            "method": "tfidf-2doc",
+            "config": {
+                "ngram_range": list(TOP_CONVERSATION_PHRASE_NGRAM_RANGE),
+                "min_occurrences": TOP_CONVERSATION_PHRASE_MIN_OCCURRENCES,
+                "min_characters": TOP_CONVERSATION_PHRASE_MIN_CHARACTERS,
+            },
+        }
+
     def _tokenize_words(self, text: str) -> list[str]:
         if not text:
             return []
@@ -1180,6 +1218,57 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
                 continue
             filtered.append(token)
         return filtered
+
+    def _count_phrase_ngrams(
+        self, messages: list[Message], *, is_from_me: bool
+    ) -> tuple[Counter[str], int]:
+        counts: Counter[str] = Counter()
+        for message in messages:
+            if message.is_from_me != is_from_me:
+                continue
+            tokens = self._word_tokenizer.tokenize(message.text or "")
+            if not tokens:
+                continue
+            for phrase in self._generate_phrase_ngrams(tokens):
+                counts[phrase] += 1
+
+        filtered = Counter(
+            {
+                phrase: count
+                for phrase, count in counts.items()
+                if count >= TOP_CONVERSATION_PHRASE_MIN_OCCURRENCES
+            }
+        )
+        return filtered, sum(filtered.values())
+
+    def _generate_phrase_ngrams(self, tokens: Sequence[str]) -> list[str]:
+        min_n, max_n = TOP_CONVERSATION_PHRASE_NGRAM_RANGE
+        length = len(tokens)
+        phrases: list[str] = []
+        for n in range(min_n, max_n + 1):
+            if length < n:
+                continue
+            for idx in range(length - n + 1):
+                window = tokens[idx : idx + n]
+                if not self._valid_phrase_window(window):
+                    continue
+                phrases.append(" ".join(window))
+        return phrases
+
+    def _valid_phrase_window(self, tokens: Sequence[str]) -> bool:
+        if not tokens:
+            return False
+        characters = sum(len(token) for token in tokens)
+        if characters < TOP_CONVERSATION_PHRASE_MIN_CHARACTERS:
+            return False
+        has_letter = any(any(char.isalpha() for char in token) for token in tokens)
+        if not has_letter:
+            return False
+        if any(token in TOP_CONVERSATION_PHRASE_FILTER_BANK for token in tokens):
+            return False
+        if all(token in self._word_stopwords for token in tokens):
+            return False
+        return True
 
     def _format_word_counter(
         self, counter: Counter[str], total: int, top_n: int
@@ -1263,6 +1352,85 @@ class RawStatisticsAnalyzer(StatisticsAnalyzer):
         def _trim(entry: dict[str, Any]) -> dict[str, Any]:
             return {
                 "word": entry["word"],
+                "count": entry["count"],
+                "other_count": entry.get("other_count") or 0,
+                "score": round(float(entry["score"]), 6),
+            }
+
+        return (
+            [_trim(e) for e in you_filtered[:top_n]],
+            [_trim(e) for e in them_filtered[:top_n]],
+        )
+
+    def _compute_unique_phrases_tfidf(
+        self,
+        you_counter: Counter[str],
+        them_counter: Counter[str],
+        total_you: int,
+        total_them: int,
+        top_n: int,
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        if total_you <= 0 and total_them <= 0:
+            return ([], [])
+
+        total_docs = 2
+
+        def _idf(df: int) -> float:
+            return log((total_docs + 1) / (df + 1)) + 1.0
+
+        vocabulary = set(you_counter) | set(them_counter)
+        you_scored: list[dict[str, Any]] = []
+        them_scored: list[dict[str, Any]] = []
+
+        for phrase in vocabulary:
+            you_count = int(you_counter.get(phrase, 0))
+            them_count = int(them_counter.get(phrase, 0))
+            df = (1 if you_count > 0 else 0) + (1 if them_count > 0 else 0)
+            if df == 0:
+                continue
+            idf = _idf(df)
+
+            if you_count > 0 and total_you > 0:
+                tf = you_count / total_you
+                you_scored.append(
+                    {
+                        "phrase": phrase,
+                        "count": you_count,
+                        "score": tf * idf,
+                        "other_count": them_count,
+                    }
+                )
+            if them_count > 0 and total_them > 0:
+                tf = them_count / total_them
+                them_scored.append(
+                    {
+                        "phrase": phrase,
+                        "count": them_count,
+                        "score": tf * idf,
+                        "other_count": you_count,
+                    }
+                )
+
+        def _sort_key(entry: dict[str, Any]) -> tuple[float, int, str]:
+            return (
+                float(entry.get("score") or 0),
+                -(int(entry.get("other_count") or 0)),
+                entry["phrase"],
+            )
+
+        you_scored.sort(key=_sort_key, reverse=True)
+        them_scored.sort(key=_sort_key, reverse=True)
+
+        you_filtered = [
+            e for e in you_scored if (e.get("count") or 0) > (e.get("other_count") or 0)
+        ]
+        them_filtered = [
+            e for e in them_scored if (e.get("count") or 0) > (e.get("other_count") or 0)
+        ]
+
+        def _trim(entry: dict[str, Any]) -> dict[str, Any]:
+            return {
+                "phrase": entry["phrase"],
                 "count": entry["count"],
                 "other_count": entry.get("other_count") or 0,
                 "score": round(float(entry["score"]), 6),

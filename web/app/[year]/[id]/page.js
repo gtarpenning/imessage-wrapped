@@ -12,7 +12,6 @@ import MessageLengthSection from "@/components/MessageLengthSection";
 import ConversationsSection from "@/components/ConversationsSection";
 import TopConversationSection from "@/components/TopConversationSection";
 import GhostSection from "@/components/GhostSection";
-import CrashoutSection from "@/components/CrashoutSection";
 // import CliffhangerSection from "@/components/CliffhangerSection";
 import ResponseTimesSection from "@/components/ResponseTimesSection";
 import TapbacksSection from "@/components/TapbacksSection";
@@ -113,7 +112,6 @@ export default function WrappedPage() {
         <ContactsSection contacts={stats.contacts} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
         <ContentSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} uniqueEmoji={uniqueEmoji} />
         <MessageAnalysisSection sentiment={stats.content?.sentiment} />
-        <CrashoutSection crashout={stats.crashout} />
         <MessageLengthSection content={stats.content} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
         <ConversationsSection conversations={stats.conversations} percentiles={percentiles} ranks={ranks} metricCounts={metricCounts} totalWraps={totalWraps} />
         <TopConversationSection deepDive={stats.top_conversation_deep_dive} />
