@@ -70,7 +70,6 @@ export default function TopConversationSection({ deepDive }) {
       )}
 
       <ConversationSummary deepDive={deepDive} />
-      <WordUsageBreakdown usage={deepDive.word_usage} />
       <UniquePhrasesBreakdown uniquePhrases={deepDive.unique_phrases} />
       <div className="top-convo-grid">
         <RadialHourChart hourly={deepDive.hourly_distribution} />
@@ -137,58 +136,6 @@ function ConversationSummary({ deepDive }) {
             : "Evenly spread"}
         </p>
       </div>
-    </div>
-  );
-}
-
-function WordUsageBreakdown({ usage }) {
-  if (!usage) return null;
-
-  const columns = [
-    { label: "You", data: usage.sent, color: "#a855f7", total: usage.total_sent_tokens },
-    {
-      label: "Them",
-      data: usage.received,
-      color: "#ec4899",
-      total: usage.total_received_tokens,
-    },
-  ];
-
-  const hasData = columns.some((column) => Array.isArray(column.data) && column.data.length > 0);
-  if (!hasData) return null;
-
-  return (
-    <div className="word-usage-grid">
-      {columns.map((column) => (
-        <div className="word-usage-column" key={column.label}>
-          <div className="word-usage-column__header">
-            <h3>{column.label}</h3>
-            <span>{column.total?.toLocaleString() || 0} tokens</span>
-          </div>
-          {column.data && column.data.length > 0 ? (
-            <ul>
-              {column.data.map((item) => (
-                <li key={`${column.label}-${item.word}`} className="word-usage-row">
-                  <div className="word-usage-row__word">
-                    <span>{item.word}</span>
-                    <span className="word-usage-row__count">{item.count.toLocaleString()}</span>
-                  </div>
-                  <div className="word-usage-row__bar">
-                    <span
-                      style={{
-                        width: `${Math.min(100, Math.max(2, (item.share || 0) * 100))}%`,
-                        background: column.color,
-                      }}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="word-usage-empty">No words detected for this side.</p>
-          )}
-        </div>
-      ))}
     </div>
   );
 }
